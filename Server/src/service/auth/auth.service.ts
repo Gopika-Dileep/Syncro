@@ -1,24 +1,33 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import crypto from 'crypto'
 import { IAuthRepository } from "../../interfaces/repositories/IAuthRepository";
 import { IAuthService } from "../../interfaces/services/IAuthService";
-import { env } from '../../config/env';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/token.utils';
+import redis from '../../config/redis';
+import { sendPasswordResetEmail } from '../../utils/email.utils';
 
 export class AuthService implements IAuthService {
   constructor(private _authRepo: IAuthRepository) { }
 
-  async registration(name: string, email: string, password: string): Promise<{ token: string }> {
+  async registration(name: string, email: string, password: string, companyName:string): Promise<{ accessToken: string, refreshToken: string }> {
+
     const existing = await this._authRepo.findByEmail(email)
     if (existing) {
       throw new Error("email already exist")
     }
+
     const hashed = await bcrypt.hash(password, 10);
-    const user = await this._authRepo.create(name, email, hashed)
-    const token = jwt.sign({ id: user._id, email: user.email }, env.JWT_SECRET, { expiresIn: "7d" });
-    return { token }
+    const user = await this._authRepo.createUser(name, email, hashed,"company_admin")
+
+    const accessToken = generateAccessToken(user._id.toString())
+    const refreshToken = generateRefreshToken(user._id.toString())
+
+    await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
+
+    return { accessToken, refreshToken }
   }
 
-  async login(email: string, password: string): Promise<{ token: string }> {
+  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string }> {
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("user not found")
@@ -27,7 +36,55 @@ export class AuthService implements IAuthService {
     if (!isMatch) {
       throw new Error("Invalid credentials")
     }
-    const token = jwt.sign({ id: user._id, email: user.email }, env.JWT_SECRET, { expiresIn: "7d" })
-    return { token }
+    const accessToken = generateAccessToken(user._id.toString())
+    const refreshToken = generateRefreshToken(user._id.toString())
+
+    await this._authRepo.updateRefreshToken(user._id.toString() , refreshToken)
+    return { accessToken, refreshToken }
+  }
+
+  async refresh(refreshToken: string): Promise<{ accessToken: string; }> {
+    const decoded = verifyRefreshToken(refreshToken)
+
+    const user = await this._authRepo.findById(decoded.id)
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new Error("invalid refresh token")
+    }
+
+    const accessToken = generateAccessToken(user._id.toString())
+    return { accessToken }
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    const decoded = verifyRefreshToken(refreshToken)
+
+    await this._authRepo.clearRefreshToken(decoded.id)
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this._authRepo.findByEmail(email)
+
+    if(!user){
+      return 
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex")
+
+    await redis.set(`password_reset:${resetToken}`,user._id.toString(),"EX" ,900)
+    await sendPasswordResetEmail(user.email,resetToken)
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const userId = await redis.get(`password_reset:${token}`)
+
+    if(!userId){
+      throw new Error("Invalid or expired reset token")
+    }
+
+    const hashed = await bcrypt.hash(newPassword,10)
+
+    await this._authRepo.updatePassword(userId,hashed)
+
+    await redis.del(`password_reset:${token}`)
   }
 }

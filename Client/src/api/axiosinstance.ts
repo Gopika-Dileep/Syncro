@@ -1,28 +1,48 @@
+import { setToken, logout } from '@/store/slices/authSlice'
+import { store } from '@/store/store'
 import axios from 'axios'
 
 const axiosInstance = axios.create({
-    baseURL:
-        "http://localhost:5000/api",
+    baseURL:"http://localhost:5000/api",
     headers: {
         "content-Type":
             "application/json",
     },
+    withCredentials:true
 })
 
 axiosInstance.interceptors.request.use((config) => {
+    const token = store.getState().auth.token
+    if(token){
+        config.headers.Authorization = `Bearer ${token}`
+    }
     return config
 },
-    (error) => {
-        return Promise.reject(error)
-    }
+(error) => {
+    return Promise.reject(error)
+}
 )
 
 axiosInstance.interceptors.response.use((response) => {
     return response
 },
-    (error) => {
-        if (error.response?.status === 401) {
-            console.warn("Unauthorized-token may be expired")
+async (error) => {
+    const originalRequest = error.config
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true
+            try{
+                const res = await axios.post(
+                    "http://localhost:5000/api/auth/refresh",
+                    {},
+                    {withCredentials:true}
+                )
+                const newToken = res.data.token 
+                store.dispatch(setToken(newToken))
+                originalRequest.headers.Authorization = `Bearer ${newToken}`
+                return axiosInstance(originalRequest)
+            }catch{
+                store.dispatch(logout())
+            }
         }
         return Promise.reject(error)
     }

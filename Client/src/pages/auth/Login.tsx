@@ -1,8 +1,16 @@
 import { loginApi } from "@/api/authapi";
+import { setToken } from "@/store/slices/authSlice";
+import type { AppDispatch } from "@/store/store";
 import { useState} from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 
 export default function Login(){
+
+    const navigate = useNavigate()
+
+    const  dispatch = useDispatch<AppDispatch>()
     const [form,setform] = useState({email:"",password:""})
 
     const handleChange=(e:React.ChangeEvent<HTMLInputElement>)=>{
@@ -14,7 +22,8 @@ export default function Login(){
         try{
             const data = await loginApi(form.email,form.password)
             console.log("login successful",data)
-
+            dispatch(setToken(data.token))
+            navigate("/company/dashboard")
         }catch(error){
             console.log("login failed",error)
         }

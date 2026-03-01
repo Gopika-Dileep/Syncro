@@ -10,5 +10,10 @@ export const env = {
     PORT: getEnv('PORT'),
     FRONTEND_URL:getEnv('FRONTEND_URL'),
     MONGO_URI:getEnv('MONGO_URI'),
-    JWT_SECRET:getEnv("JWT_SECRET")
+    ACCESS_TOKEN_SECRET:getEnv("ACCESS_TOKEN_SECRET"),
+    REFRESH_TOKEN_SECRET:getEnv("REFRESH_TOKEN_SECRET"),
+    REDIS_HOST:getEnv("REDIS_HOST"),
+    REDIS_PORT:getEnv("REDIS_PORT"),
+    EMAIL_USER: getEnv("EMAIL_USER"),   
+    EMAIL_PASS: getEnv("EMAIL_PASS"),   
 }
