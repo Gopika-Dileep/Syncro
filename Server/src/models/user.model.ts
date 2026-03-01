@@ -8,7 +8,7 @@ export interface IUser extends Document {
     role:         UserRole
     name:         string
     avatar?:      string
-    is_active:    boolean
+    is_blocked:    boolean
     refreshToken?: string
     created_at:   Date
     updated_at:   Date
@@ -38,9 +38,9 @@ const userSchema = new Schema<IUser>(
             type:    String,
             default: null,
         },
-        is_active: {
+        is_blocked: {
             type:    Boolean,
-            default: true,
+            default: false,
         },
         refreshToken: {
             type:    String,

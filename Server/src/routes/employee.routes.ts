@@ -11,6 +11,9 @@ export class EmployeeRouter {
     }
 
     private _initializeRoutes(): void {
+         this.router.get("/", authMiddleware, employeeController.getEmployees)
         this.router.post("/add", authMiddleware, employeeController.addEmployee)
+        this.router.patch("/:userId/toggle-block",authMiddleware,employeeController.toggleBlockEmployee)
+        
     }
 }

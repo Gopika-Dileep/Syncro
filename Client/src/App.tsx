@@ -12,6 +12,7 @@ import Employees from './pages/company/Employees'
 import Projects from './pages/company/Projects'
 import Notifications from './pages/company/Notifications'
 import Settings from './pages/company/Settings'
+import AddEmployee from './pages/company/AddEmployee'
 
 function App(){
 return(
@@ -33,6 +34,7 @@ return(
                         >
                             <Route path='dashboard'     element={<CompanyDashboard />} />
                             <Route path='employees'     element={<Employees />} />
+                            <Route path='employees/add' element={<AddEmployee/>}/>
                             <Route path='projects'      element={<Projects/>} />
                             <Route path='notifications' element={<Notifications />} />
                             <Route path='settings'      element={<Settings />} />

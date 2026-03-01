@@ -4,7 +4,7 @@ export interface ICompany extends Document {
     user_id:    Types.ObjectId     
     name:       string
     about_us?:  string
-    is_active:  boolean
+    is_blocked:  boolean
     created_at: Date
     updated_at: Date
 }
@@ -24,9 +24,9 @@ const companySchema = new Schema<ICompany>(
             type:    String,
             default: null,
         },
-        is_active: {
+        is_blocked: {
             type:    Boolean,
-            default: true,
+            default: false,
         },
     },
     { timestamps: true }

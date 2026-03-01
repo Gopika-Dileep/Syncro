@@ -11,4 +11,6 @@ export interface AddEmployeeData{
 
 export interface IEmployeeService {
     addEmployee(adminUserId : string, data : AddEmployeeData):Promise <void>
+    getEmployees(adminUserId:string): Promise<any[]>
+    toggleBlockEmployee(adminUserId:string,userId:string):Promise<boolean>
 }

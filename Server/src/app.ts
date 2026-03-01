@@ -13,7 +13,8 @@ export default class App {
     }
     private _configureRoutes(): void {
         this.app.use('/api/auth', new AuthRouter().router);
-        this.app.use('/api/company', new EmployeeRouter().router)
+        this.app.use('/api/company', new EmployeeRouter().router);
+        this.app.use('/api/company/employees',new EmployeeRouter().router)
     }
     private _configureMiddleware():void{
         this.app.use(

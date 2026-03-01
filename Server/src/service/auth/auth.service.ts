@@ -19,6 +19,8 @@ export class AuthService implements IAuthService {
     const hashed = await bcrypt.hash(password, 10);
     const user = await this._authRepo.createUser(name, email, hashed,"company_admin")
 
+    await this._authRepo.createCompany(user._id.toString(),companyName)
+    
     const accessToken = generateAccessToken(user._id.toString())
     const refreshToken = generateRefreshToken(user._id.toString())
 
