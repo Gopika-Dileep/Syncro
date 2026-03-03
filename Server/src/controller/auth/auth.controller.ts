@@ -34,7 +34,16 @@ export class AuthController {
         }
     }
 
-
+    resendOtp = async (req:Request , res:Response):Promise<void>=>{
+        try{
+            const {email} = req.body
+            const result = await this._authService.resendOtp(email)
+            res.status(200).json({success:true,message:result.message})
+        }catch(err:unknown){
+            const message = err instanceof Error? err.message :"Failed to resend otp";
+            res.status(400).json({success:false,message});
+        }
+    }
 
 
     login = async (req: Request, res: Response): Promise<void> => {

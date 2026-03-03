@@ -12,6 +12,11 @@ export const verifyOtpApi = async (email:string ,otp:string)=>{
     
 }
 
+export const resendOtpApi = async (email:string) =>{
+    const response = await axiosInstance.post("/auth/resend-otp",{email})
+    return response.data;
+}
+
 export const loginApi = async (email: string, password: string) => {
     const response = await axiosInstance.post("/auth/login", { email, password })
     return response.data

@@ -24,7 +24,7 @@ export class AuthService implements IAuthService {
     await this._authRepo.createCompany(user._id.toString(), companyName)
 
     const otp = crypto.randomInt(100000, 999999).toString();
-
+    console.log("otp",otp)
     await redis.set(`otp:${email}`, otp, "EX", 600)
 
     await sendOtpEmail(email, otp)
@@ -56,8 +56,24 @@ export class AuthService implements IAuthService {
     await redis.del(`otp:${email}`)
     return { accessToken, refreshToken }
 
+  }
 
+  async resendOtp(email: string): Promise<{ message: string; }> {
+      const user = await this._authRepo.findByEmail(email)
+      if(!user){
+        throw new Error("User not found")
+      }
+      if(user.is_verified){
+        throw new Error("user is already verified")
+      }
 
+      const otp = crypto.randomInt(100000, 999999).toString()
+      console.log("otp" , otp)
+      await redis.set(`otp:${email}`,otp,"EX",600)
+
+      await sendOtpEmail(email,otp);
+
+      return {message:"new otp send to email"}
   }
 
   async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string }> {
