@@ -31,4 +31,8 @@ export class AuthRepository implements IAuthRepository{
     async updatePassword(id: string, hashedpassword: string): Promise<void> {
         await userModel.findByIdAndUpdate(id,{password:hashedpassword})
     }
+
+    async verifyUser(id: string): Promise<void> {
+        await userModel.findByIdAndUpdate(id,{is_verified:true})
+    }
 }  

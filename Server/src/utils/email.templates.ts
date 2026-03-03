@@ -61,3 +61,23 @@ export const employeeInvitationTemplate = (
         `,
     }
 }
+
+
+export const otpEmailTemplate = (otp: string): { subject: string; html: string } => {
+    return {
+        subject: "Your Registration OTP - Syncro",
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px;">
+                <h2 style="color: #4f46e5;">Verify your email address</h2>
+                <p>Thank you for registering. Please use the following OTP to complete your registration:</p>
+                <div style="margin: 24px 0; padding: 16px; background: #f3f4f6; text-align: center; border-radius: 8px;">
+                    <h1 style="letter-spacing: 4px; color: #333; margin: 0;">${otp}</h1>
+                </div>
+                <p>This code is valid for <strong>10 minutes</strong>.</p>
+                <p style="margin-top:24px; color:#999; font-size:12px;">
+                    If you did not request this, you can safely ignore this email.
+                </p>
+            </div>
+        `,
+    }
+}

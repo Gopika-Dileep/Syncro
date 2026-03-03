@@ -4,14 +4,14 @@ import { IAuthService } from '../interfaces/services/IAuthService';
 import { IAuthRepository } from '../interfaces/repositories/IAuthRepository';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/token.utils';
 import redis from '../config/redis';
-import { sendPasswordResetEmail } from '../utils/email.utils';
+import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 
 
 export class AuthService implements IAuthService {
-  
+
   constructor(private _authRepo: IAuthRepository) { }
 
-  async registration(name: string, email: string, password: string, companyName: string): Promise<{ accessToken: string, refreshToken: string }> {
+  async registration(name: string, email: string, password: string, companyName: string): Promise<{message:string}> {
 
     const existing = await this._authRepo.findByEmail(email)
     if (existing) {
@@ -23,6 +23,14 @@ export class AuthService implements IAuthService {
 
     await this._authRepo.createCompany(user._id.toString(), companyName)
 
+    const otp = crypto.randomInt(100000,999999).toString();
+
+    await redis.set(`otp:${email}`,otp,"EX",600)
+
+    await sendOtpEmail(email,otp)
+
+    return {message:"Otp sent to email successfully"}
+    
     const accessToken = generateAccessToken(user._id.toString())
     const refreshToken = generateRefreshToken(user._id.toString())
 

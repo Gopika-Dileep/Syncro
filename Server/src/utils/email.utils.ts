@@ -1,5 +1,5 @@
 import transporter from '../config/nodemailer';
-import { employeeInvitationTemplate, passwordResetTemplate } from './email.templates';
+import { employeeInvitationTemplate, otpEmailTemplate, passwordResetTemplate } from './email.templates';
 import { env } from '../config/env';
 
 export const sendPasswordResetEmail = async(
@@ -30,4 +30,15 @@ export const sendEmployeeInvitationEmail = async (
         subject,
         html
      })
+}
+
+
+export const sendOtpEmail = async (toEmail:string,otp:string):Promise<void>=>{
+    const {subject,html} = otpEmailTemplate(otp)
+    await transporter.sendMail({
+        from:`"Syncro <${env.EMAIL_USER}>`,
+        to:toEmail,
+        subject,
+        html
+    })
 }

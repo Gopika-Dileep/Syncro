@@ -9,4 +9,5 @@ export interface IAuthRepository{
     updateRefreshToken(id:string,refreshToken:string):Promise<void>
     clearRefreshToken(id:string):Promise<void>
     updatePassword(id:string,hashedpassword:string):Promise<void>
+    verifyUser(id:string):Promise<void>
 }
