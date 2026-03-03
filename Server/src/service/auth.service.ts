@@ -11,7 +11,7 @@ export class AuthService implements IAuthService {
 
   constructor(private _authRepo: IAuthRepository) { }
 
-  async registration(name: string, email: string, password: string, companyName: string): Promise<{message:string}> {
+  async registration(name: string, email: string, password: string, companyName: string): Promise<{ message: string }> {
 
     const existing = await this._authRepo.findByEmail(email)
     if (existing) {
@@ -23,26 +23,51 @@ export class AuthService implements IAuthService {
 
     await this._authRepo.createCompany(user._id.toString(), companyName)
 
-    const otp = crypto.randomInt(100000,999999).toString();
+    const otp = crypto.randomInt(100000, 999999).toString();
 
-    await redis.set(`otp:${email}`,otp,"EX",600)
+    await redis.set(`otp:${email}`, otp, "EX", 600)
 
-    await sendOtpEmail(email,otp)
+    await sendOtpEmail(email, otp)
 
-    return {message:"Otp sent to email successfully"}
-    
+    return { message: "Otp sent to email successfully" }
+
+  }
+
+
+  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string }> {
+    const storedOtp = await redis.get(`otp:${email}`)
+
+    if (!storedOtp || storedOtp !== otp) {
+      throw new Error("Invalid or expired OTP")
+    }
+
+    const user = await this._authRepo.findByEmail(email)
+    if (!user) {
+      throw new Error("User not found")
+    }
+
+    await this._authRepo.verifyUser(user._id.toString())
+
     const accessToken = generateAccessToken(user._id.toString())
     const refreshToken = generateRefreshToken(user._id.toString())
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
 
+    await redis.del(`otp:${email}`)
     return { accessToken, refreshToken }
+
+
+
   }
 
   async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string }> {
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("user not found")
+    }
+
+    if(!user.is_verified){
+        throw new Error("Please verify your email before logging in")
     }
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
