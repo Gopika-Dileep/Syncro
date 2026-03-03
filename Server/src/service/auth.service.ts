@@ -1,15 +1,17 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto'
-import { IAuthRepository } from "../../interfaces/repositories/IAuthRepository";
-import { IAuthService } from "../../interfaces/services/IAuthService";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/token.utils';
-import redis from '../../config/redis';
-import { sendPasswordResetEmail } from '../../utils/email.utils';
+import { IAuthService } from '../interfaces/services/IAuthService';
+import { IAuthRepository } from '../interfaces/repositories/IAuthRepository';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/token.utils';
+import redis from '../config/redis';
+import { sendPasswordResetEmail } from '../utils/email.utils';
+
 
 export class AuthService implements IAuthService {
+  
   constructor(private _authRepo: IAuthRepository) { }
 
-  async registration(name: string, email: string, password: string, companyName:string): Promise<{ accessToken: string, refreshToken: string }> {
+  async registration(name: string, email: string, password: string, companyName: string): Promise<{ accessToken: string, refreshToken: string }> {
 
     const existing = await this._authRepo.findByEmail(email)
     if (existing) {
@@ -17,10 +19,10 @@ export class AuthService implements IAuthService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await this._authRepo.createUser(name, email, hashed,"company_admin")
+    const user = await this._authRepo.createUser(name, email, hashed, "company_admin")
 
-    await this._authRepo.createCompany(user._id.toString(),companyName)
-    
+    await this._authRepo.createCompany(user._id.toString(), companyName)
+
     const accessToken = generateAccessToken(user._id.toString())
     const refreshToken = generateRefreshToken(user._id.toString())
 
@@ -41,7 +43,7 @@ export class AuthService implements IAuthService {
     const accessToken = generateAccessToken(user._id.toString())
     const refreshToken = generateRefreshToken(user._id.toString())
 
-    await this._authRepo.updateRefreshToken(user._id.toString() , refreshToken)
+    await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
     return { accessToken, refreshToken }
   }
 
@@ -66,26 +68,26 @@ export class AuthService implements IAuthService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this._authRepo.findByEmail(email)
 
-    if(!user){
-      return 
+    if (!user) {
+      return
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex")
 
-    await redis.set(`password_reset:${resetToken}`,user._id.toString(),"EX" ,900)
-    await sendPasswordResetEmail(user.email,resetToken)
+    await redis.set(`password_reset:${resetToken}`, user._id.toString(), "EX", 900)
+    await sendPasswordResetEmail(user.email, resetToken)
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const userId = await redis.get(`password_reset:${token}`)
 
-    if(!userId){
+    if (!userId) {
       throw new Error("Invalid or expired reset token")
     }
 
-    const hashed = await bcrypt.hash(newPassword,10)
+    const hashed = await bcrypt.hash(newPassword, 10)
 
-    await this._authRepo.updatePassword(userId,hashed)
+    await this._authRepo.updatePassword(userId, hashed)
 
     await redis.del(`password_reset:${token}`)
   }

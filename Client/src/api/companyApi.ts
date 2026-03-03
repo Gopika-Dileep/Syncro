@@ -12,7 +12,7 @@ export interface AddEmployeeForm {
 }
 
 export const addEmployeeApi = async(data:AddEmployeeForm)=>{
-    const response = await axiosInstance.post("/company/employees/add",data)
+    const response = await axiosInstance.post("/company/employee/add",data)
     return response.data
 }
 
@@ -22,6 +22,6 @@ export const getEmployeesApi = async ()=>{
 }
 
 export const toggleBlockEmployeeApi = async (userId:string) =>{
-    const response = await axiosInstance.patch(`/company/employees/${userId}/toggle-block`)
+    const response = await axiosInstance.patch(`/company/employee/${userId}/toggle-block`)
     return response.data
 }

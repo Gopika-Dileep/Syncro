@@ -1,21 +1,15 @@
-import { IEmployeeRepository } from "../../interfaces/repositories/IEmployeeRepository";
-import { AddEmployeeData, IEmployeeService } from "../../interfaces/services/IEmployeeService";
+import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
+import { AddEmployeeData, IEmployeeService } from "../interfaces/services/IEmployeeService";
 import bcrypt from "bcrypt"
 import crypto from "crypto"
-import { sendEmployeeInvitationEmail } from "../../utils/email.utils"
-
-const parseDate = (value?: string): Date | undefined => {
-    if (!value || value.trim() === "") return undefined
-    const date = new Date(value)
-    return isNaN(date.getTime()) ? undefined : date
-}
-
+import { sendEmployeeInvitationEmail } from "../utils/email.utils"
+import { parseDate } from "../utils/parseDate.utils";
 
 export class EmployeeService implements IEmployeeService {
     constructor(private _employeeRepo: IEmployeeRepository) { }
 
-    async addEmployee(adminUserId: string, data: AddEmployeeData): Promise<void> {
-        const company = await this._employeeRepo.findCompanyByUserId(adminUserId)
+    async addEmployee(companyId: string, data: AddEmployeeData): Promise<void> {
+        const company = await this._employeeRepo.findCompanyByUserId(companyId)
         if (!company) {
             throw new Error("company not found")
         }
@@ -39,6 +33,7 @@ export class EmployeeService implements IEmployeeService {
             ...(data.address && { address: data.address }),
             skills: data.skills ?? [],
         })
+
         await sendEmployeeInvitationEmail(
             data.email,
             data.name,
@@ -48,14 +43,14 @@ export class EmployeeService implements IEmployeeService {
     }
 
 
-    async getEmployees(adminUserId:string):Promise<any[]>{
-        const company = await this._employeeRepo.findCompanyByUserId(adminUserId)
+    async getEmployees(companyId:string):Promise<any[]>{
+        const company = await this._employeeRepo.findCompanyByUserId(companyId)
         if(!company) throw new Error("company not found")
         return this._employeeRepo.getEmployeesByCompanyId(company._id.toString())
     }
 
-    async toggleBlockEmployee(adminUserId: string, userId: string): Promise<boolean> {
-        const company = await this._employeeRepo.findCompanyByUserId(adminUserId)
+    async toggleBlockEmployee(companyId: string, userId: string): Promise<boolean> {
+        const company = await this._employeeRepo.findCompanyByUserId(companyId)
         if(!company) throw new Error("company not found")
         const newStatus = await this._employeeRepo.toggleBlockUser(userId)
         return newStatus

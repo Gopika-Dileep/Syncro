@@ -10,7 +10,7 @@ export interface AddEmployeeData{
 }
 
 export interface IEmployeeService {
-    addEmployee(adminUserId : string, data : AddEmployeeData):Promise <void>
-    getEmployees(adminUserId:string): Promise<any[]>
-    toggleBlockEmployee(adminUserId:string,userId:string):Promise<boolean>
+    addEmployee(companyId : string, data : AddEmployeeData):Promise <void>
+    getEmployees(companyId:string): Promise<any[]>
+    toggleBlockEmployee(companyId:string,userId:string):Promise<boolean>
 }

@@ -1,4 +1,4 @@
-import { toggleBlockEmployeeApi, getEmployeesApi } from "@/api/employeeApi";
+import { toggleBlockEmployeeApi, getEmployeesApi } from "@/api/companyApi";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"
 

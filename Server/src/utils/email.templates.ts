@@ -36,12 +36,12 @@ export const employeeInvitationTemplate = (
     const loginLink = `${env.FRONTEND_URL}/login`
 
     return {
-        subject: `You're invited to join ${companyName} on Syncro`,
+        subject: `You're invited to join ${companyName} `,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px;">
                 <h2 style="color: #4f46e5;">Welcome to ${companyName}!</h2>
                 <p>Hi <strong>${employeeName}</strong>,</p>
-                <p>You have been added to <strong>${companyName}</strong> on Syncro.</p>
+                <p>You have been added to <strong>${companyName}</strong>.</p>
                 <p>Here are your login credentials:</p>
                 <table style="border-collapse: collapse; width: 100%;">
                     <tr>

@@ -9,7 +9,7 @@ export interface IEmployee extends Document {
     date_of_birth?:  Date
     phone?:          string
     address?:        string
-    skills:          string[]
+    skills?:          string[]
     created_at:      Date
 }
 

@@ -1,6 +1,6 @@
 import { EmployeeController } from "../controller/employee/employee.controller";
 import { EmployeeRepository } from "../repositories/employee.respository";
-import { EmployeeService } from "../service/employee/employee.service";
+import { EmployeeService } from "../service/employee.service";
 
 
 const employeeRepo = new EmployeeRepository()

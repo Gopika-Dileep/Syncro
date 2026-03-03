@@ -6,11 +6,11 @@ export class EmployeeController {
 
     addEmployee = async (req:Request,res:Response):Promise<void> =>{
         try{
-            const adminUserId = req.userId!
+            const companyId = req.userId!
 
             const { name,email,designation,date_of_joining , date_of_birth, phone,address,skills} = req.body
 
-            await this._employeeService.addEmployee(adminUserId,{
+            await this._employeeService.addEmployee(companyId,{
                 name,email,designation,date_of_joining,date_of_birth,phone,address,skills:skills?skills.split(",").map((s:string)=>s.trim()):[]
             })
 
@@ -23,8 +23,8 @@ export class EmployeeController {
 
     getEmployees = async (req:Request, res:Response):Promise<void>=>{
         try{
-            const adminUserId = req.userId!
-            const employees = await this._employeeService.getEmployees(adminUserId)
+            const companyId = req.userId!
+            const employees = await this._employeeService.getEmployees(companyId)
             res.status(200).json({success:true ,data :employees})
         }catch(err:unknown){
             const message = err instanceof Error? err.message: "failed to fetch employees"
@@ -34,14 +34,14 @@ export class EmployeeController {
 
     toggleBlockEmployee = async (req:Request,res:Response):Promise<void> =>{
         try{
-            const adminUserId = req.userId!
+            const companyId = req.userId!
             const userId = req.params.userId as string
 
             if(!userId){
                 res.status(400).json({success:false,message:"userId is required"})
                 return 
             }
-            const isBlocked = await this._employeeService.toggleBlockEmployee(adminUserId,userId)
+            const isBlocked = await this._employeeService.toggleBlockEmployee(companyId,userId)
             res.status(200).json({success:true, isBlocked , message: isBlocked?"employee blocked":"employee unblocked"})
         }catch (err:unknown){
             const message = err instanceof Error? err.message:"failed to update status"

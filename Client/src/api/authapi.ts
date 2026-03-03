@@ -12,7 +12,7 @@ export const loginApi = async (email: string, password: string) => {
 }
 
 export const forgotPasswordApi =  async (email:string)=>{
-    const response = await axiosInstance.post ("/auth/forget-password",{email})
+    const response = await axiosInstance.post ("/auth/forgot-password",{email})
     return response.data
 }
 

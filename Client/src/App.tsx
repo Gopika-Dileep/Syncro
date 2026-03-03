@@ -1,4 +1,4 @@
-import {BrowserRouter, Route, Routes} from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgetPassword from './pages/auth/ForgotPassword'
@@ -14,36 +14,36 @@ import Notifications from './pages/company/Notifications'
 import Settings from './pages/company/Settings'
 import AddEmployee from './pages/company/AddEmployee'
 
-function App(){
-return(
-  <div>
-    <BrowserRouter>
-    <AuthInitializer>
-    <Routes>
-      <Route path='/login' element={<PublicRote><Login/></PublicRote>}/>
-      <Route path='register' element={<PublicRote><Register/></PublicRote>}/>
-      <Route path='/forgot-password' element={<ForgetPassword/>}/>
-      <Route path='/reset-password' element={<ResetPassword/>}/>
-               <Route
-                            path='/company'
-                            element={
-                                <ProtectedRoute>
-                                    <CompanyLayout />
-                                </ProtectedRoute>
-                            }
-                        >
-                            <Route path='dashboard'     element={<CompanyDashboard />} />
-                            <Route path='employees'     element={<Employees />} />
-                            <Route path='employees/add' element={<AddEmployee/>}/>
-                            <Route path='projects'      element={<Projects/>} />
-                            <Route path='notifications' element={<Notifications />} />
-                            <Route path='settings'      element={<Settings />} />
-                        </Route>
-    </Routes>
-    </AuthInitializer>
-    </BrowserRouter>
-  </div>
-)
+function App() {
+  return (
+    <div>
+      <BrowserRouter>
+        <AuthInitializer>
+          <Routes>
+            <Route path='/login' element={<PublicRote><Login /></PublicRote>} />
+            <Route path='register' element={<PublicRote><Register /></PublicRote>} />
+            <Route path='/forgot-password' element={<ForgetPassword />} />
+            <Route path='/reset-password' element={<ResetPassword />} />
+            <Route
+              path='/company'
+              element={
+                <ProtectedRoute>
+                  <CompanyLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path='dashboard' element={<CompanyDashboard />} />
+              <Route path='employees' element={<Employees />} />
+              <Route path='employees/add' element={<AddEmployee />} />
+              <Route path='projects' element={<Projects />} />
+              <Route path='notifications' element={<Notifications />} />
+              <Route path='settings' element={<Settings />} />
+            </Route>
+          </Routes>
+        </AuthInitializer>
+      </BrowserRouter>
+    </div>
+  )
 
 }
 

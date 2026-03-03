@@ -1,4 +1,4 @@
-import { addEmployeeApi, type AddEmployeeForm } from "@/api/employeeApi";
+import { addEmployeeApi, type AddEmployeeForm } from "@/api/companyApi";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 

@@ -3,7 +3,7 @@ import { AuthRouter } from './routes/auth.routes';
 import cookieParser from "cookie-parser"
 import { env } from './config/env';
 import cors from 'cors';
-import { EmployeeRouter } from './routes/employee.routes';
+import { CompanyRouter } from './routes/company.routes';
 export default class App {
     public app: Application;
     constructor() {
@@ -13,8 +13,7 @@ export default class App {
     }
     private _configureRoutes(): void {
         this.app.use('/api/auth', new AuthRouter().router);
-        this.app.use('/api/company', new EmployeeRouter().router);
-        this.app.use('/api/company/employees',new EmployeeRouter().router)
+        this.app.use('/api/company', new CompanyRouter().router);
     }
     private _configureMiddleware():void{
         this.app.use(
