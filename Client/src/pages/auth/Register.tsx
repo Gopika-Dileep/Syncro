@@ -1,15 +1,11 @@
 import { registerApi } from "@/api/authapi"
-import { setToken } from "@/store/slices/authSlice"
-import type { AppDispatch } from "@/store/store"
 import { useState } from "react"
-import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
 
 
 export default function Register() {
 
     const navigate = useNavigate()
-    const dispatch = useDispatch<AppDispatch>()
 
     const [form,setform] = useState({name:"",email:"",password:"",companyName:""})
 
@@ -22,8 +18,8 @@ export default function Register() {
         try{
             const data = await registerApi(form.name,form.email,form.password,form.companyName)
             console.log("register success:",data)
-            dispatch(setToken(data.token))
-            navigate('/company/dashboard')
+            
+            navigate('/verify-otp',{state:{email:form.email}})
         }catch (error){
             console.log("register failed:",error)
         }

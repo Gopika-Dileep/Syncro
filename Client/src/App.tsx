@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import VerifyOtp from './pages/auth/VerifyOtp'
 import ForgetPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import CompanyDashboard from './pages/company/CompanyDashboard'
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path='/login' element={<PublicRote><Login /></PublicRote>} />
             <Route path='register' element={<PublicRote><Register /></PublicRote>} />
+            <Route path='/verify-otp' element={<PublicRote><VerifyOtp /></PublicRote>} />
             <Route path='/forgot-password' element={<ForgetPassword />} />
             <Route path='/reset-password' element={<ResetPassword />} />
             <Route

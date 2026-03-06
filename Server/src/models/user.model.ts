@@ -9,6 +9,7 @@ export interface IUser extends Document {
     name:         string
     avatar?:      string
     is_blocked:    boolean
+    is_verified:  boolean
     refreshToken?: string
     created_at:   Date
     updated_at:   Date
@@ -41,6 +42,10 @@ const userSchema = new Schema<IUser>(
         is_blocked: {
             type:    Boolean,
             default: false,
+        },
+        is_verified: {
+            type:    Boolean,
+            default: false, 
         },
         refreshToken: {
             type:    String,

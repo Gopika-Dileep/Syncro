@@ -8,18 +8,44 @@ export class AuthController {
         try {
             const { name, email, password, companyName } = req.body
             const result = await this._authService.registration(name, email, password, companyName)
+
+            res.status(201).json({ success: true, message:result.message})
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Registration failed";
+            res.status(400).json({ success: false, message });
+        }
+    }
+
+    verifyOtp = async (req: Request, res: Response): Promise<void> => {
+        try{
+            const {email,otp} = req.body
+            const result = await this._authService.verifyOtp(email,otp)
+
             res.cookie("refreshToken", result.refreshToken, {
                 httpOnly: true,
                 secure: false,
                 sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             })
-            res.status(201).json({ success: true, token: result.accessToken })
+            res.status(200).json({ success: true, token: result.accessToken })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Registration failed";
+            const message = err instanceof Error ? err.message : "Otp verification failed";
             res.status(400).json({ success: false, message });
         }
     }
+
+    resendOtp = async (req:Request , res:Response):Promise<void>=>{
+        try{
+            const {email} = req.body
+            const result = await this._authService.resendOtp(email)
+            res.status(200).json({success:true,message:result.message})
+        }catch(err:unknown){
+            const message = err instanceof Error? err.message :"Failed to resend otp";
+            res.status(400).json({success:false,message});
+        }
+    }
+
+
     login = async (req: Request, res: Response): Promise<void> => {
         try {
             const { email, password } = req.body

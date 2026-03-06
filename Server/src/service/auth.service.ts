@@ -4,14 +4,14 @@ import { IAuthService } from '../interfaces/services/IAuthService';
 import { IAuthRepository } from '../interfaces/repositories/IAuthRepository';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/token.utils';
 import redis from '../config/redis';
-import { sendPasswordResetEmail } from '../utils/email.utils';
+import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 
 
 export class AuthService implements IAuthService {
-  
+
   constructor(private _authRepo: IAuthRepository) { }
 
-  async registration(name: string, email: string, password: string, companyName: string): Promise<{ accessToken: string, refreshToken: string }> {
+  async registration(name: string, email: string, password: string, companyName: string): Promise<{ message: string }> {
 
     const existing = await this._authRepo.findByEmail(email)
     if (existing) {
@@ -23,18 +23,67 @@ export class AuthService implements IAuthService {
 
     await this._authRepo.createCompany(user._id.toString(), companyName)
 
+    const otp = crypto.randomInt(100000, 999999).toString();
+    console.log("otp",otp)
+    await redis.set(`otp:${email}`, otp, "EX", 600)
+
+    await sendOtpEmail(email, otp)
+
+    return { message: "Otp sent to email successfully" }
+
+  }
+
+
+  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string }> {
+    const storedOtp = await redis.get(`otp:${email}`)
+
+    if (!storedOtp || storedOtp !== otp) {
+      throw new Error("Invalid or expired OTP")
+    }
+
+    const user = await this._authRepo.findByEmail(email)
+    if (!user) {
+      throw new Error("User not found")
+    }
+
+    await this._authRepo.verifyUser(user._id.toString())
+
     const accessToken = generateAccessToken(user._id.toString())
     const refreshToken = generateRefreshToken(user._id.toString())
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
 
+    await redis.del(`otp:${email}`)
     return { accessToken, refreshToken }
+
+  }
+
+  async resendOtp(email: string): Promise<{ message: string; }> {
+      const user = await this._authRepo.findByEmail(email)
+      if(!user){
+        throw new Error("User not found")
+      }
+      if(user.is_verified){
+        throw new Error("user is already verified")
+      }
+
+      const otp = crypto.randomInt(100000, 999999).toString()
+      console.log("otp" , otp)
+      await redis.set(`otp:${email}`,otp,"EX",600)
+
+      await sendOtpEmail(email,otp);
+
+      return {message:"new otp send to email"}
   }
 
   async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string }> {
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("user not found")
+    }
+
+    if(!user.is_verified){
+        throw new Error("Please verify your email before logging in")
     }
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
