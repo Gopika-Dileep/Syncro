@@ -1,5 +1,5 @@
 import { refreshTokenApi } from "@/api/authapi"
-import { setInitialized, setToken, } from "@/store/slices/authSlice"
+import { setInitialized, setRole, setToken, } from "@/store/slices/authSlice"
 import type { AppDispatch } from "@/store/store"
 import { useEffect } from "react"
 import { useDispatch } from "react-redux"
@@ -15,8 +15,9 @@ export default function AuthInitializer({children}:Props){
             try{
                 const data = await refreshTokenApi()
                 dispatch(setToken(data.token))
-            }catch{
-
+                dispatch(setRole(data.role))
+            }catch(error){
+                console.error("Failed to refresh token:", error)
             }finally{
                 dispatch(setInitialized())
             }
