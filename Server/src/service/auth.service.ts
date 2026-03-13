@@ -5,11 +5,15 @@ import { IAuthRepository } from '../interfaces/repositories/IAuthRepository';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/token.utils';
 import redis from '../config/redis';
 import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
+import { ICompanyRepository } from '../interfaces/repositories/ICompanyRepository';
 
 
 export class AuthService implements IAuthService {
 
-  constructor(private _authRepo: IAuthRepository) { }
+  constructor(
+    private _authRepo: IAuthRepository,
+    private _companyRepo :ICompanyRepository
+  ) { }
 
   async registration(name: string, email: string, password: string, companyName: string): Promise<{ message: string }> {
 
@@ -19,9 +23,9 @@ export class AuthService implements IAuthService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await this._authRepo.createUser(name, email, hashed, "company_admin")
+    const user = await this._authRepo.createUser(name, email, hashed, "company")
 
-    await this._authRepo.createCompany(user._id.toString(), companyName)
+    await this._companyRepo.createCompany(user._id.toString(), companyName)
 
     const otp = crypto.randomInt(100000, 999999).toString();
     console.log("otp",otp)
@@ -76,7 +80,7 @@ export class AuthService implements IAuthService {
       return {message:"new otp send to email"}
   }
 
-  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string }> {
+  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string, role:string }> {
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("user not found")
@@ -93,7 +97,8 @@ export class AuthService implements IAuthService {
     const refreshToken = generateRefreshToken(user._id.toString())
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
-    return { accessToken, refreshToken }
+    const role = user.role
+    return { accessToken, refreshToken, role}
   }
 
   async refresh(refreshToken: string): Promise<{ accessToken: string; }> {

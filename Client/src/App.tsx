@@ -14,6 +14,10 @@ import Projects from './pages/company/Projects'
 import Notifications from './pages/company/Notifications'
 import Settings from './pages/company/Settings'
 import AddEmployee from './pages/company/AddEmployee'
+import EmployeeLayout from './layouts/EmployeeLayout'
+import EmployeeDashboard from './pages/employee/EmployeeDashbord'
+import Sprints from './pages/employee/Sprints'
+import Backlogs from './pages/employee/Backlogs'
 
 function App() {
   return (
@@ -29,7 +33,7 @@ function App() {
             <Route
               path='/company'
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['company']}>
                   <CompanyLayout />
                 </ProtectedRoute>
               }
@@ -40,6 +44,21 @@ function App() {
               <Route path='projects' element={<Projects />} />
               <Route path='notifications' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
+              </Route>
+              <Route
+              path='/employee'
+              element={
+                <ProtectedRoute allowedRoles={['employee']}>
+                  <EmployeeLayout />
+                </ProtectedRoute>
+              }
+            > 
+              <Route path='dashboard' element={<EmployeeDashboard />} />
+              <Route path='projects' element={<Projects />} />
+              <Route path='backlogs' element={<Backlogs />} />
+              <Route path='sprints' element={<Sprints />} />
+              <Route path='notifications' element={<Notifications />} />
+              <Route path='settings' element={<Settings />} /> 
             </Route>
           </Routes>
         </AuthInitializer>

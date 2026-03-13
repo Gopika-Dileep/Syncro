@@ -2,7 +2,7 @@ export interface IAuthService {
     registration(name:string, email: string,password: string , companyName:string): Promise<{message:string}>;
     verifyOtp(email:string,otp:string):Promise<{accessToken:string, refreshToken:string}>
     resendOtp(email: string): Promise<{ message: string }>;
-    login(email:string,password:string):Promise<{ accessToken:string ,refreshToken:string}>
+    login(email:string,password:string):Promise<{ accessToken:string ,refreshToken:string,role:string}>
     refresh(refreshToken:string):Promise<{accessToken:string}>
     logout(refreshToken:string):Promise<void>
     forgotPassword(email:string):Promise<void>

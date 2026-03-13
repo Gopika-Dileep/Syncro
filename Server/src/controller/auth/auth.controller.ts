@@ -56,7 +56,7 @@ export class AuthController {
                 sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             })
-            res.status(200).json({ success: true, token: result.accessToken })
+            res.status(200).json({ success: true, token: result.accessToken, role:result.role })
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Login failed";
             res.status(400).json({ success: false, message });
