@@ -38,7 +38,7 @@ export class AuthService implements IAuthService {
   }
 
 
-  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string }> {
+  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string , role:string }> {
     const storedOtp = await redis.get(`otp:${email}`)
 
     if (!storedOtp || storedOtp !== otp) {
@@ -56,9 +56,9 @@ export class AuthService implements IAuthService {
     const refreshToken = generateRefreshToken(user._id.toString())
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
-
+    const role = user.role
     await redis.del(`otp:${email}`)
-    return { accessToken, refreshToken }
+    return { accessToken, refreshToken , role}
 
   }
 
@@ -101,16 +101,16 @@ export class AuthService implements IAuthService {
     return { accessToken, refreshToken, role}
   }
 
-  async refresh(refreshToken: string): Promise<{ accessToken: string; }> {
+  async refresh(refreshToken: string): Promise<{ accessToken: string , role:string }> {
     const decoded = verifyRefreshToken(refreshToken)
 
     const user = await this._authRepo.findById(decoded.id)
     if (!user || user.refreshToken !== refreshToken) {
       throw new Error("invalid refresh token")
     }
-
+    const role = user.role
     const accessToken = generateAccessToken(user._id.toString())
-    return { accessToken }
+    return { accessToken , role }
   }
 
   async logout(refreshToken: string): Promise<void> {

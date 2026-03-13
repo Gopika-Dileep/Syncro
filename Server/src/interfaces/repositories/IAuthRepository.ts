@@ -1,5 +1,5 @@
 import { IUser } from "../../models/user.model";
-import { ICompany } from "../../models/company.model";
+
 
 export interface IAuthRepository{
     findByEmail(email:string):Promise<IUser | null>
