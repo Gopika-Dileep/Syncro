@@ -1,5 +1,5 @@
 import { loginApi } from "@/api/authapi";
-import { setToken } from "@/store/slices/authSlice";
+import { setRole, setToken } from "@/store/slices/authSlice";
 import type { AppDispatch } from "@/store/store";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -23,7 +23,12 @@ export default function Login() {
             const data = await loginApi(form.email, form.password)
             console.log("login successful", data)
             dispatch(setToken(data.token))
-            navigate("/company/dashboard")
+            dispatch(setRole(data.role))
+            if(data.role=="employee"){
+                navigate('/employee/dashboard')
+            }else{
+                navigate("/company/dashboard")
+            }
         } catch (error) {
             console.log("login failed", error)
         }

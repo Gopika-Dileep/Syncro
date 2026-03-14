@@ -8,11 +8,7 @@ export class AuthRepository implements IAuthRepository{
     }
 
     async createUser(name: string, email: string, hashedpassword: string, role:string): Promise<IUser> {
-        return userModel.create({name,email,password:hashedpassword,role})
-    }
-
-    async createCompany(userId:string,companyName:string):Promise<ICompany>{
-        return companyModel.create({user_id:userId, name: companyName})
+        return userModel.create({name,email,password:hashedpassword, role})
     }
 
 
@@ -34,5 +30,14 @@ export class AuthRepository implements IAuthRepository{
 
     async verifyUser(id: string): Promise<void> {
         await userModel.findByIdAndUpdate(id,{is_verified:true})
+    }
+
+    async toggleBlockUser(userId:string):Promise<boolean>{
+        const user = await userModel.findById(userId)
+        if(!user) throw new Error("user not found")
+
+            const newStatus = !user.is_blocked
+            await userModel.findByIdAndUpdate(userId,{is_blocked:newStatus})
+            return newStatus
     }
 }  
