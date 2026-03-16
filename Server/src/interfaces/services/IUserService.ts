@@ -1,16 +1,17 @@
-import { IUser } from "../../models/user.model";
+import { ICompany } from "../../models/company.model";
+import { IEmployee } from "../../models/employee.model";
 
 export interface IProfileData {
     user: {
-        _id: any;
+        _id: string;
         name: string;
         email: string;
         role: string;
         avatar?: string | null;
         created_at: Date;
     };
-    company?: any;
-    employee?: any;
+    company?: ICompany | null;
+    employee?: IEmployee | null;
 }
 
 export interface IUserService {
