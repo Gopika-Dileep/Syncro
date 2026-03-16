@@ -11,16 +11,16 @@ export class TeamService implements ITeamService{
         private _companyRepo:ICompanyRepository
     ) {}
 
-    async createTeam(name: string, companyId: string): Promise<ITeam> {
+    async createTeam(name: string, userId: string): Promise<ITeam> {
         
-        const company = await this._companyRepo.findCompanyByUserId(companyId);
+        const company = await this._companyRepo.findCompanyByUserId(userId);
 
         if(!company){
             throw new Error("company not found")
         }
 
-        const resolvedCompanyId = company._id .toString();
-        const existing = await this._teamRepo.findByNameAndCompany(name,companyId);
+        const resolvedCompanyId = company._id.toString();
+        const existing = await this._teamRepo.findByNameAndCompany(name,resolvedCompanyId);
 
         if(existing){
             throw new Error("this team already exisits");
@@ -29,10 +29,10 @@ export class TeamService implements ITeamService{
         return await this._teamRepo.createTeam(name,resolvedCompanyId);
     }
 
-    async getTeams(companyId:string):Promise<ITeam[]>{
-        const company = await this._companyRepo.findCompanyByUserId(companyId)
+    async getTeams(userId:string):Promise<ITeam[]>{
+        const company = await this._companyRepo.findCompanyByUserId(userId)
         if(!company) throw new Error("company not found");
 
-        return await this._teamRepo.findByCompanyId(companyId)
+        return await this._teamRepo.findByCompanyId(company._id.toString())
     }
 }

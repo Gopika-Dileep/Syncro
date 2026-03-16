@@ -16,7 +16,7 @@ export class CompanyRouter {
         this.router.post("/employee/add", authMiddleware, employeeController.addEmployee)
         this.router.patch("/employee/:userId/toggle-block",authMiddleware,employeeController.toggleBlockEmployee)
         this.router.post('/teams',authMiddleware,teamController.createTeam);
-        this.router.post('/teams',authMiddleware,teamController.getTeams);
+        this.router.get('/teams',authMiddleware,teamController.getTeams);
         
     }
 }

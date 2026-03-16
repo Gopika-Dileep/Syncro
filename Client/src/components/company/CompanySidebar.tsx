@@ -9,11 +9,12 @@ import {
 } from "lucide-react"
 
 const navItems = [
-    { label: "Dashboard", path: "/company/dashboard", icon: LayoutDashboard },
-    { label: "Employees", path: "/company/employees", icon: Users },
-    { label: "Projects", path: "/company/projects", icon: FolderKanban },
-    { label: "Notifications", path: "/company/notification", icon: Bell },
-    { label: "Settings", path: "/company/settings", icon: Settings },
+    {label: "Dashboard", path: "/company/dashboard", icon: LayoutDashboard },
+    {label: "Employees", path: "/company/employees", icon: Users },
+    {label: "Projects", path: "/company/projects", icon: FolderKanban },
+    {label:"Teams" ,path:"/company/teams" , icon:Users},
+    {label: "Notifications", path: "/company/notification", icon: Bell },
+    {label: "Settings", path: "/company/settings", icon: Settings },
 ]
 
 export default function CompanySidebar() {

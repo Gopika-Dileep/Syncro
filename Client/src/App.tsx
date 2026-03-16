@@ -18,6 +18,7 @@ import EmployeeLayout from './layouts/EmployeeLayout'
 import EmployeeDashboard from './pages/employee/EmployeeDashbord'
 import Sprints from './pages/employee/Sprints'
 import Backlogs from './pages/employee/Backlogs'
+import Teams from './pages/company/Teams'
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
               <Route path='employees' element={<Employees />} />
               <Route path='employees/add' element={<AddEmployee />} />
               <Route path='projects' element={<Projects />} />
+              <Route path='teams' element={<Teams/>}/>
               <Route path='notifications' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
               </Route>

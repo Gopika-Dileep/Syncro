@@ -2,6 +2,6 @@ import { ITeam } from "../../models/team.model";
 
 
 export interface ITeamService {
-    createTeam(name:string , companyId :string): Promise<ITeam>;
-    getTeams(companyId:string):Promise<ITeam[]>;
+    createTeam(name:string , userId :string): Promise<ITeam>;
+    getTeams(userId:string):Promise<ITeam[]>;
 }
