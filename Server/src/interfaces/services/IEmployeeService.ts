@@ -57,6 +57,7 @@ export interface AddEmployeeData{
     name:string
     email:string
     designation?:string
+    team_id?:string
     date_of_joining?:string
     date_of_birth?:string
     phone?:string

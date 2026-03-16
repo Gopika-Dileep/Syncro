@@ -2,6 +2,7 @@ import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeReposit
 import { AddEmployeeData, EmployeePermissions, IEmployeeService, PermissionScopes} from "../interfaces/services/IEmployeeService";
 import bcrypt from "bcrypt"
 import crypto from "crypto"
+import { Types } from "mongoose";
 import { sendEmployeeInvitationEmail } from "../utils/email.utils"
 import { parseDate } from "../utils/parseDate.utils";
 import { IAuthRepository } from "../interfaces/repositories/IAuthRepository";
@@ -43,8 +44,11 @@ export class EmployeeService implements IEmployeeService {
 
         const joiningDate = parseDate(data.date_of_joining)
         const birthDate = parseDate(data.date_of_birth)
+
+        
         await this._employeeRepo.createEmployee(user._id.toString(), company._id.toString(), {
             ...(data.designation && { designation: data.designation }),
+            ...(data.team_id && { team_id: new Types.ObjectId(data.team_id) as unknown as Types.ObjectId }),
             ...(joiningDate && { date_of_joining: joiningDate }),
             ...(birthDate && { date_of_birth: birthDate }),
             ...(data.phone && { phone: data.phone }),
@@ -85,7 +89,7 @@ export class EmployeeService implements IEmployeeService {
         return keys
     }
 
-    async getEmployees(companyId: string): Promise<any[]> {
+    async getEmployees(companyId: string): Promise<object[]> {
         const company = await this._companyRepo.findCompanyByUserId(companyId)
         if (!company) throw new Error("company not found")
         return this._employeeRepo.getEmployeesByCompanyId(company._id.toString())
