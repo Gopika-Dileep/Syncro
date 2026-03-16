@@ -119,7 +119,7 @@ export default function AddEmployee() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
+        <div className="max-full mx-auto p-6 bg-gray-50 min-h-screen">
             {/* Header */}
             <div className="flex items-center gap-3 mb-8">
                 <button

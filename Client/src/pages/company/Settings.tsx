@@ -1,4 +1,4 @@
-
+import SettingsPage from "../shared/SettingsPage";
 export default function Settings() {
-    return <h1>Settings</h1>
+    return <SettingsPage />;
 }

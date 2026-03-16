@@ -28,11 +28,11 @@ export class UserService implements IUserService {
 
         return {
             user: {
-                _id: user._id,
+                _id: user._id.toString(),
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                avatar: user.avatar || undefined,
+                avatar: user.avatar || null,
                 created_at: user.created_at
             },
             company,
