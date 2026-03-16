@@ -4,7 +4,9 @@ import { Request, Response, NextFunction } from "express"
 declare global {
     namespace Express {
         interface Request {
-            userId?:string 
+            userId?:string;
+            userRole?:string;
+            permissions?:string[];
         }
     }
 }
@@ -21,7 +23,9 @@ export const authMiddleware = (req:Request, res:Response,next:NextFunction):void
         if(!token) return 
         
         const decoded = verifyAccessToken(token)
-        req.userId = decoded.id
+        req.userId = decoded.id;
+        req.userRole = decoded.role;
+        req.permissions = decoded.permissions || [];
         next()
     }catch{
         res.status(401).json({success: false, message: "invalid or expired token "})

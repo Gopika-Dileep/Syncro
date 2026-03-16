@@ -6,13 +6,15 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '.
 import redis from '../config/redis';
 import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 import { ICompanyRepository } from '../interfaces/repositories/ICompanyRepository';
+import { IPermissionRepository } from '../interfaces/repositories/IPermissionRepository';
 
 
 export class AuthService implements IAuthService {
 
   constructor(
     private _authRepo: IAuthRepository,
-    private _companyRepo :ICompanyRepository
+    private _companyRepo: ICompanyRepository,
+    private _permissionRepo: IPermissionRepository
   ) { }
 
   async registration(name: string, email: string, password: string, companyName: string): Promise<{ message: string }> {
@@ -28,7 +30,7 @@ export class AuthService implements IAuthService {
     await this._companyRepo.createCompany(user._id.toString(), companyName)
 
     const otp = crypto.randomInt(100000, 999999).toString();
-    console.log("otp",otp)
+    console.log("otp", otp)
     await redis.set(`otp:${email}`, otp, "EX", 600)
 
     await sendOtpEmail(email, otp)
@@ -38,7 +40,7 @@ export class AuthService implements IAuthService {
   }
 
 
-  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string , role:string }> {
+  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string, role: string, permissions:string[] }> {
     const storedOtp = await redis.get(`otp:${email}`)
 
     if (!storedOtp || storedOtp !== otp) {
@@ -52,65 +54,79 @@ export class AuthService implements IAuthService {
 
     await this._authRepo.verifyUser(user._id.toString())
 
-    const accessToken = generateAccessToken(user._id.toString())
+    let permissions: string[] = [];
+    if (user.role === 'employee') {
+      permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
+    }
+
+    const accessToken = generateAccessToken(user._id.toString(),user.role,permissions)
     const refreshToken = generateRefreshToken(user._id.toString())
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
     const role = user.role
     await redis.del(`otp:${email}`)
-    return { accessToken, refreshToken , role}
+    return { accessToken, refreshToken, role, permissions }
 
   }
 
   async resendOtp(email: string): Promise<{ message: string; }> {
-      const user = await this._authRepo.findByEmail(email)
-      if(!user){
-        throw new Error("User not found")
-      }
-      if(user.is_verified){
-        throw new Error("user is already verified")
-      }
+    const user = await this._authRepo.findByEmail(email)
+    if (!user) {
+      throw new Error("User not found")
+    }
+    if (user.is_verified) {
+      throw new Error("user is already verified")
+    }
 
-      const otp = crypto.randomInt(100000, 999999).toString()
-      console.log("otp" , otp)
-      await redis.set(`otp:${email}`,otp,"EX",600)
+    const otp = crypto.randomInt(100000, 999999).toString()
+    console.log("otp", otp)
+    await redis.set(`otp:${email}`, otp, "EX", 600)
 
-      await sendOtpEmail(email,otp);
+    await sendOtpEmail(email, otp);
 
-      return {message:"new otp send to email"}
+    return { message: "new otp send to email" }
   }
 
-  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string, role:string }> {
+  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string, role: string, permissions:string[] }> {
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("user not found")
     }
 
-    if(!user.is_verified){
-        throw new Error("Please verify your email before logging in")
+    if (!user.is_verified) {
+      throw new Error("Please verify your email before logging in")
     }
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
       throw new Error("Invalid credentials")
     }
-    const accessToken = generateAccessToken(user._id.toString())
+
+    let permissions: string[] = [];
+    if (user.role === 'employee') {
+      permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
+    }
+    const accessToken = generateAccessToken(user._id.toString(),user.role, permissions);
     const refreshToken = generateRefreshToken(user._id.toString())
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
     const role = user.role
-    return { accessToken, refreshToken, role}
+    return { accessToken, refreshToken, role, permissions }
   }
 
-  async refresh(refreshToken: string): Promise<{ accessToken: string , role:string }> {
+  async refresh(refreshToken: string): Promise<{ accessToken: string, role: string, permissions:string[] }> {
     const decoded = verifyRefreshToken(refreshToken)
 
     const user = await this._authRepo.findById(decoded.id)
     if (!user || user.refreshToken !== refreshToken) {
       throw new Error("invalid refresh token")
     }
+    let permissions: string[] = [];
+    if (user.role === 'employee') {
+      permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
+    }
     const role = user.role
-    const accessToken = generateAccessToken(user._id.toString())
-    return { accessToken , role }
+    const accessToken = generateAccessToken(user._id.toString(),user.role,permissions)
+    return { accessToken, role, permissions }
   }
 
   async logout(refreshToken: string): Promise<void> {

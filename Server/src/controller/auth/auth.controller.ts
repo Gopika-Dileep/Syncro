@@ -27,7 +27,7 @@ export class AuthController {
                 sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             })
-            res.status(200).json({ success: true, token: result.accessToken , role : result.role})
+            res.status(200).json({ success: true, token: result.accessToken , role : result.role, permissions:result.permissions})
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Otp verification failed";
             res.status(400).json({ success: false, message });
@@ -56,7 +56,7 @@ export class AuthController {
                 sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             })
-            res.status(200).json({ success: true, token: result.accessToken, role:result.role })
+            res.status(200).json({ success: true, token: result.accessToken, role:result.role, permissions:result.permissions })
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Login failed";
             res.status(400).json({ success: false, message });
@@ -72,7 +72,7 @@ export class AuthController {
                 return
             }
             const result = await this._authService.refresh(refreshToken)
-            res.status(200).json({ success: true, token: result.accessToken , role:result.role })
+            res.status(200).json({ success: true, token: result.accessToken , role:result.role, permissions:result.permissions})
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "TOken refresh failed"
             res.status(403).json({ success: false, message })
