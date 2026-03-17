@@ -2,14 +2,21 @@ import { Search, Bell, LogOut } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/store/slices/authSlice";
+import { logoutApi } from "@/api/authapi";
 
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (err) {
+      console.log("Logout API failed", err);
+    } finally {
+      dispatch(logout());
+      navigate("/login");
+    }
   };
 
   return (
@@ -44,10 +51,10 @@ const Header = () => {
           </div>
           <button 
             onClick={handleLogout}
-            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-            title="Logout"
+            className="flex items-center gap-2 bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 px-4 py-2 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 ml-2"
           >
-            <LogOut size={20} />
+            <LogOut size={16} />
+            LOGOUT
           </button>
         </div>
       </div>
