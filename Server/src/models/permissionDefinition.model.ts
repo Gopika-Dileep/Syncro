@@ -29,4 +29,4 @@ const permissionDefinitionSchema = new Schema<IpermissionDefinition>({
     }
 })
 
-export const permissionDefinitionModel = mongoose.model<IpermissionDefinition>("permissionDefinition" , permissionDefinitionSchema)
+export const permissionDefinitionModel = mongoose.model<IpermissionDefinition>("PermissionDefinition" , permissionDefinitionSchema)

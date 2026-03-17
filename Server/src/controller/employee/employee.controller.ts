@@ -11,7 +11,7 @@ export class EmployeeController {
             const { name, email, designation, date_of_joining, date_of_birth, phone, address, skills,permissions } = req.body
 
             await this._employeeService.addEmployee(companyId, {
-                name, email, designation, date_of_joining, date_of_birth, phone, address, skills: skills ? skills.split(",").map((s: string) => s.trim()) : [],permissions
+                name, email, designation, date_of_joining, date_of_birth, phone, address, skills: Array.isArray(skills) ? skills : (typeof skills === 'string' ? skills.split(",").map((s: string) => s.trim()) : []),permissions
             })
 
             res.status(201).json({ success: true, message: "Employee added and invitation sent" })

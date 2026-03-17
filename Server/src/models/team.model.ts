@@ -13,7 +13,7 @@ const teamSchema = new Schema<ITeam>({
     },
     company_id:{
         type:Schema.Types.ObjectId,
-        ref:"company",
+        ref: "Company",
         required:true
     }
 },{timestamps:true});
