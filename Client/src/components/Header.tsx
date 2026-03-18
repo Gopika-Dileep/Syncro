@@ -1,12 +1,18 @@
+// src/components/Header.tsx
+
 import { Search, Bell, LogOut } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout } from "@/store/slices/authSlice";
 import { logoutApi } from "@/api/authapi";
+import type { RootState } from "@/store/store";
 
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // ACCESSING THE REAL USER DATA FROM REDUX
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const handleLogout = async () => {
     try {
@@ -43,15 +49,22 @@ const Header = () => {
 
         <div className="h-8 w-px bg-gray-100 mx-2"></div>
 
-        {/* Profile Dropdown (Simplified) */}
+        {/* Dynamic Profile/Logout Dropdown */}
         <div className="flex items-center gap-3 pl-2">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-gray-900 leading-none">User Profile</p>
-            <p className="text-[11px] text-gray-400 mt-1">Manage Account</p>
+            {/* DYNAMIC USER NAME */}
+            <p className="text-sm font-semibold text-gray-900 leading-none">
+              {user?.name || "Loading..."}
+            </p>
+            {/* DYNAMIC ROLE OR DESIGNATION */}
+            <p className="text-[11px] text-gray-400 mt-1">
+              {user?.role === 'company' ? "Admin Account" : user?.designation || "Employee"}
+            </p>
           </div>
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 px-4 py-2 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 ml-2"
+            title="Logout"
           >
             <LogOut size={16} />
             LOGOUT
