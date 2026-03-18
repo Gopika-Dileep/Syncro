@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
     Search, Plus, Users, UserCheck, Briefcase, 
-    LayoutGrid, MoreHorizontal, ShieldAlert, CheckCircle,
-    Clock, Filter
+    LayoutGrid, MoreHorizontal, ShieldAlert, CheckCircle, Filter
 } from "lucide-react";
 
 interface Employee {
