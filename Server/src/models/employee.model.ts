@@ -13,6 +13,13 @@ export interface IEmployee extends Document {
     created_at:      Date
 }
 
+export interface IPopulatedEmployee extends Omit<IEmployee, 'company_id'> {
+    company_id: {
+        _id: string;
+        name: string;
+    };
+}
+
 const employeeSchema = new Schema<IEmployee>(
     {
         user_id: {

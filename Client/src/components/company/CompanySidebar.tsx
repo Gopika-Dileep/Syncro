@@ -1,4 +1,6 @@
-import { NavLink } from "react-router-dom"
+import { NavLink } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 import {
     LayoutDashboard,
     Users,
@@ -6,18 +8,26 @@ import {
     Bell,
     Settings,
     Zap,
-} from "lucide-react"
+} from "lucide-react";
 
 const navItems = [
-    {label: "Dashboard", path: "/company/dashboard", icon: LayoutDashboard },
-    {label: "Employees", path: "/company/employees", icon: Users },
-    {label: "Projects", path: "/company/projects", icon: FolderKanban },
-    {label:"Teams" ,path:"/company/teams" , icon:Users},
-    {label: "Notifications", path: "/company/notification", icon: Bell },
-    {label: "Settings", path: "/company/settings", icon: Settings },
-]
+    { label: "Dashboard", path: "/company/dashboard", icon: LayoutDashboard },
+    { label: "Employees", path: "/company/employees", icon: Users },
+    { label: "Projects", path: "/company/projects", icon: FolderKanban },
+    { label: "Teams", path: "/company/teams", icon: Users },
+    { label: "Notifications", path: "/company/notification", icon: Bell },
+    { label: "Settings", path: "/company/settings", icon: Settings },
+];
 
 export default function CompanySidebar() {
+    // ACCESS REAL USER DATA
+    const user = useSelector((state: RootState) => state.auth.user);
+
+    // DYNAMIC INITIALS FOR AVATAR
+    const initials = user?.name 
+        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) 
+        : "??";
+
     return (
         <aside className="flex flex-col h-screen w-60 bg-white border-r border-gray-100 sticky top-0">
             {/* Logo */}
@@ -57,18 +67,22 @@ export default function CompanySidebar() {
                 ))}
             </nav>
 
-            {/* Footer */}
+            {/* Profile Footer (Dynamic) */}
             <div className="px-4 py-4 border-t border-gray-100">
-                <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition">
-                    <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600">
-                        AC
+                <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition group">
+                    <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-[10px] font-bold text-white ring-2 ring-white">
+                        {initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-800 truncate">Admin User</p>
-                        <p className="text-[11px] text-gray-400 truncate">admin@syncro.com</p>
+                        <p className="text-xs font-bold text-gray-800 truncate uppercase tracking-tight">
+                            {user?.name || "Admin User"}
+                        </p>
+                        <p className="text-[10px] text-gray-400 truncate">
+                            {user?.companyName || "Organization"}
+                        </p>
                     </div>
                 </div>
             </div>
         </aside>
-    )
+    );
 }

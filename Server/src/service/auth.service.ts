@@ -7,6 +7,7 @@ import redis from '../config/redis';
 import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 import { ICompanyRepository } from '../interfaces/repositories/ICompanyRepository';
 import { IPermissionRepository } from '../interfaces/repositories/IPermissionRepository';
+import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
 
 
 export class AuthService implements IAuthService {
@@ -14,7 +15,8 @@ export class AuthService implements IAuthService {
   constructor(
     private _authRepo: IAuthRepository,
     private _companyRepo: ICompanyRepository,
-    private _permissionRepo: IPermissionRepository
+    private _permissionRepo: IPermissionRepository,
+    private _employeeRepo:IEmployeeRepository
   ) { }
 
   async registration(name: string, email: string, password: string, companyName: string): Promise<{ message: string }> {
@@ -40,7 +42,7 @@ export class AuthService implements IAuthService {
   }
 
 
-  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string, role: string, permissions:string[] }> {
+  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string, user:{id:string , name:string , role:string , designation: string | null , companyName :string |null }, permissions:string[] }> {
     const storedOtp = await redis.get(`otp:${email}`)
 
     if (!storedOtp || storedOtp !== otp) {
@@ -55,17 +57,34 @@ export class AuthService implements IAuthService {
     await this._authRepo.verifyUser(user._id.toString())
 
     let permissions: string[] = [];
+    let designation :string | null = null
+    let companyName : string |null = null
     if (user.role === 'employee') {
+      const employeeData = await this._employeeRepo.findByUserId(user._id.toString());
+      designation = employeeData?.designation || null
+
+      if(employeeData && employeeData.company_id){
+        companyName = employeeData.company_id.name
+      }
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
+    }else{
+      const company = await this._companyRepo.findCompanyByUserId(user._id.toString());
+      companyName = company?.name || null
     }
 
-    const accessToken = generateAccessToken(user._id.toString(),user.role,permissions)
-    const refreshToken = generateRefreshToken(user._id.toString())
+    const userPayload ={
+      id:user._id.toString(),
+      name : user.name,
+      role:user.role,
+      designation: designation,
+      companyName:companyName
+    }
+    const accessToken = generateAccessToken(userPayload.id,userPayload.role,permissions, userPayload.name,userPayload.designation , userPayload.companyName);
+    const refreshToken = generateRefreshToken(userPayload.id)
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
-    const role = user.role
     await redis.del(`otp:${email}`)
-    return { accessToken, refreshToken, role, permissions }
+    return { accessToken, refreshToken, user:userPayload, permissions }
 
   }
 
@@ -87,7 +106,7 @@ export class AuthService implements IAuthService {
     return { message: "new otp send to email" }
   }
 
-  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string, role: string, permissions:string[] }> {
+  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string, user:{id:string , name:string , role:string , designation: string | null , companyName :string |null }, permissions:string[] }> {
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("user not found")
@@ -102,18 +121,39 @@ export class AuthService implements IAuthService {
     }
 
     let permissions: string[] = [];
+    let designation : string |null = null;
+    let companyName : string | null = null; 
     if (user.role === 'employee') {
+      const employeeData = await this._employeeRepo.findByUserId(user._id.toString())
+      designation = employeeData?.designation || null 
+      if(employeeData && employeeData.company_id){
+        companyName = employeeData.company_id.name
+      }
+
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
+    }else{
+
+      const company = await this._companyRepo.findCompanyByUserId(user._id.toString())
+      companyName = company?.name || null
     }
-    const accessToken = generateAccessToken(user._id.toString(),user.role, permissions);
-    const refreshToken = generateRefreshToken(user._id.toString())
+
+    const userPayload ={
+      id:user._id.toString(),
+      name:user.name,
+      role:user.role,
+      designation:designation,
+      companyName : companyName
+    }
+
+    const accessToken = generateAccessToken(userPayload.id,userPayload.role,  permissions, userPayload.name,  userPayload.designation,userPayload.companyName);
+    const refreshToken = generateRefreshToken(userPayload.id)
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
-    const role = user.role
-    return { accessToken, refreshToken, role, permissions }
+   
+    return { accessToken, refreshToken, user:userPayload, permissions }
   }
 
-  async refresh(refreshToken: string): Promise<{ accessToken: string, role: string, permissions:string[] }> {
+  async refresh(refreshToken: string): Promise<{ accessToken: string, user:{id:string , name:string , role:string , designation: string | null , companyName :string |null }, permissions:string[] }> {
     const decoded = verifyRefreshToken(refreshToken)
 
     const user = await this._authRepo.findById(decoded.id)
@@ -121,12 +161,33 @@ export class AuthService implements IAuthService {
       throw new Error("invalid refresh token")
     }
     let permissions: string[] = [];
+    let designation :string |  null = null;
+    let companyName :string | null = null;
     if (user.role === 'employee') {
+
+      const employeeData = await this._employeeRepo.findByUserId(user._id.toString());
+      designation = employeeData?.designation || null
+
+      if(employeeData && employeeData.company_id){
+        companyName = employeeData.company_id.name
+      }
+
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
+    }else{
+      const company = await this._companyRepo.findCompanyByUserId(user._id.toString())
+      companyName = company?.name || null
     }
-    const role = user.role
-    const accessToken = generateAccessToken(user._id.toString(),user.role,permissions)
-    return { accessToken, role, permissions }
+
+    const userPayload = {
+      id:user._id.toString(),
+      name:user.name,
+      role:user.role,
+      designation:designation,
+      companyName:companyName
+    }
+  
+    const accessToken = generateAccessToken(userPayload.id,userPayload.role,permissions,userPayload.name,userPayload.designation,userPayload.companyName)
+    return { accessToken, user:userPayload, permissions }
   }
 
   async logout(refreshToken: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { ICompany } from "../../models/company.model";
-import { IEmployee } from "../../models/employee.model";
+import { IEmployee,IPopulatedEmployee } from "../../models/employee.model";
 
 export interface IProfileData {
     user: {
@@ -11,7 +11,7 @@ export interface IProfileData {
         created_at: Date;
     };
     company?: ICompany | null;
-    employee?: IEmployee | null;
+    employee?: IEmployee |IPopulatedEmployee | null;
 }
 
 export interface IUserService {
