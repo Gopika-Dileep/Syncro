@@ -73,17 +73,17 @@ export const addEmployeeApi = async (data: AddEmployeeForm) => {
         skills: data.skills.split(",").map(s => s.trim()).filter(s => s !== "")
     };
     const response = await axiosInstance.post("/company/employee/add", payload);
-    return response.data;
+    return response.data;   //{success message}
 };
 
 export const getEmployeesApi = async () => {
     const response = await axiosInstance.get("/company/employees");
-    return response.data;
+    return response.data;    //{employee data in array of objects}
 };
 
 export const toggleBlockEmployeeApi = async (userId: string) => {
     const response = await axiosInstance.patch(`/company/employee/${userId}/toggle-block`);
-    return response.data;
+    return response.data;  // {success message saying "employee bolcked or employee unblocked"} along with the status
 };
 
 export const createTeamApi = async (name:string):Promise<{success:boolean; data:Team}>=>{
