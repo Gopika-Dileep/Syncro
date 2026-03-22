@@ -11,3 +11,4 @@ export interface IAuthRepository{
     verifyUser(id:string):Promise<void>
     toggleBlockUser(userId:string):Promise<boolean>
 }
+

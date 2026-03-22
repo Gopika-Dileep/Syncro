@@ -27,11 +27,7 @@ export const passwordResetTemplate = (resetToken: string): { subject: string; ht
 
 
 
-export const employeeInvitationTemplate = (
-    employeeName: string,
-    companyName:  string,
-    password:     string
-): { subject: string; html: string } => {
+export const employeeInvitationTemplate = (employeeName: string, companyName:string,password:string): { subject: string; html: string } => {
 
     const loginLink = `${env.FRONTEND_URL}/login`
 

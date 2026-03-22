@@ -101,7 +101,7 @@ export class AuthController {
             await this._authService.forgotPassword(email)
             res.status(200).json({
                 success: true,
-                message: "If this email exists, a reset link has been sent"
+                message: " a reset link has been sent to this mail"
             })
 
         } catch (err: unknown) {

@@ -1,5 +1,4 @@
 import { IAuthRepository } from "../interfaces/repositories/IAuthRepository";
-import { companyModel, ICompany } from "../models/company.model";
 import { IUser, userModel } from "../models/user.model";
 
 export class AuthRepository implements IAuthRepository{

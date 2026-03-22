@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/store/store";
 import { resendOtpApi, verifyOtpApi } from "@/api/authapi";
-import { setCredentials } from "@/store/slices/authSlice"; // Changed to setCredentials for full user data
+import { setCredentials } from "@/store/slices/authSlice"; 
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Fingerprint, Zap, Clock, Loader2, ArrowLeft, ArrowRight, RotateCw } from "lucide-react";
 
@@ -38,7 +38,6 @@ export default function VerifyOtp() {
         setError("");
         try {
             const data = await verifyOtpApi(email, otp);
-            // Since the controller returns 'user' and 'token', we use setCredentials
             dispatch(setCredentials({ user: data.user, token: data.token }));
             navigate(data.user.role === 'employee' ? '/employee/dashboard' : '/company/dashboard');
         } catch (err: any) {
@@ -66,7 +65,6 @@ export default function VerifyOtp() {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="w-full max-w-[440px] animate-in fade-in zoom-in duration-500">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-900 rounded-xl mb-4 shadow-lg shadow-gray-200">
                         <Zap size={24} className="text-white fill-white" />
@@ -77,8 +75,6 @@ export default function VerifyOtp() {
                         <span className="font-bold text-gray-900">{email}</span>
                     </p>
                 </div>
-
-                {/* Card */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (

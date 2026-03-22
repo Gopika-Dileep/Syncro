@@ -26,10 +26,10 @@ export interface UserProfile {
 
 export const getProfileApi = async () : Promise <UserProfile> =>{
     const response = await axiosInstance.get("/user/profile");
-    return response.data.data;
+    return response.data.data;  //{full profile data will be sent}
 };
 
 export const changePasswordAPi = async (data:{currentPassword:string;newPassword:string}):Promise<{success:boolean; message:string}>=>{
      const response = await axiosInstance.post('/user/change-password',data);
-     return response.data;
+     return response.data; // update password , {no returns doesnt even return success message} // just check that 
 }

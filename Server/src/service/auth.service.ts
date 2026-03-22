@@ -113,11 +113,11 @@ export class AuthService implements IAuthService {
     }
 
     if (!user.is_verified) {
-      throw new Error("Please verify your email before logging in")
+      throw new Error("User is not verified")
     }
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
-      throw new Error("Invalid credentials")
+      throw new Error("Password is wrong")
     }
 
     let permissions: string[] = [];
@@ -200,7 +200,7 @@ export class AuthService implements IAuthService {
     const user = await this._authRepo.findByEmail(email)
 
     if (!user) {
-      return
+      throw new Error("User not found")
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex")
