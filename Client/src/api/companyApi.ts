@@ -6,57 +6,45 @@ export interface PermissionScopes {
     all: boolean;
 }
 
+
 export interface EmployeePermissions {
     project: {
-        view: PermissionScopes;
         create: boolean;
-        update: PermissionScopes;
+        view: { team: boolean; all: boolean };
+        update: { team: boolean; all: boolean };
         delete: boolean;
-        archive: boolean;
-        assign: boolean;
-        unassign: boolean;
     };
-    userStory: {
-        view: PermissionScopes;
+    task: {
         create: boolean;
-        update: PermissionScopes;
-        delete: boolean;
-        assign: boolean;
-        addToSprint: boolean;
-        removeFromSprint: boolean;
-        changeStatus: boolean;
+        view: { team: boolean; all: boolean };
+        assign: { team: boolean; all: boolean };
+        update: { team: boolean; all: boolean };
     };
     sprint: {
-        view: PermissionScopes;
         create: boolean;
+        view: { all: boolean };
         update: boolean;
-        delete: boolean;
-        addItems: boolean;
-        removeItems: boolean;
         start: boolean;
         complete: boolean;
     };
-    task: {
-        view: PermissionScopes;
+    userStory: {
         create: boolean;
-        update: PermissionScopes;
-        delete: PermissionScopes;
+        view: { all: boolean };
+        update: boolean;
         assign: boolean;
-        changeStatus: boolean;
-        addSubtask: boolean;
-        addComment: boolean;
+    };
+    team: {
+        view: { team: boolean; all: boolean };
+        performance: { team: boolean; all: boolean };
     };
 }
 
 export interface AddEmployeeForm {
     name: string;
     email: string;
+    phone: string;
     designation: string;
     date_of_joining: string;
-    date_of_birth: string;
-    phone: string;
-    address: string;
-    skills: string;
     permissions: EmployeePermissions;
 }
 
@@ -88,12 +76,7 @@ export interface Team {
 }
 
 export const addEmployeeApi = async (data: AddEmployeeForm) => {
-
-    const payload = {
-        ...data,
-        skills: data.skills.split(",").map(s => s.trim()).filter(s => s !== "")
-    };
-    const response = await axiosInstance.post("/company/employee/add", payload);
+    const response = await axiosInstance.post("/company/employee/add", data);
     return response.data;   //{success message}
 };
 
@@ -112,10 +95,12 @@ export const getEmployeeDetailsApi = async (userId: string) => {
     return response.data;
 }
 
-export const updateEmployeeDetailsApi = async (userId:string,data:Partial<UserProfile>)=>{
-    const response = await axiosInstance.put(`/company/employee/${userId}`,data);
+
+export const updateEmployeeApi = async (userId: string, data: AddEmployeeForm) => {
+    const response = await axiosInstance.put(`/company/employee/${userId}`, data);
     return response.data;
-}
+};
+
 
 export const createTeamApi = async (name: string): Promise<{ success: boolean; data: Team }> => {
     const response = await axiosInstance.post('/company/teams', { name });
