@@ -20,6 +20,7 @@ export interface UserProfile {
         address?:string;
         skills?:string[];
         date_of_joining?:string;
+        team?: { _id: string; name: string } | null; 
     } | null;
 }
 
@@ -32,4 +33,9 @@ export const getProfileApi = async () : Promise <UserProfile> =>{
 export const changePasswordAPi = async (data:{currentPassword:string;newPassword:string}):Promise<{success:boolean; message:string}>=>{
      const response = await axiosInstance.post('/user/change-password',data);
      return response.data; // update password , {no returns doesnt even return success message} // just check that 
+}
+
+export const updateProfileApi = async (data:{name:string,email:string,phone?:string;address?:string; skills:string[]}):Promise<{success:boolean ; message:string}>=>{
+    const response = await axiosInstance.put("/user/profile",data);
+    return response.data;
 }

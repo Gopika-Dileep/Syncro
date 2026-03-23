@@ -9,7 +9,8 @@ interface Props{
 
 export default function ProtectedRoute({children,allowedRoles}:Props){
     const token = useSelector((state:RootState)=>state.auth.token)
-    const role = useSelector((state:RootState)=>state.auth.role)
+    const user = useSelector((state :RootState)=>state.auth.user)
+    const role = user?.role
     const isInitialized = useSelector((state:RootState)=>state.auth.isInitialized)
     if(!isInitialized){
         return <div>Loading...</div>
