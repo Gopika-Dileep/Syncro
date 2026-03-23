@@ -1,5 +1,5 @@
 import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
-import { AddEmployeeData, EmployeePermissions, IEmployeeService, PermissionScopes } from "../interfaces/services/IEmployeeService";
+import { AddEmployeeData, EmployeePermissions, IEmployeeService } from "../interfaces/services/IEmployeeService";
 import bcrypt from "bcrypt"
 import crypto from "crypto"
 import { sendEmployeeInvitationEmail } from "../utils/email.utils"
@@ -7,7 +7,6 @@ import { parseDate } from "../utils/parseDate.utils";
 import { IAuthRepository } from "../interfaces/repositories/IAuthRepository";
 import { ICompanyRepository } from "../interfaces/repositories/ICompanyRepository";
 import { IPermissionRepository } from "../interfaces/repositories/IPermissionRepository";
-import { IEmployee } from "../models/employee.model";
 
 export class EmployeeService implements IEmployeeService {
     constructor(
@@ -60,11 +59,9 @@ export class EmployeeService implements IEmployeeService {
         )
     }
 
-    // Server/src/service/employee.service.ts
     private _flattenPermissions(p: EmployeePermissions): string[] {
         const keys: string[] = [];
 
-        // MODULE: project
         if (p.project.create) keys.push("project:create");
         if (p.project.view.team) keys.push("project:view:team");
         if (p.project.view.all) keys.push("project:view:all");
@@ -72,7 +69,6 @@ export class EmployeeService implements IEmployeeService {
         if (p.project.update.all) keys.push("project:update:all");
         if (p.project.delete) keys.push("project:delete");
 
-        // MODULE: task
         if (p.task.create) keys.push("task:create");
         if (p.task.view.team) keys.push("task:view:team");
         if (p.task.view.all) keys.push("task:view:all");
@@ -81,20 +77,17 @@ export class EmployeeService implements IEmployeeService {
         if (p.task.update.team) keys.push("task:update:team");
         if (p.task.update.all) keys.push("task:update:all");
 
-        // MODULE: sprint
         if (p.sprint.create) keys.push("sprint:create");
         if (p.sprint.view.all) keys.push("sprint:view:all");
         if (p.sprint.update) keys.push("sprint:update");
         if (p.sprint.start) keys.push("sprint:start");
         if (p.sprint.complete) keys.push("sprint:complete");
 
-        // MODULE: userStory
         if (p.userStory.create) keys.push("userStory:create");
         if (p.userStory.view.all) keys.push("userStory:view:all");
         if (p.userStory.update) keys.push("userStory:update");
         if (p.userStory.assign) keys.push("userStory:assign");
 
-        // MODULE: team
         if (p.team.view.team) keys.push("team:view:team");
         if (p.team.view.all) keys.push("team:view:all");
         if (p.team.performance.team) keys.push("team:performance:team");

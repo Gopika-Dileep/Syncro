@@ -1,5 +1,3 @@
-// src/components/Header.tsx
-
 import { Search, Bell, LogOut } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +9,6 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ACCESSING THE REAL USER DATA FROM REDUX
   const user = useSelector((state: RootState) => state.auth.user);
 
   const handleLogout = async () => {
@@ -27,7 +24,6 @@ const Header = () => {
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 px-8 flex items-center justify-between sticky top-0 z-10">
-      {/* Search Bar */}
       <div className="flex-1 max-w-md">
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
@@ -39,9 +35,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-4">
-        {/* Notifications */}
         <button className="relative p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors group">
           <Bell size={20} />
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
@@ -49,14 +43,13 @@ const Header = () => {
 
         <div className="h-8 w-px bg-gray-100 mx-2"></div>
 
-        {/* Dynamic Profile/Logout Dropdown */}
         <div className="flex items-center gap-3 pl-2">
           <div className="text-right hidden sm:block">
-            {/* DYNAMIC USER NAME */}
+
             <p className="text-sm font-semibold text-gray-900 leading-none">
               {user?.name || "Loading..."}
             </p>
-            {/* DYNAMIC ROLE OR DESIGNATION */}
+  
             <p className="text-[11px] text-gray-400 mt-1">
               {user?.role === 'company' ? "Admin Account" : user?.designation || "Employee"}
             </p>

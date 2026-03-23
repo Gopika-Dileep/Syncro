@@ -1,6 +1,8 @@
 import { verifyAccessToken } from "../utils/token.utils"
 import { Request, Response, NextFunction } from "express"
 import { userModel } from "../models/user.model";
+import { HttpStatus } from "../enums/HttpStatus";
+import { AUTH_MESSAGES } from "../constants/messages";
 
 declare global {
     namespace Express {
@@ -17,7 +19,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         const authHeader = req.headers.authorization
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            res.status(401).json({ success: false, message: "NO token provided" })
+            res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: AUTH_MESSAGES.NO_TOKEN })
             return
         }
         const token = authHeader.split(" ")[1]
@@ -27,7 +29,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
 
         const user = await userModel.findById(decoded.id).select('is_blocked');
         if (!user || user.is_blocked) {
-             res.status(403).json({ success: false, message: "Account is blocked. Access denied." });
+             res.status(HttpStatus.FORBIDDEN).json({ success: false, message: AUTH_MESSAGES.ACCOUNT_BLOCKED });
              return;
         }
 
@@ -36,6 +38,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         req.permissions = decoded.permissions || [];
         next()
     } catch {
-        res.status(401).json({ success: false, message: "invalid or expired token " })
+        res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: AUTH_MESSAGES.INVALID_TOKEN })
     }
 }

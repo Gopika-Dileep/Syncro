@@ -1,6 +1,7 @@
 import { IEmployeeService } from "../../interfaces/services/IEmployeeService";
 import { Request, Response } from "express"
-import { IEmployee } from "../../models/employee.model";
+import { HttpStatus } from "../../enums/HttpStatus";
+import { EMPLOYEE_MESSAGES } from "../../constants/messages";
 
 export class EmployeeController {
     constructor(private _employeeService: IEmployeeService) { }
@@ -15,10 +16,10 @@ export class EmployeeController {
                 name, email, phone, designation, date_of_joining, permissions
             })
 
-            res.status(201).json({ success: true, message: "Employee added and invitation sent" })
+            res.status(HttpStatus.CREATED).json({ success: true, message: EMPLOYEE_MESSAGES.ADD_SUCCESS })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Failed to add employee"
-            res.status(400).json({ success: false, message })
+            const message = err instanceof Error ? err.message : EMPLOYEE_MESSAGES.ADD_FAILED
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
         }
     }
 
@@ -30,10 +31,10 @@ export class EmployeeController {
             const search = (req.query.search as string) || "";
 
             const { employees, total } = await this._employeeService.getEmployees(companyId, page, limit, search)
-            res.status(200).json({ success: true, data: employees, total, page, limit })
+            res.status(HttpStatus.OK).json({ success: true, data: employees, total, page, limit })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "failed to fetch employees"
-            res.status(400).json({ success: false, message })
+            const message = err instanceof Error ? err.message : EMPLOYEE_MESSAGES.FETCH_FAILED
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
         }
     }
 
@@ -43,14 +44,14 @@ export class EmployeeController {
             const userId = req.params.userId as string
 
             if (!userId) {
-                res.status(400).json({ success: false, message: "userId is required" })
+                res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: EMPLOYEE_MESSAGES.USER_ID_REQUIRED })
                 return
             }
             const isBlocked = await this._employeeService.toggleBlockEmployee(companyId, userId)
-            res.status(200).json({ success: true, isBlocked, message: isBlocked ? "employee blocked" : "employee unblocked" })
+            res.status(HttpStatus.OK).json({ success: true, isBlocked, message: EMPLOYEE_MESSAGES.TOGGLE_BLOCK_SUCCESS(isBlocked) })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "failed to update status"
-            res.status(400).json({ success: false, message })
+            const message = err instanceof Error ? err.message : EMPLOYEE_MESSAGES.FETCH_DATA_FAILED
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
         }
     }
 
@@ -58,15 +59,15 @@ export class EmployeeController {
         try {
             const userId = req.params.userId as string
             if (!userId) {
-                res.status(400).json({ success: false, message: "userId required" })
+                res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: EMPLOYEE_MESSAGES.USER_ID_REQUIRED })
                 return
             }
             const result = await this._employeeService.getEmployeeDetails(userId)
-            res.status(200).json({ success: true, data: result })
+            res.status(HttpStatus.OK).json({ success: true, data: result })
 
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "failed to get data"
-            res.status(400).json({ success: false, message })
+            const message = err instanceof Error ? err.message : EMPLOYEE_MESSAGES.FETCH_DATA_FAILED
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
 
         }
     }
@@ -75,16 +76,16 @@ export class EmployeeController {
         try {
             const userId = req.params.userId as string
             if (!userId) {
-                res.status(400).json({ success: false, message: "userId is required" });
+                res.status(HttpStatus.BAD_REQUEST).json({ success: false, message: EMPLOYEE_MESSAGES.USER_ID_REQUIRED });
                 return
             }
 
             const result = await this._employeeService.updateEmployeeDetails(userId, req.body);
 
-            res.status(200).json({ success: true, message: "Employee Profile updated successfully", data: result })
+            res.status(HttpStatus.OK).json({ success: true, message: EMPLOYEE_MESSAGES.UPDATE_SUCCESS, data: result })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "failed to update data"
-            res.status(400).json({ success: false, message })
+            const message = err instanceof Error ? err.message : EMPLOYEE_MESSAGES.UPDATE_FAILED
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
         }
     }
 }

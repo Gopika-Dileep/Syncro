@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosinstance";
+import { ENDPOINTS } from "@/constants/endpoints";
 
 export interface PermissionScopes {
     own: boolean;
@@ -76,38 +77,38 @@ export interface Team {
 }
 
 export const addEmployeeApi = async (data: AddEmployeeForm) => {
-    const response = await axiosInstance.post("/company/employee/add", data);
+    const response = await axiosInstance.post(ENDPOINTS.COMPANY.ADD_EMPLOYEE, data);
     return response.data;   //{success message}
 };
 
 export const getEmployeesApi = async (page: number = 1, limit: number = 5, search: string = "") => {
-    const response = await axiosInstance.get(`/company/employees?page=${page}&limit=${limit}&search=${search}`);
+    const response = await axiosInstance.get(`${ENDPOINTS.COMPANY.EMPLOYEES}?page=${page}&limit=${limit}&search=${search}`);
     return response.data;
 };
 
 export const toggleBlockEmployeeApi = async (userId: string) => {
-    const response = await axiosInstance.patch(`/company/employee/${userId}/toggle-block`);
+    const response = await axiosInstance.patch(ENDPOINTS.COMPANY.TOGGLE_BLOCK_EMPLOYEE(userId));
     return response.data;  // {success message saying "employee bolcked or employee unblocked"} along with the status
 };
 
 export const getEmployeeDetailsApi = async (userId: string) => {
-    const response = await axiosInstance.get(`/company/employee/${userId}`);
+    const response = await axiosInstance.get(ENDPOINTS.COMPANY.GET_EMPLOYEE_DETAILS(userId));
     return response.data;
 }
 
 
 export const updateEmployeeApi = async (userId: string, data: AddEmployeeForm) => {
-    const response = await axiosInstance.put(`/company/employee/${userId}`, data);
+    const response = await axiosInstance.put(ENDPOINTS.COMPANY.UPDATE_EMPLOYEE_DETAILS(userId), data);
     return response.data;
 };
 
 
 export const createTeamApi = async (name: string): Promise<{ success: boolean; data: Team }> => {
-    const response = await axiosInstance.post('/company/teams', { name });
+    const response = await axiosInstance.post(ENDPOINTS.COMPANY.TEAMS, { name });
     return response.data
 };
 
 export const getTeamsApi = async (): Promise<{ success: boolean; data: Team[] }> => {
-    const response = await axiosInstance.get("/company/teams");
+    const response = await axiosInstance.get(ENDPOINTS.COMPANY.TEAMS);
     return response.data;
 }

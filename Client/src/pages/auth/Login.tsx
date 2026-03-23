@@ -58,7 +58,6 @@ export default function Login() {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="w-full max-w-[440px] animate-in fade-in zoom-in duration-500">
-                {/* Logo & Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-900 rounded-xl mb-4 shadow-lg shadow-gray-200">
                         <Zap size={24} className="text-white fill-white" />
@@ -66,8 +65,6 @@ export default function Login() {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
                     <p className="text-gray-500 mt-2">Enter your details to access your dashboard</p>
                 </div>
-
-                {/* Login Card */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
                     <form onSubmit={handleSubmit} noValidate className="space-y-5">
                         {error && (

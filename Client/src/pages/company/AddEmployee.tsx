@@ -29,8 +29,7 @@ export default function AddEmployee() {
 
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(isEditMode);
-    // const [error, setError] = useState(""); // Removed
-    // const [success, setSuccess] = useState(""); // Removed
+
 
     const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof EmployeeformInput, string>>>({})
 
@@ -69,7 +68,6 @@ export default function AddEmployee() {
                 const newValue = !updatedModule[field][subField];
                 updatedModule[field] = { ...updatedModule[field], [subField]: newValue };
                 
-                // Mutually exclusive logic: if scope 'team' is enabled, disable 'all', and vice-versa.
                 if (newValue) {
                     if (subField === 'team') updatedModule[field].all = false;
                     if (subField === 'all') updatedModule[field].team = false;

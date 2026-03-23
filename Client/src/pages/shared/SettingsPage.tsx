@@ -18,8 +18,6 @@ import { useEffect, useState } from "react";
 import { getZodErrors, updateProfileSchema, changePasswordSchema } from "@/lib/schema";
 import { toast } from "sonner";
 
-/* --- 1. REUSABLE ATOMS (Atoms available globally in the file) --- */
-
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <p className="text-xs font-black uppercase tracking-widest mb-5" style={{ color: "oklch(0.556 0 0)" }}>
         {children}
@@ -96,8 +94,6 @@ const InputGroup = ({ label, value, onChange, error }: { label: string, value: s
 );
 
 
-/* --- 2. MAIN PAGE COMPONENT --- */
-
 const SettingsPage: React.FC = () => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -137,7 +133,6 @@ const SettingsPage: React.FC = () => {
             <h1 className="text-2xl font-bold mb-8">Account Settings</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                {/* Left Card — Profile */}
                 <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                         <SectionLabel>My Profile</SectionLabel>
@@ -152,15 +147,12 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <ProfileSection profile={profile} />
                 </div>
-
-                {/* Right Card — Security */}
                 <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-sm">
                     <SectionLabel>Authentication & Security</SectionLabel>
                     <SecuritySection />
                 </div>
             </div>
 
-            {/* EDIT MODAL */}
             {isEditModalOpen && profile && (
                 <EditProfileModal 
                     profile={profile} 
@@ -173,7 +165,6 @@ const SettingsPage: React.FC = () => {
 };
 
 
-/* --- 3. SUB-COMPONENTS --- */
 
 const EditProfileModal: React.FC<{ 
     profile: UserProfile; 
@@ -272,7 +263,6 @@ const ProfileSection: React.FC<{ profile: UserProfile | null }> = ({ profile }) 
 
     return (
         <div>
-            {/* Avatar & Basic Info */}
             <div className="flex items-center gap-4 mb-6">
                 <div className="h-16 w-16 rounded-full flex items-center justify-center text-xl font-bold bg-slate-100 overflow-hidden border border-slate-100">
                     {profile.user.avatar ? (

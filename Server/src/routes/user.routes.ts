@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { userController } from "../container/user.di";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { ENDPOINTS } from "../constants/endpoints";
 
 export class UserRouter {
     public router: Router;
@@ -11,8 +12,8 @@ export class UserRouter {
     }
 
     private _initializeRoutes(): void {
-        this.router.get("/profile", authMiddleware, userController.getProfile);
-        this.router.post("/change-password", authMiddleware, userController.changePassword);
-        this.router.put("/profile",authMiddleware,userController.updateProfile);
+        this.router.get(ENDPOINTS.USER.PROFILE, authMiddleware, userController.getProfile);
+        this.router.post(ENDPOINTS.USER.CHANGE_PASSWORD, authMiddleware, userController.changePassword);
+        this.router.put(ENDPOINTS.USER.PROFILE, authMiddleware, userController.updateProfile);
     }
 }

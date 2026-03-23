@@ -53,7 +53,6 @@ export default function Register() {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="w-full max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-900 rounded-xl mb-4 shadow-lg shadow-gray-200">
                         <Zap size={24} className="text-white fill-white" />
@@ -61,8 +60,6 @@ export default function Register() {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create workspace</h1>
                     <p className="text-gray-500 mt-2">Start managing your teams and projects today</p>
                 </div>
-
-                {/* Form Card */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 lg:p-10">
                     <form onSubmit={handleSubmit} noValidate className="space-y-4">
                         {error && (

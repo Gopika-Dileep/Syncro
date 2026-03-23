@@ -56,7 +56,6 @@ export default function GetEmployee() {
 
     return (
         <div className="min-h-screen bg-[#f9fafb] text-slate-900 font-sans pb-20">
-            {/* Top Navigation Bar */}
             <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <button 
@@ -76,16 +75,11 @@ export default function GetEmployee() {
             </div>
 
             <div className="max-w-6xl mx-auto px-6 space-y-6">
-                
-                {/* Hero Profile Card */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
                     <div className="flex flex-col md:flex-row gap-8">
-                        {/* Avatar */}
                         <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-[#f3f4f6] flex items-center justify-center text-2xl md:text-3xl font-bold text-slate-400 shrink-0 border border-slate-100">
                             {getInitials(user.name)}
                         </div>
-
-                        {/* Identity & Tags */}
                         <div className="flex-1 space-y-4">
                             <div className="flex flex-wrap items-start justify-between gap-4">
                                 <div>
@@ -104,8 +98,6 @@ export default function GetEmployee() {
                             <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
                                 Professional team member dedicated to achieving organizational goals through collaborative effort and technical expertise.
                             </p>
-
-                            {/* Quick Info Row */}
                             <div className="pt-6 border-t border-slate-50 flex flex-wrap gap-x-10 gap-y-4">
                                 <QuickInfo icon={<Mail size={14}/>} text={user.email} />
                                 {employee?.phone && <QuickInfo icon={<Phone size={14}/>} text={employee.phone} />}
@@ -116,7 +108,6 @@ export default function GetEmployee() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* About & Skills Section */}
                     <div className="lg:col-span-2 space-y-6">
                         <section className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
                             <h3 className="text-sm font-bold mb-6">About</h3>
@@ -138,16 +129,12 @@ export default function GetEmployee() {
                                 )}
                             </div>
                         </section>
-
-                        {/* Stat Boxes */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Team Card (Using optional chaining for future implementation) */}
                             <StatCard 
                                 label="Assigned Team" 
                                 value={employee?.team?.name || "N/A"} 
                                 icon={<Users className="text-slate-400" size={18}/>} 
                             />
-                            {/* Joining Date Card (Moved from sidebar) */}
                             <StatCard 
                                 label="Date of Joining" 
                                 value={employee?.date_of_joining ? new Date(employee.date_of_joining).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : "Not Set"} 
@@ -155,8 +142,6 @@ export default function GetEmployee() {
                             />
                         </div>
                     </div>
-
-                    {/* Meta Sidebar (simplified) */}
                     <div className="space-y-6">
                         <section className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
                             <h3 className="text-sm font-bold mb-6">Quick Actions</h3>

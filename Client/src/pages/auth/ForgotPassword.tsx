@@ -96,7 +96,6 @@ export default function ForgotPassword() {
                         </div>
                     )}
 
-                    {/* Footer */}
                     <div className="mt-8 pt-6 border-t border-gray-50 flex justify-center">
                         <Link
                             to="/login"

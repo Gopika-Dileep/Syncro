@@ -8,7 +8,7 @@ import ResetPassword from './pages/auth/ResetPassword'
 import CompanyDashboard from './pages/company/CompanyDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthInitializer from './components/AuthInitializer'
-import PublicRote from './components/PublicRoute'
+import PublicRoute from './components/PublicRoute'
 import CompanyLayout from './layouts/CompanyLayout'
 import Employees from './pages/company/Employees'
 import Projects from './pages/company/Projects'
@@ -29,11 +29,11 @@ function App() {
         <Toaster richColors position="top-right" />
         <AuthInitializer>
           <Routes>
-            <Route path='/login' element={<PublicRote><Login /></PublicRote>} />
-            <Route path='register' element={<PublicRote><Register /></PublicRote>} />
-            <Route path='/verify-otp' element={<PublicRote><VerifyOtp /></PublicRote>} />
-            <Route path='/forgot-password' element={<ForgetPassword />} />
-            <Route path='/reset-password' element={<ResetPassword />} />
+            <Route path='/login' element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path='/register' element={<PublicRoute><Register /></PublicRoute>} />
+            <Route path='/verify-otp' element={<PublicRoute><VerifyOtp /></PublicRoute>} />
+            <Route path='/forgot-password' element={<PublicRoute><ForgetPassword /></PublicRoute>} />
+            <Route path='/reset-password' element={<PublicRoute><ResetPassword /></PublicRoute>} />
             <Route
               path='/company'
               element={

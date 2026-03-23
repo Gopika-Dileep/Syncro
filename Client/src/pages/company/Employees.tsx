@@ -77,7 +77,6 @@ export default function Employees() {
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans text-slate-800">
-            {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                 <div>
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Employee Management</h1>
@@ -91,8 +90,6 @@ export default function Employees() {
                     Add Employee
                 </button>
             </div>
-
-            {/* Search bar */}
             <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 shadow-sm">
                 <div className="relative w-full">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -108,8 +105,6 @@ export default function Employees() {
                     />
                 </div>
             </div>
-
-            {/* Main Listing Table */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm relative">
                 {loading ? (
                     <div className="p-20 text-center flex flex-col items-center gap-4">
@@ -186,7 +181,6 @@ export default function Employees() {
 
                                             {openMenuId === emp._id && (
                                                 <>
-                                                    {/* Click away overlay */}
                                                     <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)} />
 
                                                     <div className="absolute right-6 top-12 w-48 bg-white border border-slate-200 rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] z-50 p-1.5 animate-in fade-in slide-in-from-top-1 duration-200">

@@ -1,4 +1,3 @@
-import { IEmployee } from "../../models/employee.model";
 
 export interface PermissionScopes{
     own:boolean;

@@ -2,6 +2,7 @@ import { Router } from "express"
 import { employeeController } from "../container/employee.di"
 import { authMiddleware } from "../middleware/auth.middleware"
 import { teamController } from "../container/team.di"
+import { ENDPOINTS } from "../constants/endpoints";
 
 export class CompanyRouter {
     public router: Router
@@ -12,13 +13,13 @@ export class CompanyRouter {
     }
 
     private _initializeRoutes(): void {
-        this.router.get("/employees", authMiddleware, employeeController.getEmployees)
-        this.router.post("/employee/add", authMiddleware, employeeController.addEmployee)
-        this.router.patch("/employee/:userId/toggle-block", authMiddleware, employeeController.toggleBlockEmployee)
-        this.router.get('/employee/:userId',authMiddleware,employeeController.getEmployeeDetails)
-        this.router.put('/employee/:userId',authMiddleware,employeeController.updateEmployeeDetails)
-        this.router.post('/teams', authMiddleware, teamController.createTeam);
-        this.router.get('/teams', authMiddleware, teamController.getTeams);
+        this.router.get(ENDPOINTS.COMPANY.EMPLOYEES, authMiddleware, employeeController.getEmployees)
+        this.router.post(ENDPOINTS.COMPANY.ADD_EMPLOYEE, authMiddleware, employeeController.addEmployee)
+        this.router.patch(ENDPOINTS.COMPANY.TOGGLE_BLOCK_EMPLOYEE, authMiddleware, employeeController.toggleBlockEmployee)
+        this.router.get(ENDPOINTS.COMPANY.GET_EMPLOYEE_DETAILS, authMiddleware, employeeController.getEmployeeDetails)
+        this.router.put(ENDPOINTS.COMPANY.UPDATE_EMPLOYEE_DETAILS, authMiddleware, employeeController.updateEmployeeDetails)
+        this.router.post(ENDPOINTS.COMPANY.TEAMS, authMiddleware, teamController.createTeam);
+        this.router.get(ENDPOINTS.COMPANY.TEAMS, authMiddleware, teamController.getTeams);
 
     }
 }
