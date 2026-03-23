@@ -10,7 +10,7 @@ export default function EmployeeLayout() {
             <div className="flex-1 flex flex-col">
                 <Header />
                 <main className="flex-1 p-6 overflow-auto">
-                    <Outlet />     {/* child page renders here */}
+                    <Outlet />    
                 </main>
             </div>
         </div>

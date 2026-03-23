@@ -7,12 +7,13 @@ interface Props{
     children :React.ReactNode
 }
 
-export default function PublicRote({children}:Props){
+export default function PublicRoute({children}:Props){
     const token = useSelector((state:RootState)=>state.auth.token)
-    const role = useSelector((state:RootState)=>state.auth.role)
+    const user = useSelector((state:RootState)=>state.auth.user)
+    const role = user?.role
 
-    if(token){
-        if(role=="employee"){
+    if(token && role){
+        if(role === "employee"){
             return <Navigate to="/employee/dashboard" replace/>
         }
         return <Navigate to="/company/dashboard" replace/>

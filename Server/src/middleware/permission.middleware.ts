@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from "express";
+import { HttpStatus } from "../enums/HttpStatus";
+import { COMMON_MESSAGES } from "../constants/messages";
 
 
 export interface AuthenticatedRequest extends Request{
@@ -19,6 +21,6 @@ export const checkPermission = (requiredKey:string)=>{
             return next();
         }
 
-        return res.status(403).json({success:false,message:`Access denied. you dont have hte permission:${requiredKey}`})
+        return res.status(HttpStatus.FORBIDDEN).json({success:false,message: COMMON_MESSAGES.ACCESS_DENIED(requiredKey)})
     }
 }

@@ -4,7 +4,9 @@ import type { AppDispatch } from "@/store/store";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Zap, ArrowRight, Loader2 } from "lucide-react";
+import { Zap, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { getZodErrors, loginSchema } from "@/lib/schema";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -12,21 +14,42 @@ export default function Login() {
     const [form, setForm] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+        if (fieldErrors[e.target.name]) {
+            setFieldErrors(prev => {
+                const updated = { ...prev };
+                delete updated[e.target.name];
+                return updated;
+            });
+        }
         if (error) setError("");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
+        setFieldErrors({});
+        
+        const validation = loginSchema.safeParse(form);
+        if (!validation.success) {
+            setFieldErrors(getZodErrors(validation.error));
+            return;
+        }
+
         setLoading(true);
         try {
             const data = await loginApi(form.email, form.password);
-            dispatch(setCredentials({ user: data.user, token: data.token }));
-            navigate(data.role === "employee" ? '/employee/dashboard' : "/company/dashboard");
+            dispatch(setCredentials({ user: data.user, token: data.token, permissions: data.permissions }));
+            toast.success("Welcome back! Login successful.");
+            navigate(data.user.role === "company" ? "/company/dashboard" : "/employee/dashboard");
         } catch (err: any) {
-            setError(err.response?.data?.message || "Invalid email or password");
+            const msg = err.response?.data?.message || err.message || "Invalid credentials";
+            toast.error(msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -35,7 +58,6 @@ export default function Login() {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="w-full max-w-[440px] animate-in fade-in zoom-in duration-500">
-                {/* Logo & Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-900 rounded-xl mb-4 shadow-lg shadow-gray-200">
                         <Zap size={24} className="text-white fill-white" />
@@ -43,10 +65,8 @@ export default function Login() {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
                     <p className="text-gray-500 mt-2">Enter your details to access your dashboard</p>
                 </div>
-
-                {/* Login Card */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} noValidate className="space-y-5">
                         {error && (
                             <div className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-lg text-sm font-medium animate-shake">
                                 {error}
@@ -60,13 +80,13 @@ export default function Login() {
                                 <input
                                     name="email"
                                     type="email"
-                                    required
                                     placeholder="name@company.com"
                                     value={form.email}
                                     onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[15px] focus:bg-white focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all placeholder:text-gray-400"
+                                    className={`w-full pl-10 pr-4 py-3 bg-gray-50 border ${fieldErrors.email ? 'border-rose-400 focus:ring-rose-50' : 'border-gray-100 focus:ring-gray-100'} rounded-xl text-[15px] focus:bg-white focus:border-gray-900 focus:ring-4 outline-none transition-all placeholder:text-gray-400`}
                                 />
                             </div>
+                            {fieldErrors.email && <p className="text-[11px] text-rose-600 font-bold px-1">{fieldErrors.email}</p>}
                         </div>
 
                         <div className="space-y-1.5">
@@ -84,14 +104,21 @@ export default function Login() {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gray-900 transition-colors" size={18} />
                                 <input
                                     name="password"
-                                    type="password"
-                                    required
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
                                     value={form.password}
                                     onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[15px] focus:bg-white focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all placeholder:text-gray-400"
+                                    className={`w-full pl-10 pr-12 py-3 bg-gray-50 border ${fieldErrors.password ? 'border-rose-400 focus:ring-rose-50' : 'border-gray-100 focus:ring-gray-100'} rounded-xl text-[15px] focus:bg-white focus:border-gray-900 focus:ring-4 outline-none transition-all placeholder:text-gray-400`}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 transition-colors p-1"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
+                            {fieldErrors.password && <p className="text-[11px] text-rose-600 font-bold px-1">{fieldErrors.password}</p>}
                         </div>
 
                         <button

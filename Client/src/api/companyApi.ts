@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosinstance";
+import { ENDPOINTS } from "@/constants/endpoints";
 
 export interface PermissionScopes {
     own: boolean;
@@ -6,92 +7,108 @@ export interface PermissionScopes {
     all: boolean;
 }
 
+
 export interface EmployeePermissions {
     project: {
-        view: PermissionScopes;
         create: boolean;
-        update: PermissionScopes;
+        view: { team: boolean; all: boolean };
+        update: { team: boolean; all: boolean };
         delete: boolean;
-        archive: boolean;
-        assign: boolean;
-        unassign: boolean;
     };
-    userStory: {
-        view: PermissionScopes;
+    task: {
         create: boolean;
-        update: PermissionScopes;
-        delete: boolean;
-        assign: boolean;
-        addToSprint: boolean;
-        removeFromSprint: boolean;
-        changeStatus: boolean;
+        view: { team: boolean; all: boolean };
+        assign: { team: boolean; all: boolean };
+        update: { team: boolean; all: boolean };
     };
     sprint: {
-        view: PermissionScopes;
         create: boolean;
+        view: { all: boolean };
         update: boolean;
-        delete: boolean;
-        addItems: boolean;
-        removeItems: boolean;
         start: boolean;
         complete: boolean;
     };
-    task: {
-        view: PermissionScopes;
+    userStory: {
         create: boolean;
-        update: PermissionScopes;
-        delete: PermissionScopes;
+        view: { all: boolean };
+        update: boolean;
         assign: boolean;
-        changeStatus: boolean;
-        addSubtask: boolean;
-        addComment: boolean;
+    };
+    team: {
+        view: { team: boolean; all: boolean };
+        performance: { team: boolean; all: boolean };
     };
 }
 
 export interface AddEmployeeForm {
     name: string;
     email: string;
+    phone: string;
     designation: string;
     date_of_joining: string;
-    date_of_birth: string;
-    phone: string;
-    address: string;
-    skills: string;
     permissions: EmployeePermissions;
 }
 
-export interface Team{
-    _id:string;
-    name:string;
-    created_at?:string;
+
+export interface UserProfile {
+    _id: string;
+    user_id: {
+        _id: string;
+        name: string;
+        email: string;
+        role: string;
+        created_at: string;
+    };
+    designation?: string;
+    phone?: string;
+    address?: string;
+    skills?: string[];
+    date_of_joining?: string;
+    team?: { _id: string; name: string } | null;
+}
+
+
+
+
+export interface Team {
+    _id: string;
+    name: string;
+    created_at?: string;
 }
 
 export const addEmployeeApi = async (data: AddEmployeeForm) => {
-
-    const payload = {
-        ...data,
-        skills: data.skills.split(",").map(s => s.trim()).filter(s => s !== "")
-    };
-    const response = await axiosInstance.post("/company/employee/add", payload);
+    const response = await axiosInstance.post(ENDPOINTS.COMPANY.ADD_EMPLOYEE, data);
     return response.data;   //{success message}
 };
 
-export const getEmployeesApi = async () => {
-    const response = await axiosInstance.get("/company/employees");
-    return response.data;    //{employee data in array of objects}
+export const getEmployeesApi = async (page: number = 1, limit: number = 5, search: string = "") => {
+    const response = await axiosInstance.get(`${ENDPOINTS.COMPANY.EMPLOYEES}?page=${page}&limit=${limit}&search=${search}`);
+    return response.data;
 };
 
 export const toggleBlockEmployeeApi = async (userId: string) => {
-    const response = await axiosInstance.patch(`/company/employee/${userId}/toggle-block`);
+    const response = await axiosInstance.patch(ENDPOINTS.COMPANY.TOGGLE_BLOCK_EMPLOYEE(userId));
     return response.data;  // {success message saying "employee bolcked or employee unblocked"} along with the status
 };
 
-export const createTeamApi = async (name:string):Promise<{success:boolean; data:Team}>=>{
- const response = await axiosInstance.post('/company/teams',{name});
- return response.data
+export const getEmployeeDetailsApi = async (userId: string) => {
+    const response = await axiosInstance.get(ENDPOINTS.COMPANY.GET_EMPLOYEE_DETAILS(userId));
+    return response.data;
+}
+
+
+export const updateEmployeeApi = async (userId: string, data: AddEmployeeForm) => {
+    const response = await axiosInstance.put(ENDPOINTS.COMPANY.UPDATE_EMPLOYEE_DETAILS(userId), data);
+    return response.data;
 };
 
-export const getTeamsApi = async () :Promise<{success:boolean;data:Team[]}>=>{
-    const response = await axiosInstance.get("/company/teams");
+
+export const createTeamApi = async (name: string): Promise<{ success: boolean; data: Team }> => {
+    const response = await axiosInstance.post(ENDPOINTS.COMPANY.TEAMS, { name });
+    return response.data
+};
+
+export const getTeamsApi = async (): Promise<{ success: boolean; data: Team[] }> => {
+    const response = await axiosInstance.get(ENDPOINTS.COMPANY.TEAMS);
     return response.data;
 }

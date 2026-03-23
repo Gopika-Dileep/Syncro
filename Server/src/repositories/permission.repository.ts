@@ -22,4 +22,8 @@ export class PermissionRepository implements IPermissionRepository{
 
         return  userPerm.permissions.map(p=>p.permission_key);
     }
+
+    async updatePermission(userId: string, definitionIds: string[]): Promise<void> {
+        await permissionModel.findOneAndUpdate({ user_id: userId }, { $set: { permissions: definitionIds } });
+    }
 }

@@ -9,7 +9,7 @@ export default function Teams() {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
 
-    // Load teams on page load
+
     useEffect(() => {
         fetchTeams();
     }, []);
@@ -33,7 +33,7 @@ export default function Teams() {
             await createTeamApi(newTeamName);
             setNewTeamName("");
             setShowModal(false);
-            fetchTeams(); // Refresh the list
+            fetchTeams(); 
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Failed to create team";
             setError(message);
@@ -44,7 +44,6 @@ export default function Teams() {
 
     return (
         <div className="p-8 bg-gray-50 min-h-screen">
-            {/* Header Section */}
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Manage Teams</h1>
@@ -59,7 +58,6 @@ export default function Teams() {
                 </button>
             </div>
 
-            {/* Search/Filter placeholder */}
             <div className="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-between mb-6 shadow-sm">
                 <div className="relative w-1/3">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -70,8 +68,6 @@ export default function Teams() {
                     />
                 </div>
             </div>
-
-            {/* Teams Grid/List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {teams.length === 0 ? (
                     <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">

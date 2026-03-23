@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { IAuthService } from "../../interfaces/services/IAuthService";
+import { HttpStatus } from "../../enums/HttpStatus";
+import { AUTH_MESSAGES } from "../../constants/messages";
 
 export class AuthController {
     constructor(private _authService: IAuthService) { }
@@ -9,17 +11,17 @@ export class AuthController {
             const { name, email, password, companyName } = req.body
             const result = await this._authService.registration(name, email, password, companyName)
 
-            res.status(201).json({ success: true, message:result.message})
+            res.status(HttpStatus.CREATED).json({ success: true, message: result.message || AUTH_MESSAGES.REGISTRATION_SUCCESS })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Registration failed";
-            res.status(400).json({ success: false, message });
+            const message = err instanceof Error ? err.message : AUTH_MESSAGES.REGISTRATION_FAILED;
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
         }
     }
 
     verifyOtp = async (req: Request, res: Response): Promise<void> => {
-        try{
-            const {email,otp} = req.body
-            const result = await this._authService.verifyOtp(email,otp)
+        try {
+            const { email, otp } = req.body
+            const result = await this._authService.verifyOtp(email, otp)
 
             res.cookie("refreshToken", result.refreshToken, {
                 httpOnly: true,
@@ -27,21 +29,21 @@ export class AuthController {
                 sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             })
-            res.status(200).json({ success: true, token: result.accessToken , user : result.user, permissions:result.permissions})
+            res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Otp verification failed";
-            res.status(400).json({ success: false, message });
+            const message = err instanceof Error ? err.message : AUTH_MESSAGES.OTP_VERIFICATION_FAILED;
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
         }
     }
 
-    resendOtp = async (req:Request , res:Response):Promise<void>=>{
-        try{
-            const {email} = req.body
+    resendOtp = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { email } = req.body
             const result = await this._authService.resendOtp(email)
-            res.status(200).json({success:true,message:result.message})
-        }catch(err:unknown){
-            const message = err instanceof Error? err.message :"Failed to resend otp";
-            res.status(400).json({success:false,message});
+            res.status(HttpStatus.OK).json({ success: true, message: result.message || AUTH_MESSAGES.OTP_RESEND_SUCCESS })
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : AUTH_MESSAGES.OTP_RESEND_FAILED;
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
         }
     }
 
@@ -56,10 +58,10 @@ export class AuthController {
                 sameSite: "lax",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             })
-            res.status(200).json({ success: true, token: result.accessToken, user:result.user, permissions:result.permissions })
+            res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Login failed";
-            res.status(400).json({ success: false, message });
+            const message = err instanceof Error ? err.message : AUTH_MESSAGES.LOGIN_FAILED;
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
         }
     }
 
@@ -68,14 +70,14 @@ export class AuthController {
             const refreshToken = req.cookies.refreshToken
 
             if (!refreshToken) {
-                res.status(401).json({ success: false, message: "No refersh token" })
+                res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: AUTH_MESSAGES.NO_TOKEN })
                 return
             }
             const result = await this._authService.refresh(refreshToken)
-            res.status(200).json({ success: true, token: result.accessToken , user:result.user, permissions:result.permissions})
+            res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "TOken refresh failed"
-            res.status(403).json({ success: false, message })
+            const message = err instanceof Error ? err.message : AUTH_MESSAGES.REFRESH_FAILED
+            res.status(HttpStatus.FORBIDDEN).json({ success: false, message })
         }
     }
 
@@ -88,10 +90,10 @@ export class AuthController {
             }
 
             res.clearCookie("refreshToken")
-            res.status(200).json({ success: true, message: "Logged out" })
+            res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.LOGGED_OUT })
         } catch (err: unknown) {
             res.clearCookie("refreshToken")
-            res.status(200).json({ success: true, message: "Logged out" })
+            res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.LOGGED_OUT })
         }
     }
 
@@ -99,14 +101,14 @@ export class AuthController {
         try {
             const { email } = req.body
             await this._authService.forgotPassword(email)
-            res.status(200).json({
+            res.status(HttpStatus.OK).json({
                 success: true,
-                message: " a reset link has been sent to this mail"
+                message: AUTH_MESSAGES.FORGOT_PASSWORD_SUCCESS
             })
 
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "something went wrong"
-            res.status(400).json({ success: false, message })
+            const message = err instanceof Error ? err.message : AUTH_MESSAGES.RESET_FAILED
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
         }
     }
 
@@ -114,10 +116,10 @@ export class AuthController {
         try {
             const { token, newPassword } = req.body
             await this._authService.resetPassword(token, newPassword)
-            res.status(200).json({ success: true, message: "password reset successful" })
+            res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.RESET_SUCCESS })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "reset failed"
-            res.status(400).json({ success: false, message })
+            const message = err instanceof Error ? err.message : AUTH_MESSAGES.RESET_FAILED
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
         }
     }
 }

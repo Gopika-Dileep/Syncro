@@ -55,6 +55,9 @@ export class AuthService implements IAuthService {
     }
 
     await this._authRepo.verifyUser(user._id.toString())
+    if (user.is_blocked) {
+      throw new Error("Your account has been blocked. Please contact support.")
+    }
 
     let permissions: string[] = [];
     let designation :string | null = null
@@ -115,6 +118,9 @@ export class AuthService implements IAuthService {
     if (!user.is_verified) {
       throw new Error("User is not verified")
     }
+    if (user.is_blocked) {
+      throw new Error("Your account has been blocked. Please contact support.")
+    }
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
       throw new Error("Password is wrong")
@@ -159,6 +165,9 @@ export class AuthService implements IAuthService {
     const user = await this._authRepo.findById(decoded.id)
     if (!user || user.refreshToken !== refreshToken) {
       throw new Error("invalid refresh token")
+    }
+    if (user.is_blocked) {
+      throw new Error("Your account has been blocked. Please contact support.")
     }
     let permissions: string[] = [];
     let designation :string |  null = null;
