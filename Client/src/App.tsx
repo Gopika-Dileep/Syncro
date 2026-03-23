@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import VerifyOtp from './pages/auth/VerifyOtp'
@@ -25,6 +26,7 @@ function App() {
   return (
     <div>
       <BrowserRouter>
+        <Toaster richColors position="top-right" />
         <AuthInitializer>
           <Routes>
             <Route path='/login' element={<PublicRote><Login /></PublicRote>} />
@@ -44,6 +46,7 @@ function App() {
               <Route path='employees' element={<Employees />} />
               <Route path='employees/:userId' element={<GetEmployee/>} />
               <Route path='employees/add' element={<AddEmployee />} />
+              <Route path='employees/edit/:userId' element={<AddEmployee/>}/>
               <Route path='projects' element={<Projects />} />
               <Route path='teams' element={<Teams />} />
               <Route path='notifications' element={<Notifications />} />

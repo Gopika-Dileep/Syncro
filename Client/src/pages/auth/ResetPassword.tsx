@@ -2,6 +2,7 @@ import { resetPasswordApi } from "@/api/authapi";
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Lock, Zap, CheckCircle2, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ResetPassword() {
     const [searchParams] = useSearchParams();
@@ -16,7 +17,7 @@ export default function ResetPassword() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (newPassword !== confirmPassword) {
             setError("Passwords do not match");
             return;
@@ -25,14 +26,15 @@ export default function ResetPassword() {
         setLoading(true);
         setMessage("");
         setError("");
-        
+
         try {
             const data = await resetPasswordApi(token, newPassword);
+            toast.success("Password reset successfully!");
             setMessage(data.message || "Your password has been reset successfully.");
-            // Redirect after 3 seconds
-            setTimeout(() => navigate('/login'), 3000);
+            setTimeout(() => navigate('/login'), 500);
         } catch (err: any) {
             const msg = err.response?.data?.message || err.message || "Reset failed. The link may be expired.";
+            toast.error(msg);
             setError(msg);
         } finally {
             setLoading(false);
@@ -58,7 +60,7 @@ export default function ResetPassword() {
                             <div className="bg-rose-50 text-rose-600 p-4 rounded-xl mb-6 text-sm font-medium">
                                 Invalid or missing reset token. Please request a new link.
                             </div>
-                           <Link to="/forgot-password" className="inline-flex items-center gap-2 text-gray-900 font-bold hover:text-gray-700 transition-colors">
+                            <Link to="/forgot-password" className="inline-flex items-center gap-2 text-gray-900 font-bold hover:text-gray-700 transition-colors">
                                 <ArrowLeft size={16} />
                                 Request new link
                             </Link>

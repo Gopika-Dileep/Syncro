@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { forgotPasswordApi } from "../../api/authapi"
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Mail, Zap, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ForgotPassword() {
-    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -17,9 +17,11 @@ export default function ForgotPassword() {
         setError("");
         try {
             const data = await forgotPasswordApi(email);
+            toast.success(data.message || "A reset link has been sent to your email.");
             setMessage(data.message || "A reset link has been sent to your email.");
         } catch (err: any) {
             const msg = err.response?.data?.message || err.message || "Something went wrong";
+            toast.error(msg);
             setError(msg);
         } finally {
             setLoading(false);

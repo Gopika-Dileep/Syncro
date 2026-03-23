@@ -5,6 +5,7 @@ import { resendOtpApi, verifyOtpApi } from "@/api/authapi";
 import { setCredentials } from "@/store/slices/authSlice"; 
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Fingerprint, Zap, Clock, Loader2, ArrowLeft, ArrowRight, RotateCw } from "lucide-react";
+import { toast } from "sonner";
 
 export default function VerifyOtp() {
     const location = useLocation();
@@ -35,13 +36,15 @@ export default function VerifyOtp() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError("");
         try {
             const data = await verifyOtpApi(email, otp);
-            dispatch(setCredentials({ user: data.user, token: data.token }));
+            dispatch(setCredentials({ user: data.user, token: data.token, permissions: data.permissions }));
+            toast.success("Identity verified! Welcome back.");
             navigate(data.user.role === 'employee' ? '/employee/dashboard' : '/company/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.message || "Verification failed. Please check your code.");
+            const msg = err.response?.data?.message || "Verification failed. Please check your code.";
+            toast.error(msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -51,11 +54,13 @@ export default function VerifyOtp() {
         setLoading(true);
         try {
             await resendOtpApi(email);
+            toast.success("A new code has been sent!");
             setTimeLeft(60);
             setCanResend(false);
             setOtp("");
             setError("");
         } catch (err: any) {
+            toast.error("Failed to resend OTP. Please try again.");
             setError("Failed to resend OTP. Please try again.");
         } finally {
             setLoading(false);
