@@ -105,10 +105,10 @@ private _flattenPermissions(p: EmployeePermissions): string[] {
 }
 
 
-    async getEmployees(companyId: string): Promise<object[]> {
+    async getEmployees(companyId: string, page: number, limit: number, search: string): Promise<{ employees: any[], total: number }> {
         const company = await this._companyRepo.findCompanyByUserId(companyId)
         if (!company) throw new Error("company not found")
-        return this._employeeRepo.getEmployeesByCompanyId(company._id.toString())
+        return this._employeeRepo.getEmployeesByCompanyId(company._id.toString(), page, limit, search)
     }
 
     async toggleBlockEmployee(companyId: string, userId: string): Promise<boolean> {

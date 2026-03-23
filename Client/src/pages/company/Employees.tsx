@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
-    Search, Plus, Users, UserCheck, Briefcase,
-    LayoutGrid, MoreVertical, ShieldAlert, CheckCircle,
+    Search, Plus, Users, MoreVertical, ShieldAlert, CheckCircle,
     Edit2, Eye
 } from "lucide-react";
 
@@ -22,22 +21,33 @@ export default function Employees() {
 
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [searchTerm, setSearchTerm] = useState("");
+    const limit = 5;
     const [error, setError] = useState("");
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchEmployees = async () => {
+            setLoading(true);
             try {
-                const data = await getEmployeesApi();
+                const data = await getEmployeesApi(page, limit, searchTerm);
                 setEmployees(data.data);
+                setTotal(data.total);
             } catch {
                 setError("failed to load employees");
             } finally {
                 setLoading(false);
             }
         };
-        fetchEmployees();
-    }, []);
+
+        const timer = setTimeout(() => {
+            fetchEmployees();
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [page, searchTerm]);
 
     const updateBlockStatus = (userId: string, is_blocked: boolean) => {
         setEmployees((prev: Employee[]) =>
@@ -90,6 +100,11 @@ export default function Employees() {
                         type="text"
                         placeholder="Search employees by name, role or email..."
                         className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-slate-200 transition-all text-sm outline-none placeholder:text-slate-400"
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setPage(1);
+                        }}
                     />
                 </div>
             </div>
@@ -151,8 +166,8 @@ export default function Employees() {
                                         </td>
                                         <td className="px-6 py-5">
                                             <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${emp.user_id?.is_blocked
-                                                    ? 'bg-rose-50 text-rose-600 ring-1 ring-inset ring-rose-100'
-                                                    : 'bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-100'
+                                                ? 'bg-rose-50 text-rose-600 ring-1 ring-inset ring-rose-100'
+                                                : 'bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-100'
                                                 }`}>
                                                 <div className={`w-1.5 h-1.5 rounded-full ${emp.user_id?.is_blocked ? 'bg-rose-500' : 'bg-emerald-500'} animate-pulse`} />
                                                 {emp.user_id?.is_blocked ? "Blocked" : "Active"}
@@ -173,7 +188,7 @@ export default function Employees() {
                                                 <>
                                                     {/* Click away overlay */}
                                                     <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)} />
-                                                    
+
                                                     <div className="absolute right-6 top-12 w-48 bg-white border border-slate-200 rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] z-50 p-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
                                                         <div className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 mb-1">
                                                             Actions
@@ -197,14 +212,14 @@ export default function Employees() {
                                                             <Edit2 size={13} className="text-slate-400" />
                                                             Edit Employee
                                                         </button>
-                                                        
+
                                                         <button
                                                             onClick={() => {
                                                                 handleToggleBlock(emp.user_id._id);
                                                             }}
                                                             className={`flex items-center gap-3 w-full px-3 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-colors ${emp.user_id?.is_blocked
-                                                                    ? 'text-emerald-600 hover:bg-emerald-50'
-                                                                    : 'text-rose-600 hover:bg-rose-50'
+                                                                ? 'text-emerald-600 hover:bg-emerald-50'
+                                                                : 'text-rose-600 hover:bg-rose-50'
                                                                 }`}
                                                         >
                                                             {emp.user_id?.is_blocked ? <CheckCircle size={14} /> : <ShieldAlert size={14} />}
@@ -218,6 +233,30 @@ export default function Employees() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {employees.length > 0 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-slate-50 bg-slate-50/20">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                            Showing {((page - 1) * limit) + 1} - {Math.min(page * limit, total)} of {total} Members
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                disabled={page === 1}
+                                onClick={() => setPage(prev => prev - 1)}
+                                className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold uppercase transition-all hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                disabled={page * limit >= total}
+                                onClick={() => setPage(prev => prev + 1)}
+                                className="px-4 py-2 bg-slate-900 text-white rounded-lg text-[11px] font-bold uppercase transition-all hover:bg-black disabled:opacity-50"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

@@ -57,7 +57,7 @@ export interface AddEmployeeData{
 
 export interface IEmployeeService {
     addEmployee(companyId : string, data : AddEmployeeData):Promise <void>
-    getEmployees(companyId:string): Promise<object[]>
+    getEmployees(companyId: string, page: number, limit: number, search: string): Promise<{ employees: any[], total: number }>
     toggleBlockEmployee(companyId:string,userId:string):Promise<boolean>
     getEmployeeDetails(userId:string):Promise<Object>
     updateEmployeeDetails(userId:string , data:Partial<IEmployee>):Promise<IEmployee|null>;

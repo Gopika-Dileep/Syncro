@@ -80,9 +80,9 @@ export const addEmployeeApi = async (data: AddEmployeeForm) => {
     return response.data;   //{success message}
 };
 
-export const getEmployeesApi = async () => {
-    const response = await axiosInstance.get("/company/employees");
-    return response.data;    //{employee data in array of objects}
+export const getEmployeesApi = async (page: number = 1, limit: number = 10, search: string = "") => {
+    const response = await axiosInstance.get(`/company/employees?page=${page}&limit=${limit}&search=${search}`);
+    return response.data;
 };
 
 export const toggleBlockEmployeeApi = async (userId: string) => {
