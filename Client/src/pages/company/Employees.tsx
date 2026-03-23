@@ -1,9 +1,10 @@
 import { toggleBlockEmployeeApi, getEmployeesApi } from "@/api/companyApi";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    Search, Plus, Users, UserCheck, Briefcase, 
-    LayoutGrid, MoreHorizontal, ShieldAlert, CheckCircle, Filter
+import {
+    Search, Plus, Users, UserCheck, Briefcase,
+    LayoutGrid, MoreHorizontal, ShieldAlert, CheckCircle, Filter,
+    Edit2
 } from "lucide-react";
 
 interface Employee {
@@ -21,7 +22,7 @@ export default function Employees() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [openMenuId, setOpenMenuId] = useState<string|null>(null);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -67,7 +68,7 @@ export default function Employees() {
     };
 
     const getInitials = (name: string) => {
-        return name ? name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0, 2) : "??";
+        return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : "??";
     };
 
     return (
@@ -78,7 +79,7 @@ export default function Employees() {
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Employee Management</h1>
                     <p className="text-slate-500 text-sm mt-1">Manage and monitor your company's team members.</p>
                 </div>
-                <button 
+                <button
                     onClick={() => navigate('/company/employees/add')}
                     className="inline-flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-md active:scale-95"
                 >
@@ -89,19 +90,19 @@ export default function Employees() {
 
             {/* Statistics Row from the image */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <StatBox label="Total Employees" value={stats.total} icon={<Users size={20}/>} color="bg-blue-50 text-blue-600" />
-                <StatBox label="Active" value={stats.active} icon={<UserCheck size={20}/>} color="bg-emerald-50 text-emerald-600" />
-                <StatBox label="Team Leads" value={stats.leads} icon={<Briefcase size={20}/>} color="bg-orange-50 text-orange-600" />
-                <StatBox label="Departments" value={stats.depts} icon={<LayoutGrid size={20}/>} color="bg-pink-50 text-pink-600" />
+                <StatBox label="Total Employees" value={stats.total} icon={<Users size={20} />} color="bg-blue-50 text-blue-600" />
+                <StatBox label="Active" value={stats.active} icon={<UserCheck size={20} />} color="bg-emerald-50 text-emerald-600" />
+                <StatBox label="Team Leads" value={stats.leads} icon={<Briefcase size={20} />} color="bg-orange-50 text-orange-600" />
+                <StatBox label="Departments" value={stats.depts} icon={<LayoutGrid size={20} />} color="bg-pink-50 text-pink-600" />
             </div>
 
             {/* Search and Filters as per image */}
             <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 shadow-sm">
                 <div className="relative w-full max-w-xl">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
-                        type="text" 
-                        placeholder="Search employees by name, role or email..." 
+                    <input
+                        type="text"
+                        placeholder="Search employees by name, role or email..."
                         className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-slate-200 transition-all text-sm outline-none placeholder:text-slate-400"
                     />
                 </div>
@@ -134,7 +135,7 @@ export default function Employees() {
                         </div>
                         <h3 className="text-xl font-bold text-slate-900">No employees found</h3>
                         <p className="text-slate-500 mb-8 max-w-xs mx-auto">Get started by adding your first employee to the system.</p>
-                        <button 
+                        <button
                             onClick={() => navigate('/company/employees/add')}
                             className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition-all shadow-lg active:scale-95"
                         >
@@ -171,11 +172,10 @@ export default function Employees() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
-                                                emp.user_id?.is_blocked 
-                                                ? 'bg-rose-50 text-rose-600 ring-1 ring-inset ring-rose-100' 
-                                                : 'bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-100'
-                                            }`}>
+                                            <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${emp.user_id?.is_blocked
+                                                    ? 'bg-rose-50 text-rose-600 ring-1 ring-inset ring-rose-100'
+                                                    : 'bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-100'
+                                                }`}>
                                                 <div className={`w-1.5 h-1.5 rounded-full ${emp.user_id?.is_blocked ? 'bg-rose-500' : 'bg-emerald-500'} animate-pulse`} />
                                                 {emp.user_id?.is_blocked ? "Blocked" : "Active"}
                                             </span>
@@ -191,12 +191,25 @@ export default function Employees() {
                                             {openMenuId === emp._id && (
                                                 <div className="absolute right-6 top-16 w-48 bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-50 p-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
                                                     <button
+                                                        onClick={() => navigate(`/company/employees/${emp.user_id._id}`)}
+                                                        className="flex items-center gap-3 w-full px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50">
+                                                        <Users size={14} />
+                                                        View Details
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => navigate(`/company/employees/${emp.user_id._id}`, { state: { edit: true } })}
+                                                        className="flex items-center gap-3 w-full px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50"
+                                                    >
+                                                        <Edit2 size={14} />
+                                                        Edit Profile
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleToggleBlock(emp.user_id._id)}
-                                                        className={`flex items-center gap-3 w-full px-4 py-3 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors ${
-                                                            emp.user_id?.is_blocked 
-                                                            ? 'text-emerald-600 hover:bg-emerald-50' 
-                                                            : 'text-rose-600 hover:bg-rose-50'
-                                                        }`}
+                                                        className={`flex items-center gap-3 w-full px-4 py-3 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors ${emp.user_id?.is_blocked
+                                                                ? 'text-emerald-600 hover:bg-emerald-50'
+                                                                : 'text-rose-600 hover:bg-rose-50'
+                                                            }`}
                                                     >
                                                         {emp.user_id?.is_blocked ? <CheckCircle size={14} /> : <ShieldAlert size={14} />}
                                                         {emp.user_id?.is_blocked ? "✓ Unblock" : "🚫 Block"}

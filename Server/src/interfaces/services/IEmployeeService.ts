@@ -1,3 +1,5 @@
+import { IEmployee } from "../../models/employee.model";
+
 export interface PermissionScopes{
     own:boolean;
     team?:boolean;
@@ -71,4 +73,6 @@ export interface IEmployeeService {
     addEmployee(companyId : string, data : AddEmployeeData):Promise <void>
     getEmployees(companyId:string): Promise<object[]>
     toggleBlockEmployee(companyId:string,userId:string):Promise<boolean>
-}
+    getEmployeeDetails(userId:string):Promise<Object>
+    updateEmployeeDetails(userId:string , data:Partial<IEmployee>):Promise<IEmployee|null>;
+   }

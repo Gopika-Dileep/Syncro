@@ -8,6 +8,7 @@ import { parseDate } from "../utils/parseDate.utils";
 import { IAuthRepository } from "../interfaces/repositories/IAuthRepository";
 import { ICompanyRepository } from "../interfaces/repositories/ICompanyRepository";
 import { IPermissionRepository } from "../interfaces/repositories/IPermissionRepository";
+import { IEmployee } from "../models/employee.model";
 
 export class EmployeeService implements IEmployeeService {
     constructor(
@@ -100,5 +101,23 @@ export class EmployeeService implements IEmployeeService {
         if (!company) throw new Error("company not found")
         const newStatus = await this._authRepo.toggleBlockUser(userId)
         return newStatus
+    }
+
+    async getEmployeeDetails(userId: string): Promise<Object> {
+        const employee = await this._employeeRepo.findByUserId(userId)
+        if(!employee){
+            throw new Error("employee not found")
+        }
+        return employee
+    }
+
+    async updateEmployeeDetails(userId: string, data: Partial<IEmployee>): Promise<IEmployee | null> {
+        const updatedEmployee = await this._employeeRepo.updateEmployee(userId , data);
+
+        if(!updatedEmployee){
+            throw new Error("failed to update employee details")
+        }
+
+        return updatedEmployee
     }
 }

@@ -19,6 +19,7 @@ import EmployeeDashboard from './pages/employee/EmployeeDashbord'
 import Sprints from './pages/employee/Sprints'
 import Backlogs from './pages/employee/Backlogs'
 import Teams from './pages/company/Teams'
+import GetEmployee from './pages/company/GetEmployee'
 
 function App() {
   return (
@@ -41,26 +42,27 @@ function App() {
             >
               <Route path='dashboard' element={<CompanyDashboard />} />
               <Route path='employees' element={<Employees />} />
+              <Route path='employees/:userId' element={<GetEmployee/>} />
               <Route path='employees/add' element={<AddEmployee />} />
               <Route path='projects' element={<Projects />} />
-              <Route path='teams' element={<Teams/>}/>
+              <Route path='teams' element={<Teams />} />
               <Route path='notifications' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
-              </Route>
-              <Route
+            </Route>
+            <Route
               path='/employee'
               element={
                 <ProtectedRoute allowedRoles={['employee']}>
                   <EmployeeLayout />
                 </ProtectedRoute>
               }
-            > 
+            >
               <Route path='dashboard' element={<EmployeeDashboard />} />
               <Route path='projects' element={<Projects />} />
               <Route path='backlogs' element={<Backlogs />} />
               <Route path='sprints' element={<Sprints />} />
               <Route path='notifications' element={<Notifications />} />
-              <Route path='settings' element={<Settings />} /> 
+              <Route path='settings' element={<Settings />} />
             </Route>
           </Routes>
         </AuthInitializer>
