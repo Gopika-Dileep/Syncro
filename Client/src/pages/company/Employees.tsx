@@ -1,10 +1,11 @@
 import { toggleBlockEmployeeApi, getEmployeesApi } from "@/api/companyApi";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
     Search, Plus, Users, UserCheck, Briefcase,
-    LayoutGrid, MoreHorizontal, ShieldAlert, CheckCircle, Filter,
-    Edit2
+    LayoutGrid, MoreVertical, ShieldAlert, CheckCircle,
+    Edit2, Eye
 } from "lucide-react";
 
 interface Employee {
@@ -39,7 +40,7 @@ export default function Employees() {
     }, []);
 
     const updateBlockStatus = (userId: string, is_blocked: boolean) => {
-        setEmployees((prev) =>
+        setEmployees((prev: Employee[]) =>
             prev.map((emp) =>
                 emp.user_id._id === userId
                     ? { ...emp, user_id: { ...emp.user_id, is_blocked } }
@@ -52,19 +53,12 @@ export default function Employees() {
         try {
             const data = await toggleBlockEmployeeApi(userId);
             updateBlockStatus(userId, data.isBlocked);
-        } catch {
-            alert("Failed to update employee status");
+            toast.success(`Employee ${data.isBlocked ? 'blocked' : 'unblocked'} successfully`);
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to update employee status");
         } finally {
             setOpenMenuId(null);
         }
-    };
-
-    // Derived statistics for the premium dashboard look
-    const stats = {
-        total: employees.length,
-        active: employees.filter(e => !e.user_id.is_blocked).length,
-        leads: Math.ceil(employees.length * 0.2), // Aesthetic placeholder
-        depts: new Set(employees.filter(e => e.designation).map(e => e.designation)).size || 0
     };
 
     const getInitials = (name: string) => {
@@ -73,7 +67,7 @@ export default function Employees() {
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans text-slate-800">
-            {/* Header section as seen in the image */}
+            {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                 <div>
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Employee Management</h1>
@@ -88,17 +82,9 @@ export default function Employees() {
                 </button>
             </div>
 
-            {/* Statistics Row from the image */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <StatBox label="Total Employees" value={stats.total} icon={<Users size={20} />} color="bg-blue-50 text-blue-600" />
-                <StatBox label="Active" value={stats.active} icon={<UserCheck size={20} />} color="bg-emerald-50 text-emerald-600" />
-                <StatBox label="Team Leads" value={stats.leads} icon={<Briefcase size={20} />} color="bg-orange-50 text-orange-600" />
-                <StatBox label="Departments" value={stats.depts} icon={<LayoutGrid size={20} />} color="bg-pink-50 text-pink-600" />
-            </div>
-
-            {/* Search and Filters as per image */}
+            {/* Search bar */}
             <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 mb-8 shadow-sm">
-                <div className="relative w-full max-w-xl">
+                <div className="relative w-full">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                         type="text"
@@ -106,18 +92,10 @@ export default function Employees() {
                         className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-slate-50 border-none focus:ring-2 focus:ring-slate-200 transition-all text-sm outline-none placeholder:text-slate-400"
                     />
                 </div>
-                <div className="flex gap-3 shrink-0">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
-                        All Roles <Filter size={14} />
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
-                        All Status <Filter size={14} />
-                    </button>
-                </div>
             </div>
 
             {/* Main Listing Table */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm relative">
                 {loading ? (
                     <div className="p-20 text-center flex flex-col items-center gap-4">
                         <div className="w-8 h-8 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin"></div>
@@ -143,7 +121,7 @@ export default function Employees() {
                         </button>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-visible">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-slate-50 bg-slate-50/50">
@@ -182,39 +160,58 @@ export default function Employees() {
                                         </td>
                                         <td className="px-6 py-5 text-right relative">
                                             <button
-                                                onClick={() => setOpenMenuId(openMenuId === emp._id ? null : emp._id)}
-                                                className="p-2 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 rounded-lg transition-all text-slate-400 hover:text-slate-900"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(openMenuId === emp._id ? null : emp._id);
+                                                }}
+                                                className="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-400 hover:text-slate-900 border border-transparent"
                                             >
-                                                <MoreHorizontal size={20} />
+                                                <MoreVertical size={18} />
                                             </button>
 
                                             {openMenuId === emp._id && (
-                                                <div className="absolute right-6 top-16 w-48 bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-50 p-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                                                    <button
-                                                        onClick={() => navigate(`/company/employees/${emp.user_id._id}`)}
-                                                        className="flex items-center gap-3 w-full px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50">
-                                                        <Users size={14} />
-                                                        View Details
-                                                    </button>
+                                                <>
+                                                    {/* Click away overlay */}
+                                                    <div className="fixed inset-0 z-40" onClick={() => setOpenMenuId(null)} />
+                                                    
+                                                    <div className="absolute right-6 top-12 w-48 bg-white border border-slate-200 rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] z-50 p-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                        <div className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 mb-1">
+                                                            Actions
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                setOpenMenuId(null);
+                                                                navigate(`/company/employees/${emp.user_id._id}`);
+                                                            }}
+                                                            className="flex items-center gap-3 w-full px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                                                            <Eye size={14} className="text-slate-400" />
+                                                            View Details
+                                                        </button>
 
-                                                    <button
-                                                        onClick={() => navigate(`/company/employees/${emp.user_id._id}`, { state: { edit: true } })}
-                                                        className="flex items-center gap-3 w-full px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50"
-                                                    >
-                                                        <Edit2 size={14} />
-                                                        Edit Profile
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleToggleBlock(emp.user_id._id)}
-                                                        className={`flex items-center gap-3 w-full px-4 py-3 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors ${emp.user_id?.is_blocked
-                                                                ? 'text-emerald-600 hover:bg-emerald-50'
-                                                                : 'text-rose-600 hover:bg-rose-50'
-                                                            }`}
-                                                    >
-                                                        {emp.user_id?.is_blocked ? <CheckCircle size={14} /> : <ShieldAlert size={14} />}
-                                                        {emp.user_id?.is_blocked ? "✓ Unblock" : "🚫 Block"}
-                                                    </button>
-                                                </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                setOpenMenuId(null);
+                                                                navigate(`/company/employees/edit/${emp.user_id._id}`);
+                                                            }}
+                                                            className="flex items-center gap-3 w-full px-3 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50 mb-1">
+                                                            <Edit2 size={13} className="text-slate-400" />
+                                                            Edit Employee
+                                                        </button>
+                                                        
+                                                        <button
+                                                            onClick={() => {
+                                                                handleToggleBlock(emp.user_id._id);
+                                                            }}
+                                                            className={`flex items-center gap-3 w-full px-3 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-colors ${emp.user_id?.is_blocked
+                                                                    ? 'text-emerald-600 hover:bg-emerald-50'
+                                                                    : 'text-rose-600 hover:bg-rose-50'
+                                                                }`}
+                                                        >
+                                                            {emp.user_id?.is_blocked ? <CheckCircle size={14} /> : <ShieldAlert size={14} />}
+                                                            {emp.user_id?.is_blocked ? "Unblock" : "Block"}
+                                                        </button>
+                                                    </div>
+                                                </>
                                             )}
                                         </td>
                                     </tr>
@@ -228,16 +225,4 @@ export default function Employees() {
     );
 }
 
-function StatBox({ label, value, icon, color }: { label: string, value: number | string, icon: React.ReactNode, color: string }) {
-    return (
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
-                {icon}
-            </div>
-            <div>
-                <div className="text-2xl font-black text-slate-900 tracking-tight">{value}</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">{label}</div>
-            </div>
-        </div>
-    );
-}
+
