@@ -41,6 +41,6 @@ export class AuthRepository implements IAuthRepository{
     }
 
     async updateUser(userId: string, data: { name?: string; email?: string; }): Promise<IUser | null> {
-        return await userModel.findByIdAndUpdate(userId,{$set:data},{new:true})
+        return await userModel.findByIdAndUpdate(userId, { $set: data }, { returnDocument: "after" })
     }
 }  

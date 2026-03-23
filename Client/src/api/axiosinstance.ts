@@ -23,21 +23,28 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use((response) => {
     return response
 },
-async (error) => {
-    const originalRequest = error.config
+    async (error) => {
+        const originalRequest = error.config
+        
+        // Handle forced logout for blocked accounts
+        if (error.response?.status === 403 && error.response.data?.message?.toLowerCase().includes("blocked")) {
+            store.dispatch(logout());
+            return Promise.reject(error);
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true
-            try{
+            try {
                 const res = await axios.post(
                     "http://localhost:5000/api/auth/refresh",
                     {},
-                    {withCredentials:true}
+                    { withCredentials: true }
                 )
-                const newToken = res.data.token 
+                const newToken = res.data.token
                 store.dispatch(setToken(newToken))
                 originalRequest.headers.Authorization = `Bearer ${newToken}`
                 return axiosInstance(originalRequest)
-            }catch{
+            } catch {
                 store.dispatch(logout())
             }
         }

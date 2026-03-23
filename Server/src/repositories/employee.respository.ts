@@ -53,6 +53,6 @@ export class EmployeeRepository implements IEmployeeRepository {
     }
 
     async updateEmployee(userId:string,data:Partial<IEmployee>):Promise<IEmployee |null>{
-        return await employeeModel.findOneAndUpdate({user_id:userId},{$set:data},{new:true})
+        return await employeeModel.findOneAndUpdate({user_id:userId},{$set:data},{ returnDocument: "after" })
     }
 }

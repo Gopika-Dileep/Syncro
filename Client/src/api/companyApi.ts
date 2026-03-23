@@ -63,7 +63,7 @@ export interface UserProfile {
     address?: string;
     skills?: string[];
     date_of_joining?: string;
-    team?: { _id: string; name: string } | null; 
+    team?: { _id: string; name: string } | null;
 }
 
 
@@ -80,7 +80,7 @@ export const addEmployeeApi = async (data: AddEmployeeForm) => {
     return response.data;   //{success message}
 };
 
-export const getEmployeesApi = async (page: number = 1, limit: number = 10, search: string = "") => {
+export const getEmployeesApi = async (page: number = 1, limit: number = 5, search: string = "") => {
     const response = await axiosInstance.get(`/company/employees?page=${page}&limit=${limit}&search=${search}`);
     return response.data;
 };

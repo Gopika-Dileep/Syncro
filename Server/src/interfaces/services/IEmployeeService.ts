@@ -60,5 +60,5 @@ export interface IEmployeeService {
     getEmployees(companyId: string, page: number, limit: number, search: string): Promise<{ employees: any[], total: number }>
     toggleBlockEmployee(companyId:string,userId:string):Promise<boolean>
     getEmployeeDetails(userId:string):Promise<Object>
-    updateEmployeeDetails(userId:string , data:Partial<IEmployee>):Promise<IEmployee|null>;
+    updateEmployeeDetails(userId: string, data: any): Promise<any>;
    }

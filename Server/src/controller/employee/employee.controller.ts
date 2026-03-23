@@ -74,22 +74,16 @@ export class EmployeeController {
     updateEmployeeDetails = async (req: Request, res: Response): Promise<void> => {
         try {
             const userId = req.params.userId as string
-
-            const updateData: Partial<IEmployee> = {
-                designation: req.body.designation,
-                phone: req.body.phone,
-                date_of_joining: req.body.date_of_joining ? new Date(req.body.date_of_joining) : undefined
-            };
             if (!userId) {
                 res.status(400).json({ success: false, message: "userId is required" });
                 return
             }
 
-            const result = await this._employeeService.updateEmployeeDetails(userId, updateData);
+            const result = await this._employeeService.updateEmployeeDetails(userId, req.body);
 
             res.status(200).json({ success: true, message: "Employee Profile updated successfully", data: result })
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "failed to get data"
+            const message = err instanceof Error ? err.message : "failed to update data"
             res.status(400).json({ success: false, message })
         }
     }
