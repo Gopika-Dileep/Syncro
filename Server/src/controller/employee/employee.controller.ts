@@ -9,10 +9,10 @@ export class EmployeeController {
         try {
             const companyId = req.userId!
 
-            const { name, email, designation, date_of_joining, date_of_birth, phone, address, skills,permissions } = req.body
+            const { name, email,  phone, designation, date_of_joining, permissions } = req.body
 
             await this._employeeService.addEmployee(companyId, {
-                name, email, designation, date_of_joining, date_of_birth, phone, address, skills: Array.isArray(skills) ? skills : (typeof skills === 'string' ? skills.split(",").map((s: string) => s.trim()) : []),permissions
+                name, email, phone, designation, date_of_joining,permissions
             })
 
             res.status(201).json({ success: true, message: "Employee added and invitation sent" })
@@ -74,8 +74,6 @@ export class EmployeeController {
             const updateData :Partial<IEmployee>={
                 designation : req.body.designation,
                 phone:req.body.phone,
-                address:req.body.address,
-                skills:req.body.skills,
                 date_of_joining:req.body.date_of_joining ?new Date(req.body.date_of_joining):undefined
             };
             if(!userId){

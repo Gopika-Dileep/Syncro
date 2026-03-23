@@ -41,4 +41,24 @@ export class UserController {
             res.status(400).json({ success: false, message });
         }
     }
+
+    updateProfile = async (req:Request , res:Response) :Promise<void> =>{
+        try{
+            const userId = req.userId
+
+            const {name,email,phone,address,skills} = req.body
+
+            if(!userId){
+                res.status(401).json({success:false ,message:"unauthorized"});
+                return 
+            }
+
+            const result = await this._userService.updateUserProfile(userId,{name,email,phone,address,skills});
+
+            res.status(200).json({success:true ,message:"Profile updated successfully", data:result});
+        }catch (err:unknown){
+           const message = err instanceof Error ? err.message : "Failed to change password";
+           res.status(400).json({ success: false, message });
+        }
+    }
 }

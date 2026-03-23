@@ -4,12 +4,12 @@ export interface IEmployee extends Document {
     user_id:        Types.ObjectId     
     company_id:     Types.ObjectId 
     team_id?:       Types.ObjectId     
-    designation?:   string | undefined
-    date_of_joining?: Date | undefined  
-    date_of_birth?:  Date | undefined
-    phone?:          string | undefined
-    address?:        string | undefined
-    skills?:          string[] | undefined
+    designation?:   string
+    date_of_joining?: Date
+    date_of_birth?:  Date
+    phone?:          string
+    address?:        string
+    skills?:          string[]
     created_at:      Date
 }
 

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { IAuthRepository } from "../interfaces/repositories/IAuthRepository";
 import { ICompanyRepository } from "../interfaces/repositories/ICompanyRepository";
 import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
-import { IUserService, IProfileData } from "../interfaces/services/IUserService";
+import { IUserService, IProfileData, IUpdateProfileData } from "../interfaces/services/IUserService";
 
 export class UserService implements IUserService {
     constructor(
@@ -53,5 +53,21 @@ export class UserService implements IUserService {
 
         const hashed = await bcrypt.hash(newPassword, 10);
         await this._authRepo.updatePassword(userId, hashed);
+    }
+
+    async updateUserProfile(userId: string, data: IUpdateProfileData): Promise<IProfileData> {
+        if(data.name || data.email){
+            await this._authRepo.updateUser(userId,{name:data.name , email:data.email})
+        }
+
+        const employeeData ={
+            phone:data.phone,
+            address:data.address,
+            skills :data.skills
+        }
+
+        await this._employeeRepo.updateEmployee(userId,employeeData);
+
+        return await this.getProfile(userId)
     }
 }

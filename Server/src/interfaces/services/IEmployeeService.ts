@@ -13,45 +13,35 @@ export interface ModulePermissions{
     [action:string] :PermissionAction;
 }
 
-export interface EmployeePermissions{
-    project:{
-        view:PermissionScopes;
-        create:boolean;
-        update:PermissionScopes;
-        delete:boolean;
-        archive:boolean;
-        assign:boolean;
-        unassign:boolean
+export interface EmployeePermissions {
+    project: {
+        create: boolean;
+        view: { team: boolean; all: boolean };
+        update: { team: boolean; all: boolean };
+        delete: boolean;
     };
-    task:{
-        view:PermissionScopes;
-        create:boolean;
-        update:PermissionScopes;
-        delete:PermissionScopes;
-        assign:boolean;
-        changeStatus: boolean;
-        addSubtask: boolean;
-        addComment: boolean;
+    task: {
+        create: boolean;
+        view: { team: boolean; all: boolean };
+        assign: { team: boolean; all: boolean };
+        update: { team: boolean; all: boolean };
     };
-    sprint:{
-        view:PermissionScopes;
-        create:boolean;
-        update:boolean;
-        delete:boolean;
-        addItems: boolean;
-        removeItems: boolean;
+    sprint: {
+        create: boolean;
+        view: { all: boolean };
+        update: boolean;
         start: boolean;
         complete: boolean;
-    },
+    };
     userStory: {
-        view: PermissionScopes;
         create: boolean;
-        update: PermissionScopes;
-        delete: boolean;
+        view: { all: boolean };
+        update: boolean;
         assign: boolean;
-        addToSprint: boolean;
-        removeFromSprint: boolean;
-        changeStatus: boolean;
+    };
+    team: {
+        view: { team: boolean; all: boolean };
+        performance: { team: boolean; all: boolean };
     };
 }
 
@@ -59,12 +49,8 @@ export interface AddEmployeeData{
     name:string
     email:string
     designation?:string
-    team_id?:string
-    date_of_joining?:string
-    date_of_birth?:string
     phone?:string
-    address?:string
-    skills?:string[]
+    date_of_joining?:string
     permissions:EmployeePermissions
 
 }

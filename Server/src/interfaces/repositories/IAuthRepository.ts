@@ -10,5 +10,6 @@ export interface IAuthRepository{
     updatePassword(id:string,hashedpassword:string):Promise<void>
     verifyUser(id:string):Promise<void>
     toggleBlockUser(userId:string):Promise<boolean>
+    updateUser(userId:string , data:{name?:string;email?:string}):Promise<IUser |null >
 }
 

@@ -44,17 +44,13 @@ export class EmployeeService implements IEmployeeService {
 
 
         const joiningDate = parseDate(data.date_of_joining)
-        const birthDate = parseDate(data.date_of_birth)
 
         
         await this._employeeRepo.createEmployee(user._id.toString(), company._id.toString(), {
             ...(data.designation && { designation: data.designation }),
-            ...(data.team_id && { team_id: new Types.ObjectId(data.team_id) as unknown as Types.ObjectId }),
             ...(joiningDate && { date_of_joining: joiningDate }),
-            ...(birthDate && { date_of_birth: birthDate }),
             ...(data.phone && { phone: data.phone }),
-            ...(data.address && { address: data.address }),
-            skills: data.skills ?? [],
+
         })
 
         await sendEmployeeInvitationEmail(
@@ -65,30 +61,49 @@ export class EmployeeService implements IEmployeeService {
         )
     }
 
-    private _flattenPermissions(p: EmployeePermissions): string[] {
-        const keys: string[] = []
-        Object.entries(p).forEach(([module, moduleData]) => {
-            Object.entries(moduleData).forEach(([action, val]) => {
-                if (typeof val === 'boolean') {
-                    if (val) {
-                        keys.push(`${module}:${action}:default`);
-                    } 
-                }else {
-                        const scopes = val as PermissionScopes;
-                        if (scopes.own) {
-                            keys.push(`${module}:${action}:own`)
-                        }
-                        if (scopes.team) {
-                            keys.push(`${module}:${action}:team`)
-                        }
-                        if (scopes.all) {
-                            keys.push(`${module}:${action}:all`)
-                        }
-                    }
-            })
-        })
-        return keys
-    }
+    // Server/src/service/employee.service.ts
+private _flattenPermissions(p: EmployeePermissions): string[] {
+    const keys: string[] = [];
+
+    // MODULE: project
+    if (p.project.create) keys.push("project:create");
+    if (p.project.view.team) keys.push("project:view:team");
+    if (p.project.view.all) keys.push("project:view:all");
+    if (p.project.update.team) keys.push("project:update:team");
+    if (p.project.update.all) keys.push("project:update:all");
+    if (p.project.delete) keys.push("project:delete");
+
+    // MODULE: task
+    if (p.task.create) keys.push("task:create");
+    if (p.task.view.team) keys.push("task:view:team");
+    if (p.task.view.all) keys.push("task:view:all");
+    if (p.task.assign.team) keys.push("task:assign:team");
+    if (p.task.assign.all) keys.push("task:assign:all");
+    if (p.task.update.team) keys.push("task:update:team");
+    if (p.task.update.all) keys.push("task:update:all");
+
+    // MODULE: sprint
+    if (p.sprint.create) keys.push("sprint:create");
+    if (p.sprint.view.all) keys.push("sprint:view:all");
+    if (p.sprint.update) keys.push("sprint:update");
+    if (p.sprint.start) keys.push("sprint:start");
+    if (p.sprint.complete) keys.push("sprint:complete");
+
+    // MODULE: userStory
+    if (p.userStory.create) keys.push("userStory:create");
+    if (p.userStory.view.all) keys.push("userStory:view:all");
+    if (p.userStory.update) keys.push("userStory:update");
+    if (p.userStory.assign) keys.push("userStory:assign");
+
+    // MODULE: team
+    if (p.team.view.team) keys.push("team:view:team");
+    if (p.team.view.all) keys.push("team:view:all");
+    if (p.team.performance.team) keys.push("team:performance:team");
+    if (p.team.performance.all) keys.push("team:performance:all");
+
+    return keys;
+}
+
 
     async getEmployees(companyId: string): Promise<object[]> {
         const company = await this._companyRepo.findCompanyByUserId(companyId)

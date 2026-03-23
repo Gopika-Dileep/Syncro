@@ -39,4 +39,8 @@ export class AuthRepository implements IAuthRepository{
             await userModel.findByIdAndUpdate(userId,{is_blocked:newStatus})
             return newStatus
     }
+
+    async updateUser(userId: string, data: { name?: string; email?: string; }): Promise<IUser | null> {
+        return await userModel.findByIdAndUpdate(userId,{$set:data},{new:true})
+    }
 }  
