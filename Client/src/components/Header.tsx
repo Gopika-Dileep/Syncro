@@ -1,71 +1,100 @@
-import { Search, Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "@/store/slices/authSlice";
 import { logoutApi } from "@/api/authapi";
 import type { RootState } from "@/store/store";
 
-const Header = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+// Map route segments to readable page titles
+const pageTitles: Record<string, string> = {
+    dashboard: "Dashboard",
+    projects:  "Projects",
+    employees: "Employees",
+    tasks:     "Tasks",
+    backlogs:  "Backlog",
+    sprints:   "Sprints",
+    teams:     "Teams",
+    settings:  "Settings",
+    profile:   "Profile",
+    notification: "Notifications",
+};
 
-  const user = useSelector((state: RootState) => state.auth.user);
+interface HeaderProps {
+    onMenuToggle?: () => void;
+}
 
-  const handleLogout = async () => {
-    try {
-      await logoutApi();
-    } catch (err) {
-      console.log("Logout API failed", err);
-    } finally {
-      dispatch(logout());
-      navigate("/login");
-    }
-  };
+const Header = ({ onMenuToggle }: HeaderProps) => {
+    const dispatch   = useDispatch();
+    const navigate   = useNavigate();
+    const location   = useLocation();
+    const user       = useSelector((state: RootState) => state.auth.user);
 
-  return (
-    <header className="h-16 bg-white border-b border-gray-100 px-8 flex items-center justify-between sticky top-0 z-10">
-      <div className="flex-1 max-w-md">
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-          <input
-            type="text"
-            placeholder="Search tasks, projects..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-transparent rounded-xl text-sm focus:bg-white focus:border-blue-100 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all"
-          />
-        </div>
-      </div>
+    // Derive page title from URL
+    const segment    = location.pathname.split("/").filter(Boolean).pop() ?? "";
+    const pageTitle  = pageTitles[segment] ?? "Syncro";
 
-      <div className="flex items-center gap-4">
-        <button className="relative p-2 text-gray-500 hover:bg-gray-50 rounded-lg transition-colors group">
-          <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
+    const handleLogout = async () => {
+        try {
+            await logoutApi();
+        } catch (err) {
+            console.log("Logout API failed", err);
+        } finally {
+            dispatch(logout());
+            navigate("/login");
+        }
+    };
 
-        <div className="h-8 w-px bg-gray-100 mx-2"></div>
+    return (
+        <header className="h-[60px] bg-white border-b border-[#f0f0f0] px-4 md:px-6 flex items-center justify-between sticky top-0 z-10">
 
-        <div className="flex items-center gap-3 pl-2">
-          <div className="text-right hidden sm:block">
+            {/* Left — Hamburger (mobile) + Page title */}
+            <div className="flex items-center gap-3">
+                {/* Hamburger — only on mobile */}
+                <button
+                    onClick={onMenuToggle}
+                    className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl text-[#888] hover:bg-[#f7f7f7] hover:text-[#1f2124] transition-colors"
+                >
+                    <Menu size={18} />
+                </button>
 
-            <p className="text-sm font-semibold text-gray-900 leading-none">
-              {user?.name || "Loading..."}
-            </p>
-  
-            <p className="text-[11px] text-gray-400 mt-1">
-              {user?.role === 'company' ? "Admin Account" : user?.designation || "Employee"}
-            </p>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 px-4 py-2 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 ml-2"
-            title="Logout"
-          >
-            <LogOut size={16} />
-            LOGOUT
-          </button>
-        </div>
-      </div>
-    </header>
-  );
+                {/* Page title */}
+                <h1 className="text-[15px] font-bold text-[#1f2124] tracking-tight">{pageTitle}</h1>
+            </div>
+
+            {/* Right — actions */}
+            <div className="flex items-center gap-2">
+
+                {/* Bell */}
+                <button className="relative w-9 h-9 flex items-center justify-center rounded-xl text-[#888] hover:bg-[#f7f7f7] hover:text-[#1f2124] transition-colors">
+                    <Bell size={17} />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#fa8029] rounded-full border-2 border-white" />
+                </button>
+
+                {/* Divider */}
+                <div className="w-px h-6 bg-[#e5e5e5] mx-1 hidden sm:block" />
+
+                {/* User info — hidden on mobile */}
+                <div className="hidden sm:flex flex-col items-end mr-1">
+                    <p className="text-[12px] font-bold text-[#1f2124] leading-tight">
+                        {user?.name || "Loading..."}
+                    </p>
+                    <p className="text-[10px] text-[#aaa] leading-tight">
+                        {user?.role === "company" ? "Administrator" : user?.designation || "Team Member"}
+                    </p>
+                </div>
+
+                {/* Logout */}
+                <button
+                    onClick={handleLogout}
+                    title="Logout"
+                    className="flex items-center gap-1.5 bg-[#1f2124] hover:bg-[#fa8029] text-white text-[11px] font-bold px-3 md:px-3.5 py-2 rounded-xl transition-all active:scale-95 group"
+                >
+                    <LogOut size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                    <span className="hidden sm:inline">Logout</span>
+                </button>
+            </div>
+        </header>
+    );
 };
 
 export default Header;
