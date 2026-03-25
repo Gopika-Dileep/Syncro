@@ -87,3 +87,15 @@ export const updateProfileSchema = z.object({
   address: z.string().max(200, "Address is too long").optional().or(z.literal("")),
   skills: z.array(z.string()).optional(),
 });
+
+export const resetPasswordSchema = z.object({
+    newPassword: z.string()
+      .min(6, "Password must be at least 6 characters")
+      .regex(/[A-Z]/, "Include at least one capital letter")
+      .regex(/[0-9]/, "Include at least one number")
+      .regex(/[^A-Za-z0-9]/, "Include at least one special character"),
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  }).refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
