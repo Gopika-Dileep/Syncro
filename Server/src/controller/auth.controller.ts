@@ -1,16 +1,15 @@
 import { Request, Response } from "express";
-import { IAuthService } from "../../interfaces/services/IAuthService";
-import { HttpStatus } from "../../enums/HttpStatus";
-import { AUTH_MESSAGES } from "../../constants/messages";
+import { IAuthService } from "../interfaces/services/IAuthService";
+import { HttpStatus } from "../enums/HttpStatus";
+import { AUTH_MESSAGES } from "../constants/messages";
+import { RegisterRequestDTO, VerifyOtpRequestDTO, LoginRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO } from "../dto/auth.dto";
 
 export class AuthController {
     constructor(private _authService: IAuthService) { }
 
     register = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { name, email, password, companyName } = req.body
-            const result = await this._authService.registration(name, email, password, companyName)
-
+            const result = await this._authService.registration(req.body as RegisterRequestDTO)
             res.status(HttpStatus.CREATED).json({ success: true, message: result.message || AUTH_MESSAGES.REGISTRATION_SUCCESS })
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : AUTH_MESSAGES.REGISTRATION_FAILED;
@@ -20,8 +19,7 @@ export class AuthController {
 
     verifyOtp = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { email, otp } = req.body
-            const result = await this._authService.verifyOtp(email, otp)
+            const result = await this._authService.verifyOtp(req.body as VerifyOtpRequestDTO)
 
             res.cookie("refreshToken", result.refreshToken, {
                 httpOnly: true,
@@ -38,8 +36,7 @@ export class AuthController {
 
     resendOtp = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { email } = req.body
-            const result = await this._authService.resendOtp(email)
+            const result = await this._authService.resendOtp(req.body as ResendOtpRequestDTO)
             res.status(HttpStatus.OK).json({ success: true, message: result.message || AUTH_MESSAGES.OTP_RESEND_SUCCESS })
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : AUTH_MESSAGES.OTP_RESEND_FAILED;
@@ -50,8 +47,7 @@ export class AuthController {
 
     login = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { email, password } = req.body
-            const result = await this._authService.login(email, password)
+            const result = await this._authService.login(req.body as LoginRequestDTO)
             res.cookie("refreshToken", result.refreshToken, {
                 httpOnly: true,
                 secure: false,
@@ -99,8 +95,7 @@ export class AuthController {
 
     forgotPassword = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { email } = req.body
-            await this._authService.forgotPassword(email)
+            await this._authService.forgotPassword(req.body as ForgotPasswordRequestDTO)
             res.status(HttpStatus.OK).json({
                 success: true,
                 message: AUTH_MESSAGES.FORGOT_PASSWORD_SUCCESS
@@ -114,8 +109,7 @@ export class AuthController {
 
     resetPassword = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { token, newPassword } = req.body
-            await this._authService.resetPassword(token, newPassword)
+            await this._authService.resetPassword(req.body as ResetPasswordRequestDTO)
             res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.RESET_SUCCESS })
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : AUTH_MESSAGES.RESET_FAILED

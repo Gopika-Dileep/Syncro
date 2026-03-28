@@ -8,6 +8,7 @@ import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 import { ICompanyRepository } from '../interfaces/repositories/ICompanyRepository';
 import { IPermissionRepository } from '../interfaces/repositories/IPermissionRepository';
 import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
+import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO } from '../dto/auth.dto';
 
 
 export class AuthService implements IAuthService {
@@ -16,11 +17,11 @@ export class AuthService implements IAuthService {
     private _authRepo: IAuthRepository,
     private _companyRepo: ICompanyRepository,
     private _permissionRepo: IPermissionRepository,
-    private _employeeRepo:IEmployeeRepository
+    private _employeeRepo: IEmployeeRepository
   ) { }
 
-  async registration(name: string, email: string, password: string, companyName: string): Promise<{ message: string }> {
-
+  async registration(data: RegisterRequestDTO): Promise<{ message: string }> {
+    const { name, email, password, companyName } = data;
     const existing = await this._authRepo.findByEmail(email)
     if (existing) {
       throw new Error("email already exist")
@@ -42,7 +43,8 @@ export class AuthService implements IAuthService {
   }
 
 
-  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string, refreshToken: string, user:{id:string , name:string , role:string , designation: string | null , companyName :string |null }, permissions:string[] }> {
+  async verifyOtp(data: VerifyOtpRequestDTO): Promise<AuthResponseDTO> {
+    const { email, otp } = data;
     const storedOtp = await redis.get(`otp:${email}`)
 
     if (!storedOtp || storedOtp !== otp) {
@@ -60,38 +62,39 @@ export class AuthService implements IAuthService {
     }
 
     let permissions: string[] = [];
-    let designation :string | null = null
-    let companyName : string |null = null
+    let designation: string | null = null
+    let companyName: string | null = null
     if (user.role === 'employee') {
       const employeeData = await this._employeeRepo.findByUserId(user._id.toString());
       designation = employeeData?.designation || null
 
-      if(employeeData && employeeData.company_id){
+      if (employeeData && employeeData.company_id) {
         companyName = employeeData.company_id.name
       }
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
-    }else{
+    } else {
       const company = await this._companyRepo.findCompanyByUserId(user._id.toString());
       companyName = company?.name || null
     }
 
-    const userPayload ={
-      id:user._id.toString(),
-      name : user.name,
-      role:user.role,
+    const userPayload = {
+      id: user._id.toString(),
+      name: user.name,
+      role: user.role,
       designation: designation,
-      companyName:companyName
+      companyName: companyName
     }
-    const accessToken = generateAccessToken(userPayload.id,userPayload.role,permissions, userPayload.name,userPayload.designation , userPayload.companyName);
+    const accessToken = generateAccessToken(userPayload.id, userPayload.role, permissions, userPayload.name, userPayload.designation, userPayload.companyName);
     const refreshToken = generateRefreshToken(userPayload.id)
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
     await redis.del(`otp:${email}`)
-    return { accessToken, refreshToken, user:userPayload, permissions }
+    return { accessToken, refreshToken, user: userPayload, permissions }
 
   }
 
-  async resendOtp(email: string): Promise<{ message: string; }> {
+  async resendOtp(data: ResendOtpRequestDTO): Promise<{ message: string; }> {
+    const { email } = data;
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("User not found")
@@ -109,7 +112,8 @@ export class AuthService implements IAuthService {
     return { message: "new otp send to email" }
   }
 
-  async login(email: string, password: string): Promise<{ accessToken: string, refreshToken: string, user:{id:string , name:string , role:string , designation: string | null , companyName :string |null }, permissions:string[] }> {
+  async login(data: LoginRequestDTO): Promise<AuthResponseDTO> {
+    const { email, password } = data;
     const user = await this._authRepo.findByEmail(email)
     if (!user) {
       throw new Error("user not found")
@@ -127,39 +131,39 @@ export class AuthService implements IAuthService {
     }
 
     let permissions: string[] = [];
-    let designation : string |null = null;
-    let companyName : string | null = null; 
+    let designation: string | null = null;
+    let companyName: string | null = null;
     if (user.role === 'employee') {
       const employeeData = await this._employeeRepo.findByUserId(user._id.toString())
-      designation = employeeData?.designation || null 
-      if(employeeData && employeeData.company_id){
+      designation = employeeData?.designation || null
+      if (employeeData && employeeData.company_id) {
         companyName = employeeData.company_id.name
       }
 
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
-    }else{
+    } else {
 
       const company = await this._companyRepo.findCompanyByUserId(user._id.toString())
       companyName = company?.name || null
     }
 
-    const userPayload ={
-      id:user._id.toString(),
-      name:user.name,
-      role:user.role,
-      designation:designation,
-      companyName : companyName
+    const userPayload = {
+      id: user._id.toString(),
+      name: user.name,
+      role: user.role,
+      designation: designation,
+      companyName: companyName
     }
 
-    const accessToken = generateAccessToken(userPayload.id,userPayload.role,  permissions, userPayload.name,  userPayload.designation,userPayload.companyName);
+    const accessToken = generateAccessToken(userPayload.id, userPayload.role, permissions, userPayload.name, userPayload.designation, userPayload.companyName);
     const refreshToken = generateRefreshToken(userPayload.id)
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
-   
-    return { accessToken, refreshToken, user:userPayload, permissions }
+
+    return { accessToken, refreshToken, user: userPayload, permissions }
   }
 
-  async refresh(refreshToken: string): Promise<{ accessToken: string, user:{id:string , name:string , role:string , designation: string | null , companyName :string |null }, permissions:string[] }> {
+  async refresh(refreshToken: string): Promise<Omit<AuthResponseDTO, "refreshToken">> {
     const decoded = verifyRefreshToken(refreshToken)
 
     const user = await this._authRepo.findById(decoded.id)
@@ -170,33 +174,33 @@ export class AuthService implements IAuthService {
       throw new Error("Your account has been blocked. Please contact support.")
     }
     let permissions: string[] = [];
-    let designation :string |  null = null;
-    let companyName :string | null = null;
+    let designation: string | null = null;
+    let companyName: string | null = null;
     if (user.role === 'employee') {
 
       const employeeData = await this._employeeRepo.findByUserId(user._id.toString());
       designation = employeeData?.designation || null
 
-      if(employeeData && employeeData.company_id){
+      if (employeeData && employeeData.company_id) {
         companyName = employeeData.company_id.name
       }
 
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString())
-    }else{
+    } else {
       const company = await this._companyRepo.findCompanyByUserId(user._id.toString())
       companyName = company?.name || null
     }
 
     const userPayload = {
-      id:user._id.toString(),
-      name:user.name,
-      role:user.role,
-      designation:designation,
-      companyName:companyName
+      id: user._id.toString(),
+      name: user.name,
+      role: user.role,
+      designation: designation,
+      companyName: companyName
     }
-  
-    const accessToken = generateAccessToken(userPayload.id,userPayload.role,permissions,userPayload.name,userPayload.designation,userPayload.companyName)
-    return { accessToken, user:userPayload, permissions }
+
+    const accessToken = generateAccessToken(userPayload.id, userPayload.role, permissions, userPayload.name, userPayload.designation, userPayload.companyName)
+    return { accessToken, user: userPayload, permissions }
   }
 
   async logout(refreshToken: string): Promise<void> {
@@ -205,7 +209,8 @@ export class AuthService implements IAuthService {
     await this._authRepo.clearRefreshToken(decoded.id)
   }
 
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(data: ForgotPasswordRequestDTO): Promise<void> {
+    const { email } = data;
     const user = await this._authRepo.findByEmail(email)
 
     if (!user) {
@@ -218,7 +223,8 @@ export class AuthService implements IAuthService {
     await sendPasswordResetEmail(user.email, resetToken)
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(data: ResetPasswordRequestDTO): Promise<void> {
+    const { token, newPassword } = data;
     const userId = await redis.get(`password_reset:${token}`)
 
     if (!userId) {
