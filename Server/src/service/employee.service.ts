@@ -1,5 +1,6 @@
 import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
-import { AddEmployeeData, EmployeePermissions, IEmployeeService } from "../interfaces/services/IEmployeeService";
+import { IEmployeeService } from "../interfaces/services/IEmployeeService";
+import { AddEmployeeRequest, UpdateEmployeeRequest, EmployeePermissions, EmployeeResponseDTO, PaginatedEmployeeResponseDTO, GetEmployeesRequest } from "../dto/employee.dto";
 import bcrypt from "bcrypt"
 import crypto from "crypto"
 import { sendEmployeeInvitationEmail } from "../utils/email.utils"
@@ -16,7 +17,7 @@ export class EmployeeService implements IEmployeeService {
         private _permissionRepo: IPermissionRepository
     ) { }
 
-    async addEmployee(companyId: string, data: AddEmployeeData): Promise<void> {
+    async addEmployee(companyId: string, data: AddEmployeeRequest): Promise<void> {
         const company = await this._companyRepo.findCompanyByUserId(companyId)
         if (!company) {
             throw new Error("company not found")
@@ -42,13 +43,16 @@ export class EmployeeService implements IEmployeeService {
 
 
         const joiningDate = parseDate(data.date_of_joining)
+        const dateOfBirth = parseDate(data.date_of_birth)
 
 
         await this._employeeRepo.createEmployee(user._id.toString(), company._id.toString(), {
             ...(data.designation && { designation: data.designation }),
             ...(joiningDate && { date_of_joining: joiningDate }),
+            ...(dateOfBirth && { date_of_birth: dateOfBirth }),
             ...(data.phone && { phone: data.phone }),
-
+            ...(data.address && { address: data.address }),
+            ...(data.skills && { skills: data.skills }),
         })
 
         await sendEmployeeInvitationEmail(
@@ -59,39 +63,49 @@ export class EmployeeService implements IEmployeeService {
         )
     }
 
-    private _flattenPermissions(p: EmployeePermissions): string[] {
+    private _flattenPermissions(p: Partial<EmployeePermissions>): string[] {
         const keys: string[] = [];
 
-        if (p.project.create) keys.push("project:create");
-        if (p.project.view.team) keys.push("project:view:team");
-        if (p.project.view.all) keys.push("project:view:all");
-        if (p.project.update.team) keys.push("project:update:team");
-        if (p.project.update.all) keys.push("project:update:all");
-        if (p.project.delete) keys.push("project:delete");
+        if (p.project) {
+            if (p.project.create) keys.push("project:create");
+            if (p.project.view.team) keys.push("project:view:team");
+            if (p.project.view.all) keys.push("project:view:all");
+            if (p.project.update.team) keys.push("project:update:team");
+            if (p.project.update.all) keys.push("project:update:all");
+            if (p.project.delete) keys.push("project:delete");
+        }
 
-        if (p.task.create) keys.push("task:create");
-        if (p.task.view.team) keys.push("task:view:team");
-        if (p.task.view.all) keys.push("task:view:all");
-        if (p.task.assign.team) keys.push("task:assign:team");
-        if (p.task.assign.all) keys.push("task:assign:all");
-        if (p.task.update.team) keys.push("task:update:team");
-        if (p.task.update.all) keys.push("task:update:all");
+        if (p.task) {
+            if (p.task.create) keys.push("task:create");
+            if (p.task.view.team) keys.push("task:view:team");
+            if (p.task.view.all) keys.push("task:view:all");
+            if (p.task.assign.team) keys.push("task:assign:team");
+            if (p.task.assign.all) keys.push("task:assign:all");
+            if (p.task.update.team) keys.push("task:update:team");
+            if (p.task.update.all) keys.push("task:update:all");
+        }
 
-        if (p.sprint.create) keys.push("sprint:create");
-        if (p.sprint.view.all) keys.push("sprint:view:all");
-        if (p.sprint.update) keys.push("sprint:update");
-        if (p.sprint.start) keys.push("sprint:start");
-        if (p.sprint.complete) keys.push("sprint:complete");
+        if (p.sprint) {
+            if (p.sprint.create) keys.push("sprint:create");
+            if (p.sprint.view.all) keys.push("sprint:view:all");
+            if (p.sprint.update) keys.push("sprint:update");
+            if (p.sprint.start) keys.push("sprint:start");
+            if (p.sprint.complete) keys.push("sprint:complete");
+        }
 
-        if (p.userStory.create) keys.push("userStory:create");
-        if (p.userStory.view.all) keys.push("userStory:view:all");
-        if (p.userStory.update) keys.push("userStory:update");
-        if (p.userStory.assign) keys.push("userStory:assign");
+        if (p.userStory) {
+            if (p.userStory.create) keys.push("userStory:create");
+            if (p.userStory.view.all) keys.push("userStory:view:all");
+            if (p.userStory.update) keys.push("userStory:update");
+            if (p.userStory.assign) keys.push("userStory:assign");
+        }
 
-        if (p.team.view.team) keys.push("team:view:team");
-        if (p.team.view.all) keys.push("team:view:all");
-        if (p.team.performance.team) keys.push("team:performance:team");
-        if (p.team.performance.all) keys.push("team:performance:all");
+        if (p.team) {
+            if (p.team.view.team) keys.push("team:view:team");
+            if (p.team.view.all) keys.push("team:view:all");
+            if (p.team.performance.team) keys.push("team:performance:team");
+            if (p.team.performance.all) keys.push("team:performance:all");
+        }
 
         return keys;
     }
@@ -123,10 +137,16 @@ export class EmployeeService implements IEmployeeService {
     }
 
 
-    async getEmployees(companyId: string, page: number, limit: number, search: string): Promise<{ employees: any[], total: number }> {
+    async getEmployees(companyId: string, query: GetEmployeesRequest): Promise<PaginatedEmployeeResponseDTO> {
         const company = await this._companyRepo.findCompanyByUserId(companyId)
         if (!company) throw new Error("company not found")
-        return this._employeeRepo.getEmployeesByCompanyId(company._id.toString(), page, limit, search)
+        const result = await this._employeeRepo.getEmployeesByCompanyId(company._id.toString(), query.page, query.limit, query.search)
+
+        // Ensure result matches PaginatedEmployeeResponseDTO
+        return {
+            employees: result.employees as unknown as EmployeeResponseDTO[],
+            total: result.total
+        };
     }
 
     async toggleBlockEmployee(companyId: string, userId: string): Promise<boolean> {
@@ -136,7 +156,7 @@ export class EmployeeService implements IEmployeeService {
         return newStatus
     }
 
-    async getEmployeeDetails(userId: string): Promise<any> {
+    async getEmployeeDetails(userId: string): Promise<EmployeeResponseDTO> {
         const employee = await this._employeeRepo.findByUserId(userId)
         if (!employee) {
             throw new Error("employee not found")
@@ -144,10 +164,10 @@ export class EmployeeService implements IEmployeeService {
         const keys = await this._permissionRepo.getPermissionKeysByUserId(userId);
         const permissions = this._unflattenPermissions(keys);
 
-        return { ...employee, permissions };
+        return { ...employee as unknown as EmployeeResponseDTO, permissions };
     }
 
-    async updateEmployeeDetails(userId: string, data: any): Promise<any> {
+    async updateEmployeeDetails(userId: string, data: UpdateEmployeeRequest): Promise<EmployeeResponseDTO> {
         if (data.name) {
             await this._authRepo.updateUser(userId, { name: data.name });
         }
@@ -159,15 +179,17 @@ export class EmployeeService implements IEmployeeService {
         }
 
         const updatedEmployee = await this._employeeRepo.updateEmployee(userId, {
-            designation: data.designation,
-            phone: data.phone,
-            date_of_joining: data.date_of_joining ? new Date(data.date_of_joining) : undefined
+            ...(data.designation && { designation: data.designation }),
+            ...(data.phone && { phone: data.phone }),
+            ...(data.address && { address: data.address }),
+            ...(data.skills && { skills: data.skills }),
+            ...(data.date_of_joining && { date_of_joining: parseDate(data.date_of_joining) }),
+            ...(data.date_of_birth && { date_of_birth: parseDate(data.date_of_birth) }),
         });
 
         if (!updatedEmployee) {
             throw new Error("failed to update employee details")
         }
-
-        return updatedEmployee
+        return this.getEmployeeDetails(userId);
     }
 }

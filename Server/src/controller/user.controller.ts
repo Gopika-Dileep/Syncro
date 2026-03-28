@@ -4,7 +4,7 @@ import { HttpStatus } from "../enums/HttpStatus";
 import { USER_MESSAGES } from "../constants/messages";
 
 export class UserController {
-    constructor(private _userService: IUserService) {}
+    constructor(private _userService: IUserService) { }
 
     getProfile = async (req: Request, res: Response): Promise<void> => {
         try {
@@ -44,23 +44,23 @@ export class UserController {
         }
     }
 
-    updateProfile = async (req:Request , res:Response) :Promise<void> =>{
-        try{
+    updateProfile = async (req: Request, res: Response): Promise<void> => {
+        try {
             const userId = req.userId
 
-            const {name,email,phone,address,skills} = req.body
+            const { name, email, phone, address, skills } = req.body
 
-            if(!userId){
-                res.status(HttpStatus.UNAUTHORIZED).json({success:false ,message: USER_MESSAGES.PROFILE_UPDATE_FAILED});
-                return 
+            if (!userId) {
+                res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: USER_MESSAGES.PROFILE_UPDATE_FAILED });
+                return
             }
 
-            const result = await this._userService.updateUserProfile(userId,{name,email,phone,address,skills});
+            const result = await this._userService.updateUserProfile(userId, { name, email, phone, address, skills });
 
-            res.status(HttpStatus.OK).json({success:true ,message: USER_MESSAGES.PROFILE_UPDATE_SUCCESS, data:result});
-        }catch (err:unknown){
-           const message = err instanceof Error ? err.message : USER_MESSAGES.PROFILE_UPDATE_FAILED;
-           res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+            res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PROFILE_UPDATE_SUCCESS, data: result });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : USER_MESSAGES.PROFILE_UPDATE_FAILED;
+            res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
         }
     }
 }

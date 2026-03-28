@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import { ITeamService } from "../../interfaces/services/ITeamService";
-import { HttpStatus } from "../../enums/HttpStatus";
-import { TEAM_MESSAGES } from "../../constants/messages";
-
+import { ITeamService } from "../interfaces/services/ITeamService";
+import { HttpStatus } from "../enums/HttpStatus";
+import { TEAM_MESSAGES } from "../constants/messages";
 
 export class TeamController {
     constructor(private _teamService: ITeamService) { }
