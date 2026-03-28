@@ -8,7 +8,7 @@ import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 import { ICompanyRepository } from '../interfaces/repositories/ICompanyRepository';
 import { IPermissionRepository } from '../interfaces/repositories/IPermissionRepository';
 import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
-import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO } from '../dto/auth.dto';
+import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO, ChangePasswordRequestDTO } from '../dto/auth.dto';
 
 
 export class AuthService implements IAuthService {
@@ -237,4 +237,20 @@ export class AuthService implements IAuthService {
 
     await redis.del(`password_reset:${token}`)
   }
+
+  async changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<void> {
+        const user = await this._authRepo.findById(userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const isMatch = await bcrypt.compare(data.currentPassword, user.password);
+        if (!isMatch) {
+            throw new Error("Current password doesn't match");
+        }
+
+        const hashed = await bcrypt.hash(data.newPassword, 10);
+        await this._authRepo.updatePassword(userId, hashed);
+    }
+
 }

@@ -44,6 +44,14 @@ export const ResetPasswordRequestSchema = z.object({
     }),
 });
 
+
+export const ChangePasswordRequestSchema = z.object({
+    body: z.object({
+        currentPassword: z.string().min(1, "current password is required"),
+        newPassword: z.string().min(6, "new password must be at least 6 characters"),
+    }),
+});
+
 // --- DTO TYPES (Inferred) ---
 
 export type RegisterRequestDTO = z.infer<typeof RegisterRequestSchema>['body'];
@@ -52,6 +60,7 @@ export type VerifyOtpRequestDTO = z.infer<typeof VerifyOtpRequestSchema>["body"]
 export type ResendOtpRequestDTO = z.infer<typeof ResendOtpRequestSchema>["body"];
 export type ForgotPasswordRequestDTO = z.infer<typeof ForgotPasswordRequestSchema>["body"];
 export type ResetPasswordRequestDTO = z.infer<typeof ResetPasswordRequestSchema>["body"];
+export type ChangePasswordRequestDTO = z.infer<typeof ChangePasswordRequestSchema>['body']
 
 // --- RESPONSE DTOS ---
 

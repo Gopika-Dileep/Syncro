@@ -1,4 +1,4 @@
-import { AuthController } from "../controller/auth/auth.controller";
+import { AuthController } from "../controller/auth.controller";
 import { AuthRepository } from "../repositories/auth.repository";
 import { CompanyRepository } from "../repositories/company.repository";
 import { EmployeeRepository } from "../repositories/employee.respository";

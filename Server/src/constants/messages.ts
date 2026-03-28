@@ -16,6 +16,8 @@ export const AUTH_MESSAGES = {
     INVALID_TOKEN: "Invalid or expired token",
     NO_TOKEN: "No token provided",
     ACCOUNT_BLOCKED: "Account is blocked. Access denied.",
+    PASSWORD_CHANGE_SUCCESS: "Password changed successfully",
+    PASSWORD_CHANGE_FAILED: "Failed to change password",
 };
 
 export const EMPLOYEE_MESSAGES = {

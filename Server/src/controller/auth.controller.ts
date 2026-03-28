@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { IAuthService } from "../interfaces/services/IAuthService";
 import { HttpStatus } from "../enums/HttpStatus";
-import { AUTH_MESSAGES } from "../constants/messages";
-import { RegisterRequestDTO, VerifyOtpRequestDTO, LoginRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO } from "../dto/auth.dto";
+import { AUTH_MESSAGES} from "../constants/messages";
+import { RegisterRequestDTO, VerifyOtpRequestDTO, LoginRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, ChangePasswordRequestDTO } from "../dto/auth.dto";
 
 export class AuthController {
     constructor(private _authService: IAuthService) { }
@@ -116,4 +116,15 @@ export class AuthController {
             res.status(HttpStatus.BAD_REQUEST).json({ success: false, message })
         }
     }
+
+    changePassword = async (req: Request, res: Response): Promise<void> => {
+            try {
+                const userId = req.userId!;
+                await this._authService.changePassword(userId, req.body as ChangePasswordRequestDTO);
+                res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.PASSWORD_CHANGE_SUCCESS });
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : AUTH_MESSAGES.PASSWORD_CHANGE_FAILED;
+                res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+            }
+        }
 }
