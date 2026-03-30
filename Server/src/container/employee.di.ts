@@ -1,4 +1,4 @@
-import { EmployeeController } from "../controller/employee/employee.controller";
+import { EmployeeController } from "../controller/employee.controller";
 import { AuthRepository } from "../repositories/auth.repository";
 import { CompanyRepository } from "../repositories/company.repository";
 import { EmployeeRepository } from "../repositories/employee.respository";
@@ -10,7 +10,7 @@ const employeeRepo = new EmployeeRepository()
 const permissionRepo = new PermissionRepository()
 const authRepo = new AuthRepository();
 const companyRepo = new CompanyRepository()
-const employeeService = new EmployeeService(employeeRepo, authRepo,companyRepo,permissionRepo)
+const employeeService = new EmployeeService(employeeRepo, authRepo, companyRepo, permissionRepo)
 const employeeController = new EmployeeController(employeeService)
 
 export {

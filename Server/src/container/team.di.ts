@@ -1,4 +1,4 @@
-import { TeamController } from "../controller/company/team.controller";
+import { TeamController } from "../controller/team.controller";
 import { CompanyRepository } from "../repositories/company.repository";
 import { TeamRepository } from "../repositories/team.repository";
 import { TeamService } from "../service/team.service";
