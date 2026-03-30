@@ -8,7 +8,8 @@ import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 import { ICompanyRepository } from '../interfaces/repositories/ICompanyRepository';
 import { IPermissionRepository } from '../interfaces/repositories/IPermissionRepository';
 import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
-import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO, ChangePasswordRequestDTO } from '../dto/auth.dto';
+import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO } from '../dto/auth.dto';
+import { AuthMapper } from '../mappers/auth.mapper';
 
 
 export class AuthService implements IAuthService {
@@ -77,19 +78,13 @@ export class AuthService implements IAuthService {
       companyName = company?.name || null
     }
 
-    const userPayload = {
-      id: user._id.toString(),
-      name: user.name,
-      role: user.role,
-      designation: designation,
-      companyName: companyName
-    }
-    const accessToken = generateAccessToken(userPayload.id, userPayload.role, permissions, userPayload.name, userPayload.designation, userPayload.companyName);
-    const refreshToken = generateRefreshToken(userPayload.id)
+    const userDTO = AuthMapper.toUserDTO(user, designation, companyName)
+    const accessToken = generateAccessToken(userDTO.id, userDTO.role, permissions, userDTO.name, userDTO.designation, userDTO.companyName);
+    const refreshToken = generateRefreshToken(userDTO.id)
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
     await redis.del(`otp:${email}`)
-    return { accessToken, refreshToken, user: userPayload, permissions }
+    return AuthMapper.toAuthResponseDTO(accessToken, refreshToken, userDTO, permissions)
 
   }
 
@@ -147,20 +142,13 @@ export class AuthService implements IAuthService {
       companyName = company?.name || null
     }
 
-    const userPayload = {
-      id: user._id.toString(),
-      name: user.name,
-      role: user.role,
-      designation: designation,
-      companyName: companyName
-    }
-
-    const accessToken = generateAccessToken(userPayload.id, userPayload.role, permissions, userPayload.name, userPayload.designation, userPayload.companyName);
-    const refreshToken = generateRefreshToken(userPayload.id)
+    const userDTO = AuthMapper.toUserDTO(user, designation, companyName)
+    const accessToken = generateAccessToken(userDTO.id, userDTO.role, permissions, userDTO.name, userDTO.designation, userDTO.companyName);
+    const refreshToken = generateRefreshToken(userDTO.id)
 
     await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken)
 
-    return { accessToken, refreshToken, user: userPayload, permissions }
+    return AuthMapper.toAuthResponseDTO(accessToken, refreshToken, userDTO, permissions)
   }
 
   async refresh(refreshToken: string): Promise<Omit<AuthResponseDTO, "refreshToken">> {
@@ -191,16 +179,9 @@ export class AuthService implements IAuthService {
       companyName = company?.name || null
     }
 
-    const userPayload = {
-      id: user._id.toString(),
-      name: user.name,
-      role: user.role,
-      designation: designation,
-      companyName: companyName
-    }
-
-    const accessToken = generateAccessToken(userPayload.id, userPayload.role, permissions, userPayload.name, userPayload.designation, userPayload.companyName)
-    return { accessToken, user: userPayload, permissions }
+    const userDTO = AuthMapper.toUserDTO(user, designation, companyName)
+    const accessToken = generateAccessToken(userDTO.id, userDTO.role, permissions, userDTO.name, userDTO.designation, userDTO.companyName)
+    return AuthMapper.toRefreshResponseDTO(accessToken, userDTO, permissions)
   }
 
   async logout(refreshToken: string): Promise<void> {
@@ -237,20 +218,4 @@ export class AuthService implements IAuthService {
 
     await redis.del(`password_reset:${token}`)
   }
-
-  async changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<void> {
-        const user = await this._authRepo.findById(userId);
-        if (!user) {
-            throw new Error("User not found");
-        }
-
-        const isMatch = await bcrypt.compare(data.currentPassword, user.password);
-        if (!isMatch) {
-            throw new Error("Current password doesn't match");
-        }
-
-        const hashed = await bcrypt.hash(data.newPassword, 10);
-        await this._authRepo.updatePassword(userId, hashed);
-    }
-
 }

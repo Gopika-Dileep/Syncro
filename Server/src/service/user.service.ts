@@ -4,6 +4,7 @@ import { ICompanyRepository } from "../interfaces/repositories/ICompanyRepositor
 import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
 import { IUserService } from "../interfaces/services/IUserService";
 import { ChangePasswordRequestDTO, UpdateProfileRequestDTO, UserProfileResponseDTO, CompanyProfileDTO, EmployeeProfileDTO } from "../dto/user.dto";
+import { UserMapper } from '../mappers/user.mapper';
 
 export class UserService implements IUserService {
     constructor(
@@ -27,18 +28,7 @@ export class UserService implements IUserService {
              employee = await this._employeeRepo.findByUserId(userId);
         }
 
-        return {
-            user: {
-                _id: user._id.toString(),
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                avatar: user.avatar || null,
-                created_at: user.created_at
-            },
-            company: company as unknown as CompanyProfileDTO | null,
-            employee: employee as unknown as EmployeeProfileDTO | null
-        };
+        return UserMapper.toUserProfileDTO(user, company, employee);
     }
 
     async changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<void> {
@@ -57,17 +47,15 @@ export class UserService implements IUserService {
     }
 
     async updateUserProfile(userId: string, data: UpdateProfileRequestDTO): Promise<UserProfileResponseDTO> {
-        if (data.name || data.email) {
-            await this._authRepo.updateUser(userId, { name: data.name, email: data.email });
+        const userUpdate = UserMapper.toUserUpdateEntity(data);
+        if (Object.keys(userUpdate).length > 0) {
+            await this._authRepo.updateUser(userId, userUpdate);
         }
 
-        const employeeUpdate = {
-            phone: data.phone,
-            address: data.address,
-            skills: data.skills
-        };
-
-        await this._employeeRepo.updateEmployee(userId, employeeUpdate);
+        const employeeUpdate = UserMapper.toEmployeeUpdateEntity(data);
+        if (Object.keys(employeeUpdate).length > 0) {
+            await this._employeeRepo.updateEmployee(userId, employeeUpdate);
+        }
 
         return await this.getProfile(userId);
     }

@@ -9,7 +9,9 @@ export class EmployeeRepository implements IEmployeeRepository {
     }
 
     async getEmployeesByCompanyId(companyId: string, page: number, limit: number, search: string): Promise<{ employees: any[], total: number }> {
-        const skip = (page - 1) * limit;
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+        const skip = (pageNum - 1) * limitNum;
         const pipeline: any[] = [
             { $match: { company_id: new Types.ObjectId(companyId) } },
             {
@@ -41,7 +43,7 @@ export class EmployeeRepository implements IEmployeeRepository {
 
         pipeline.push({ $sort: { createdAt: -1 } });
         pipeline.push({ $skip: skip });
-        pipeline.push({ $limit: limit });
+        pipeline.push({ $limit: limitNum });
 
         const employees = await employeeModel.aggregate(pipeline);
 
