@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ShieldAlert, CheckCircle, Edit2, Eye, MoreHorizontal, Users } from "lucide-react";
 import DataTable, { type Column } from "@/components/DataTable";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface Employee {
     _id: string;
@@ -91,6 +92,7 @@ export default function Employees() {
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [error, setError] = useState("");
 
     // Dropdown state
@@ -104,7 +106,7 @@ export default function Employees() {
         const fetch = async () => {
             setLoading(true);
             try {
-                const data = await getEmployeesApi(page, limit, searchTerm);
+                const data = await getEmployeesApi(page, limit, debouncedSearchTerm);
                 setEmployees(data.data);
                 setTotal(data.total);
             } catch {
@@ -113,9 +115,8 @@ export default function Employees() {
                 setLoading(false);
             }
         };
-        const t = setTimeout(fetch, 400);
-        return () => clearTimeout(t);
-    }, [page, searchTerm]);
+        fetch();
+    }, [page, debouncedSearchTerm]);
 
     const updateBlockStatus = (userId: string, is_blocked: boolean) =>
         setEmployees((prev) =>

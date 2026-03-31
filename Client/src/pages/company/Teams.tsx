@@ -39,17 +39,17 @@ function TeamMenu({ pos, onClose }: { pos: DropdownPos; onClose: () => void }) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function Teams() {
-    const [teams, setTeams]             = useState<Team[]>([]);
-    const [showModal, setShowModal]     = useState(false);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [showModal, setShowModal] = useState(false);
     const [newTeamName, setNewTeamName] = useState("");
-    const [loading, setLoading]         = useState(false);
-    const [fetching, setFetching]       = useState(true);
-    const [error, setError]             = useState("");
-    const [formError, setFormError]     = useState("");
-    const [searchTerm, setSearchTerm]   = useState("");
-    const [page, setPage]               = useState(1);
-    const [openId, setOpenId]           = useState<string | null>(null);
-    const [dropPos, setDropPos]         = useState<DropdownPos>({ top: 0, right: 0 });
+    const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
+    const [error, setError] = useState("");
+    const [formError, setFormError] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [page, setPage] = useState(1);
+    const [openId, setOpenId] = useState<string | null>(null);
+    const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
     const limit = 8;
 
@@ -93,7 +93,7 @@ export default function Teams() {
         setOpenId(teamId);
     };
 
-    const filtered  = teams.filter((t) => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filtered = teams.filter((t) => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const paginated = filtered.slice((page - 1) * limit, page * limit);
 
     const columns: Column<Team>[] = [
