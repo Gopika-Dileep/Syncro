@@ -1,9 +1,10 @@
 import { EmployeeResponseDTO, AddEmployeeRequestDTO, UpdateEmployeeRequestDTO } from "../dto/employee.dto";
+import { IPopulatedEmployee } from "../models/employee.model";
 import { PermissionMapper } from "./permission.mapper";
 
 export class EmployeeMapper {
   
-    static toResponseDTO(employee: any, permissionsKeys?: string[]): EmployeeResponseDTO {
+    static toResponseDTO(employee: IPopulatedEmployee, permissionsKeys?: string[]): EmployeeResponseDTO {
         return {
             _id: employee._id.toString(),
             user_id: {
@@ -26,12 +27,12 @@ export class EmployeeMapper {
             date_of_joining: employee.date_of_joining ? new Date(employee.date_of_joining).toISOString() : undefined,
             date_of_birth: employee.date_of_birth ? new Date(employee.date_of_birth).toISOString() : undefined,
             permissions: permissionsKeys ? PermissionMapper.toStructured(permissionsKeys) : undefined,
-            created_at: employee.createdAt ? new Date(employee.createdAt).toISOString() : ""
+            created_at: employee.created_at ? new Date(employee.created_at).toISOString() : ""
         };
     }
 
 
-    static toResponseList(employees: any[]): EmployeeResponseDTO[] {
+    static toResponseList(employees: IPopulatedEmployee[]): EmployeeResponseDTO[] {
         return employees.map(emp => this.toResponseDTO(emp));
     }
 

@@ -1,8 +1,9 @@
 import { AuthResponseDTO, AuthUserDTO } from "../dto/auth.dto";
+import { IUser } from "../models/user.model";
 
 export class AuthMapper {
 
-    static toUserDTO(user: any, designation: string | null, companyName: string | null): AuthUserDTO {
+    static toUserDTO(user: IUser, designation: string | null, companyName: string | null): AuthUserDTO {
         return {
             id: user._id.toString(),
             name: user.name,
@@ -41,7 +42,7 @@ export class AuthMapper {
     static toFullAuthResponse(
         accessToken: string,
         refreshToken: string,
-        user: any,
+        user: IUser,
         permissions: string[],
         designation: string | null,
         companyName: string | null

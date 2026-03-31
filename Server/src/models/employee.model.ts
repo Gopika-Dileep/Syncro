@@ -13,9 +13,17 @@ export interface IEmployee extends Document {
     created_at:      Date
 }
 
-export interface IPopulatedEmployee extends Omit<IEmployee, 'company_id'> {
+export interface IPopulatedEmployee extends Omit<IEmployee, 'user_id' | 'company_id'> {
+    user_id: {
+        _id: string | Types.ObjectId;
+        name: string;
+        email: string;
+        role: string;
+        avatar?: string;
+        is_blocked: boolean;
+    };
     company_id: {
-        _id: string;
+        _id: string | Types.ObjectId;
         name: string;
     };
 }
@@ -62,7 +70,7 @@ const employeeSchema = new Schema<IEmployee>(
             default: [],
         },
     },
-    { timestamps: true }
+    { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 )
 
 export const employeeModel = mongoose.model<IEmployee>("Employee", employeeSchema)

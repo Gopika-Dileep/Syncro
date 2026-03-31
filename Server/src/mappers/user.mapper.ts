@@ -1,8 +1,11 @@
-import { UserProfileResponseDTO, CompanyProfileDTO, EmployeeProfileDTO } from "../dto/user.dto";
+import { UserProfileResponseDTO, CompanyProfileDTO, EmployeeProfileDTO, UpdateProfileRequestDTO } from "../dto/user.dto";
+import { ICompany } from "../models/company.model";
+import { IEmployee, IPopulatedEmployee } from "../models/employee.model";
+import { IUser } from "../models/user.model";
 
 export class UserMapper {
    
-    static toUserProfileDTO(user: any, company: any | null, employee: any | null): UserProfileResponseDTO {
+    static toUserProfileDTO(user: IUser, company: ICompany | null, employee: IPopulatedEmployee | null): UserProfileResponseDTO {
         return {
             user: {
                 _id: user._id.toString(),
@@ -10,7 +13,7 @@ export class UserMapper {
                 email: user.email,
                 role: user.role,
                 avatar: user.avatar || null,
-                created_at: user.createdAt || user.created_at 
+                created_at: user.created_at 
             },
             company: company ? this.toCompanyDTO(company) : null,
             employee: employee ? this.toEmployeeDTO(employee) : null
@@ -18,7 +21,7 @@ export class UserMapper {
     }
 
 
-    private static toCompanyDTO(company: any): CompanyProfileDTO {
+    private static toCompanyDTO(company: ICompany): CompanyProfileDTO {
         return {
             _id: company._id.toString(),
             name: company.name,
@@ -26,7 +29,7 @@ export class UserMapper {
         };
     }
 
-    private static toEmployeeDTO(employee: any): EmployeeProfileDTO {
+    private static toEmployeeDTO(employee: IPopulatedEmployee): EmployeeProfileDTO {
         return {
             _id: employee._id.toString(),
             designation: employee.designation,
@@ -39,15 +42,14 @@ export class UserMapper {
     }
 
 
-    static toUserUpdateEntity(data: any) {
+    static toUserUpdateEntity(data: Partial<UpdateProfileRequestDTO>) {
         return {
             ...(data.name && { name: data.name }),
             ...(data.email && { email: data.email }),
-            ...(data.avatar && { avatar: data.avatar })
         };
     }
 
-    static toEmployeeUpdateEntity(data: any) {
+    static toEmployeeUpdateEntity(data: Partial<UpdateProfileRequestDTO>) {
         return {
             ...(data.phone && { phone: data.phone }),
             ...(data.address && { address: data.address }),

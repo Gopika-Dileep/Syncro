@@ -2,6 +2,8 @@ import bcrypt from 'bcrypt';
 import { IAuthRepository } from "../interfaces/repositories/IAuthRepository";
 import { ICompanyRepository } from "../interfaces/repositories/ICompanyRepository";
 import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
+import { ICompany } from "../models/company.model";
+import { IEmployee, IPopulatedEmployee } from "../models/employee.model";
 import { IUserService } from "../interfaces/services/IUserService";
 import { ChangePasswordRequestDTO, UpdateProfileRequestDTO, UserProfileResponseDTO, CompanyProfileDTO, EmployeeProfileDTO } from "../dto/user.dto";
 import { UserMapper } from '../mappers/user.mapper';
@@ -11,7 +13,7 @@ export class UserService implements IUserService {
         private _authRepo: IAuthRepository,
         private _companyRepo: ICompanyRepository,
         private _employeeRepo: IEmployeeRepository
-    ) {}
+    ) { }
 
     async getProfile(userId: string): Promise<UserProfileResponseDTO> {
         const user = await this._authRepo.findById(userId);
@@ -19,13 +21,13 @@ export class UserService implements IUserService {
             throw new Error("User not found");
         }
 
-        let company = null;
-        let employee = null;
+        let company: ICompany | null = null;
+        let employee: IPopulatedEmployee | null = null;
 
         if (user.role === 'company') {
             company = await this._companyRepo.findCompanyByUserId(userId);
         } else if (user.role === 'employee') {
-             employee = await this._employeeRepo.findByUserId(userId);
+            employee = await this._employeeRepo.findByUserId(userId);
         }
 
         return UserMapper.toUserProfileDTO(user, company, employee);

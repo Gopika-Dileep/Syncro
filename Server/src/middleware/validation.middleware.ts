@@ -15,16 +15,17 @@ export const validateRequest = (schema: z.Schema) => {
       if (parsed.params) Object.assign(req.params, parsed.params);
 
       next();
-    } catch (error: any) {
-      if (error instanceof ZodError || error.name === "ZodError") {
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
         const issues = error.issues || [];
-        const errorMessages = issues.map((issue: any) => {
+        const errorMessages = issues.map((issue: z.ZodIssue) => {
           return `${issue.path.join(".")} - ${issue.message}`;
         });
         res.status(400).json({ success: false, error: "Validation failed", details: errorMessages });
         return;
       }
-      res.status(500).json({ success: false, error: "Internal server error", message: error.message });
+      const message = error instanceof Error ? error.message : "Internal server error";
+      res.status(500).json({ success: false, error: "Internal server error", message });
     }
   };
 };

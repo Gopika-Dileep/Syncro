@@ -63,10 +63,12 @@ export class PermissionMapper {
             const [moduleName, action, scope] = key.split(':') as [keyof EmployeePermissionsDTO, string, string?];
 
             if (p[moduleName] && action) {
-                const module = (p as any)[moduleName];
+                const module = p[moduleName] as unknown as Record<string, boolean | Record<string, boolean>>;
                 if (scope) {
                     const actionObj = module[action];
-                    if (actionObj) actionObj[scope] = true;
+                    if (actionObj && typeof actionObj === 'object') {
+                        (actionObj as Record<string, boolean>)[scope] = true;
+                    }
                 } else {
                     module[action] = true;
                 }

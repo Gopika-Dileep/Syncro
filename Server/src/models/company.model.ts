@@ -29,7 +29,7 @@ const companySchema = new Schema<ICompany>(
             default: false,
         },
     },
-    { timestamps: true }
+    { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 )
 
 export const companyModel = mongoose.model<ICompany>("Company", companySchema)
