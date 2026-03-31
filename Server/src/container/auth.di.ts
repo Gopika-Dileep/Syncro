@@ -1,7 +1,7 @@
 import { AuthController } from "../controller/auth.controller";
 import { AuthRepository } from "../repositories/auth.repository";
 import { CompanyRepository } from "../repositories/company.repository";
-import { EmployeeRepository } from "../repositories/employee.respository";
+import { EmployeeRepository } from "../repositories/employee.repository";
 import { PermissionRepository } from "../repositories/permission.repository";
 import { AuthService } from "../service/auth.service";
 

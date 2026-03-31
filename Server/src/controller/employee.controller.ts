@@ -2,7 +2,7 @@ import { IEmployeeService } from "../interfaces/services/IEmployeeService";
 import { Request, Response } from "express"
 import { HttpStatus } from "../enums/HttpStatus";
 import { EMPLOYEE_MESSAGES } from "../constants/messages";
-import { GetEmployeesRequest } from "../dto/employee.dto";
+import { GetEmployeesRequestDTO } from "../dto/employee.dto";
 
 export class EmployeeController {
     constructor(private _employeeService: IEmployeeService) { }
@@ -22,7 +22,7 @@ export class EmployeeController {
 
     getEmployees = async (req: Request, res: Response): Promise<void> => {
         try {
-            const query = req.query as unknown as GetEmployeesRequest
+            const query = req.query as unknown as GetEmployeesRequestDTO
             const { employees, total } = await this._employeeService.getEmployees(req.userId!, query)
             res.status(HttpStatus.OK).json({ success: true, data: employees, total, page: query.page, limit: query.limit })
         } catch (err: unknown) {

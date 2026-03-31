@@ -1,4 +1,4 @@
-import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO, ChangePasswordRequestDTO } from "../../dto/auth.dto";
+import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO } from "../../dto/auth.dto";
 
 export interface IAuthService {
     registration(data: RegisterRequestDTO): Promise<{ message: string }>;
@@ -9,5 +9,4 @@ export interface IAuthService {
     logout(refreshToken: string): Promise<void>;
     forgotPassword(data: ForgotPasswordRequestDTO): Promise<void>;
     resetPassword(data: ResetPasswordRequestDTO): Promise<void>;
-    changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<void>;
 }

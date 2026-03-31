@@ -9,22 +9,23 @@ export const validateRequest = (schema: z.Schema) => {
         query: req.query,
         params: req.params,
       }) as Record<string, unknown>;
-      
-      // Assign parsed/coerced data back to req
+
       if (parsed.body) req.body = parsed.body;
-      if (parsed.query) req.query = parsed.query as unknown as Request['query'];
-      if (parsed.params) req.params = parsed.params as unknown as Request['params'];
-      
+      if (parsed.query) Object.assign(req.query, parsed.query);
+      if (parsed.params) Object.assign(req.params, parsed.params);
+
       next();
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof ZodError) {
-        const errorMessages = error.issues.map((issue) => {
+        const issues = error.issues || [];
+        const errorMessages = issues.map((issue: z.ZodIssue) => {
           return `${issue.path.join(".")} - ${issue.message}`;
         });
         res.status(400).json({ success: false, error: "Validation failed", details: errorMessages });
         return;
       }
-      res.status(500).json({ success: false, error: "Internal server error" });
+      const message = error instanceof Error ? error.message : "Internal server error";
+      res.status(500).json({ success: false, error: "Internal server error", message });
     }
   };
 };

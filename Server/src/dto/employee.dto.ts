@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// --- PERMISSIONS SCHEMA ---
 export const EmployeePermissionsSchema = z.object({
   project: z.object({
     create: z.boolean(),
@@ -33,7 +32,7 @@ export const EmployeePermissionsSchema = z.object({
   }),
 });
 
-// --- REQUEST SCHEMAS ---
+
 export const AddEmployeeRequestSchema = z.object({
   body: z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -72,14 +71,12 @@ export const GetEmployeesRequestSchema = z.object({
   }),
 });
 
-// --- DTO TYPES (Inferred from Zod) ---
 
-export type EmployeePermissions = z.infer<typeof EmployeePermissionsSchema>;
-export type GetEmployeesRequest = z.infer<typeof GetEmployeesRequestSchema>["query"];
-export type AddEmployeeRequest = z.infer<typeof AddEmployeeRequestSchema>["body"];
-export type UpdateEmployeeRequest = z.infer<typeof UpdateEmployeeRequestSchema>["body"];
+export type EmployeePermissionsDTO = z.infer<typeof EmployeePermissionsSchema>;
+export type GetEmployeesRequestDTO = z.infer<typeof GetEmployeesRequestSchema>["query"];
+export type AddEmployeeRequestDTO = z.infer<typeof AddEmployeeRequestSchema>["body"];
+export type UpdateEmployeeRequestDTO = z.infer<typeof UpdateEmployeeRequestSchema>["body"];
 
-// --- RESPONSE DTOS ---
 
 export interface EmployeeResponseDTO {
   _id: string;

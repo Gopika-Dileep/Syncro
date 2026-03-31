@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { EmployeePermissions } from './employee.dto';
+import { EmployeePermissionsDTO } from './employee.dto';
 
 export const ChangePasswordRequestSchema = z.object({
     body: z.object({
@@ -35,7 +35,7 @@ export interface EmployeeProfileDTO {
     skills?: string[];
     date_of_joining?: string;
     date_of_birth?: string;
-    permissions?: EmployeePermissions;
+    permissions?: EmployeePermissionsDTO;
 }
 
 export interface UserProfileResponseDTO {

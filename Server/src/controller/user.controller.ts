@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { IUserService } from "../interfaces/services/IUserService";
 import { HttpStatus } from "../enums/HttpStatus";
 import { USER_MESSAGES } from "../constants/messages";
-import { ChangePasswordRequestDTO, UpdateProfileRequestDTO } from "../dto/user.dto";
 
 export class UserController {
     constructor(private _userService: IUserService) { }
@@ -21,7 +20,7 @@ export class UserController {
     changePassword = async (req: Request, res: Response): Promise<void> => {
         try {
             const userId = req.userId!;
-            await this._userService.changePassword(userId, req.body as ChangePasswordRequestDTO);
+            await this._userService.changePassword(userId, req.body);
             res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PASSWORD_CHANGE_SUCCESS });
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : USER_MESSAGES.PASSWORD_CHANGE_FAILED;
@@ -32,7 +31,7 @@ export class UserController {
     updateProfile = async (req: Request, res: Response): Promise<void> => {
         try {
             const userId = req.userId!;
-            const result = await this._userService.updateUserProfile(userId, req.body as UpdateProfileRequestDTO);
+            const result = await this._userService.updateUserProfile(userId, req.body);
             res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PROFILE_UPDATE_SUCCESS, data: result });
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : USER_MESSAGES.PROFILE_UPDATE_FAILED;

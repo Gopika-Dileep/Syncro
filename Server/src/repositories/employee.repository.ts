@@ -1,6 +1,6 @@
-import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
-import { Types } from "mongoose";
+import { PipelineStage, Types } from "mongoose";
 import { IEmployee, IPopulatedEmployee, employeeModel } from "../models/employee.model"
+import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
 
 export class EmployeeRepository implements IEmployeeRepository {
 
@@ -8,9 +8,11 @@ export class EmployeeRepository implements IEmployeeRepository {
         return employeeModel.create({ user_id: userId, company_id: companyId, ...data })
     }
 
-    async getEmployeesByCompanyId(companyId: string, page: number, limit: number, search: string): Promise<{ employees: any[], total: number }> {
-        const skip = (page - 1) * limit;
-        const pipeline: any[] = [
+    async getEmployeesByCompanyId(companyId: string, page: number, limit: number, search: string): Promise<{ employees: IPopulatedEmployee[], total: number }> {
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+        const skip = (pageNum - 1) * limitNum;
+        const pipeline: PipelineStage[] = [
             { $match: { company_id: new Types.ObjectId(companyId) } },
             {
                 $lookup: {
@@ -41,7 +43,7 @@ export class EmployeeRepository implements IEmployeeRepository {
 
         pipeline.push({ $sort: { createdAt: -1 } });
         pipeline.push({ $skip: skip });
-        pipeline.push({ $limit: limit });
+        pipeline.push({ $limit: limitNum });
 
         const employees = await employeeModel.aggregate(pipeline);
 
@@ -49,10 +51,10 @@ export class EmployeeRepository implements IEmployeeRepository {
     }
 
     async findByUserId(userId: string): Promise<IPopulatedEmployee | null> {
-        return employeeModel.findOne({ user_id: userId }).populate("user_id","name email role created_at").populate("company_id", "name").lean() as unknown as IPopulatedEmployee
+        return employeeModel.findOne({ user_id: userId }).populate("user_id", "name email role created_at").populate("company_id", "name").lean() as unknown as IPopulatedEmployee
     }
 
-    async updateEmployee(userId:string,data:Partial<IEmployee>):Promise<IEmployee |null>{
-        return await employeeModel.findOneAndUpdate({user_id:userId},{$set:data},{ returnDocument: "after" })
+    async updateEmployee(userId: string, data: Partial<IEmployee>): Promise<IEmployee | null> {
+        return await employeeModel.findOneAndUpdate({ user_id: userId }, { $set: data }, { returnDocument: "after" })
     }
 }
