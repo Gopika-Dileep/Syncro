@@ -1,3 +1,4 @@
+import { injectable, inject } from "inversify";
 import bcrypt from 'bcrypt';
 import { IAuthRepository } from "../interfaces/repositories/IAuthRepository";
 import { ICompanyRepository } from "../interfaces/repositories/ICompanyRepository";
@@ -7,12 +8,14 @@ import { IEmployee, IPopulatedEmployee } from "../models/employee.model";
 import { IUserService } from "../interfaces/services/IUserService";
 import { ChangePasswordRequestDTO, UpdateProfileRequestDTO, UserProfileResponseDTO, CompanyProfileDTO, EmployeeProfileDTO } from "../dto/user.dto";
 import { UserMapper } from '../mappers/user.mapper';
+import { TYPES } from '../di/types';
 
+@injectable()
 export class UserService implements IUserService {
     constructor(
-        private _authRepo: IAuthRepository,
-        private _companyRepo: ICompanyRepository,
-        private _employeeRepo: IEmployeeRepository
+        @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
+        @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
+        @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository
     ) { }
 
     async getProfile(userId: string): Promise<UserProfileResponseDTO> {

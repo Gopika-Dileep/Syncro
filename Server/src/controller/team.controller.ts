@@ -1,10 +1,13 @@
+import { injectable, inject } from "inversify";
 import { Request, Response } from "express";
 import { ITeamService } from "../interfaces/services/ITeamService";
 import { HttpStatus } from "../enums/HttpStatus";
 import { TEAM_MESSAGES } from "../constants/messages";
+import { TYPES } from "../di/types";
 
+@injectable()
 export class TeamController {
-    constructor(private _teamService: ITeamService) { }
+    constructor(@inject(TYPES.TeamService) private _teamService: ITeamService) { }
 
     createTeam = async (req: Request, res: Response) => {
         try {

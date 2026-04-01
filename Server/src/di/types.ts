@@ -1,0 +1,15 @@
+export const TYPES = {
+    AuthRepository: Symbol.for("AuthRepository"),
+    CompanyRepository: Symbol.for("CompanyRepository"),
+    EmployeeRepository: Symbol.for("EmployeeRepository"),
+    PermissionRepository: Symbol.for("PermissionRepository"),
+    TeamRepository: Symbol.for("TeamRepository"),
+    AuthService: Symbol.for("AuthService"),
+    EmployeeService: Symbol.for("EmployeeService"),
+    TeamService: Symbol.for("TeamService"),
+    UserService: Symbol.for("UserService"),
+    AuthController: Symbol.for("AuthController"),
+    EmployeeController: Symbol.for("EmployeeController"),
+    TeamController: Symbol.for("TeamController"),
+    UserController: Symbol.for("UserController")
+};

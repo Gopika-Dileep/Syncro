@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { authController } from "../container/auth.di";
+import { container } from "../di/inversify.config";
+import { TYPES } from "../di/types";
+import { AuthController } from "../controller/auth.controller";
 import { ENDPOINTS } from "../constants/endpoints";
+
+const authController = container.get<AuthController>(TYPES.AuthController);
 import { validateRequest } from "../middleware/validation.middleware";
 import {
     RegisterRequestSchema,

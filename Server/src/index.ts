@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import dotenv from 'dotenv';
 import { createServer, Server } from "http";
 dotenv.config();
@@ -25,7 +26,7 @@ class serverApp {
             })
 
         } catch (err) {
-            console.log(err); 
+            console.log(err);
 
         }
     }

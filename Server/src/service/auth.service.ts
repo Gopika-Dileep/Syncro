@@ -1,3 +1,4 @@
+import { injectable, inject } from "inversify";
 import bcrypt from 'bcrypt';
 import crypto from 'crypto'
 import { IAuthService } from '../interfaces/services/IAuthService';
@@ -10,15 +11,17 @@ import { IPermissionRepository } from '../interfaces/repositories/IPermissionRep
 import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
 import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO } from '../dto/auth.dto';
 import { AuthMapper } from '../mappers/auth.mapper';
+import { TYPES } from '../di/types';
 
 
+@injectable()
 export class AuthService implements IAuthService {
 
   constructor(
-    private _authRepo: IAuthRepository,
-    private _companyRepo: ICompanyRepository,
-    private _permissionRepo: IPermissionRepository,
-    private _employeeRepo: IEmployeeRepository
+    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository,
+    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository
   ) { }
 
   async registration(data: RegisterRequestDTO): Promise<{ message: string }> {

@@ -1,7 +1,7 @@
 import { EmployeePermissionsDTO } from "../dto/employee.dto";
 
 export class PermissionMapper {
-  
+
     static toFlatKeys(p: Partial<EmployeePermissionsDTO>): string[] {
         const keys: string[] = [];
 

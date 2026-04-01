@@ -33,10 +33,12 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "inversify": "^8.1.0",
     "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.1",
     "nodemailer": "^8.0.1",
+    "reflect-metadata": "^0.2.2",
     "zod": "^4.3.6"
   }
 }

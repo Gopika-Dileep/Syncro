@@ -1,3 +1,4 @@
+import { injectable, inject } from "inversify";
 import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
 import { IEmployeeService } from "../interfaces/services/IEmployeeService";
 import { EmployeeResponseDTO, PaginatedEmployeeResponseDTO, AddEmployeeRequestDTO, GetEmployeesRequestDTO, UpdateEmployeeRequestDTO } from "../dto/employee.dto";
@@ -10,13 +11,15 @@ import { ICompanyRepository } from "../interfaces/repositories/ICompanyRepositor
 import { IPermissionRepository } from "../interfaces/repositories/IPermissionRepository";
 import { PermissionMapper } from "../mappers/permission.mapper";
 import { EmployeeMapper } from "../mappers/employee.mapper";
+import { TYPES } from "../di/types";
 
+@injectable()
 export class EmployeeService implements IEmployeeService {
     constructor(
-        private _employeeRepo: IEmployeeRepository,
-        private _authRepo: IAuthRepository,
-        private _companyRepo: ICompanyRepository,
-        private _permissionRepo: IPermissionRepository
+        @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
+        @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
+        @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
+        @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository
     ) { }
 
     async addEmployee(userId: string, data: AddEmployeeRequestDTO): Promise<void> {

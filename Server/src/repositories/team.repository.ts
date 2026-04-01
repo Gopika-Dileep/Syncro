@@ -1,7 +1,9 @@
+import { injectable } from "inversify";
 import { ITeamRepository } from "../interfaces/repositories/ITeamRepository";
 import { ITeam, teamModel } from "../models/team.model";
 
 
+@injectable()
 export class TeamRepository implements ITeamRepository {
     async createTeam(name: string, companyId: string): Promise<ITeam> {
         return await teamModel.create({ name, company_id: companyId })

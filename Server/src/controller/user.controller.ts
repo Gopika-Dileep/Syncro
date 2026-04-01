@@ -1,10 +1,13 @@
+import { injectable, inject } from "inversify";
 import { Request, Response } from "express";
 import { IUserService } from "../interfaces/services/IUserService";
 import { HttpStatus } from "../enums/HttpStatus";
 import { USER_MESSAGES } from "../constants/messages";
+import { TYPES } from "../di/types";
 
+@injectable()
 export class UserController {
-    constructor(private _userService: IUserService) { }
+    constructor(@inject(TYPES.UserService) private _userService: IUserService) { }
 
     getProfile = async (req: Request, res: Response): Promise<void> => {
         try {

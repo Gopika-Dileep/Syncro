@@ -1,10 +1,13 @@
+import { injectable, inject } from "inversify";
 import { Request, Response } from "express";
-import { IAuthService } from "../interfaces/services/IAuthService";
+import type { IAuthService } from "../interfaces/services/IAuthService";
 import { HttpStatus } from "../enums/HttpStatus";
 import { AUTH_MESSAGES } from "../constants/messages";
+import { TYPES } from "../di/types";
 
+@injectable()
 export class AuthController {
-    constructor(private _authService: IAuthService) { }
+    constructor(@inject(TYPES.AuthService) private _authService: IAuthService) { }
 
     register = async (req: Request, res: Response): Promise<void> => {
         try {

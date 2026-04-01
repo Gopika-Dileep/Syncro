@@ -1,7 +1,9 @@
+import { injectable } from "inversify";
 import { PipelineStage, Types } from "mongoose";
 import { IEmployee, IPopulatedEmployee, employeeModel } from "../models/employee.model"
 import { IEmployeeRepository } from "../interfaces/repositories/IEmployeeRepository";
 
+@injectable()
 export class EmployeeRepository implements IEmployeeRepository {
 
     async createEmployee(userId: string, companyId: string, data: Partial<IEmployee>): Promise<IEmployee> {
@@ -51,7 +53,7 @@ export class EmployeeRepository implements IEmployeeRepository {
     }
 
     async findByUserId(userId: string): Promise<IPopulatedEmployee | null> {
-        return employeeModel.findOne({ user_id: userId }).populate("user_id", "name email role created_at").populate("company_id", "name").lean() as unknown as IPopulatedEmployee
+        return employeeModel.findOne({ user_id: userId }).populate("user_id", "name email role created_at").populate("company_id", "name").lean<IPopulatedEmployee | null>();
     }
 
     async updateEmployee(userId: string, data: Partial<IEmployee>): Promise<IEmployee | null> {

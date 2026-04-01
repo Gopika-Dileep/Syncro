@@ -1,11 +1,14 @@
+import { injectable, inject } from "inversify";
 import { IEmployeeService } from "../interfaces/services/IEmployeeService";
 import { Request, Response } from "express"
 import { HttpStatus } from "../enums/HttpStatus";
 import { EMPLOYEE_MESSAGES } from "../constants/messages";
 import { GetEmployeesRequestDTO } from "../dto/employee.dto";
+import { TYPES } from "../di/types";
 
+@injectable()
 export class EmployeeController {
-    constructor(private _employeeService: IEmployeeService) { }
+    constructor(@inject(TYPES.EmployeeService) private _employeeService: IEmployeeService) { }
 
     addEmployee = async (req: Request, res: Response): Promise<void> => {
         try {

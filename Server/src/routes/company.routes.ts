@@ -1,10 +1,15 @@
 import { Router } from "express"
-import { employeeController } from "../container/employee.di"
+import { container } from "../di/inversify.config";
+import { TYPES } from "../di/types";
+import { EmployeeController } from "../controller/employee.controller";
+import { TeamController } from "../controller/team.controller";
 import { authMiddleware } from "../middleware/auth.middleware"
-import { teamController } from "../container/team.di"
 import { ENDPOINTS } from "../constants/endpoints";
 import { validateRequest } from "../middleware/validation.middleware";
 import { AddEmployeeRequestSchema, UpdateEmployeeRequestSchema, GetEmployeesRequestSchema } from "../dto/employee.dto";
+
+const employeeController = container.get<EmployeeController>(TYPES.EmployeeController);
+const teamController = container.get<TeamController>(TYPES.TeamController);
 
 export class CompanyRouter {
     public router: Router
