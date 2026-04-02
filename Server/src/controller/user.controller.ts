@@ -7,12 +7,11 @@ import { TYPES } from '../di/types';
 
 @injectable()
 export class UserController {
-  constructor(@inject(TYPES.UserService) private _userService: IUserService) {}
+  constructor(@inject(TYPES.UserService) private _userService: IUserService) { }
 
   getProfile = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.userId!;
-      const profile = await this._userService.getProfile(userId);
+      const profile = await this._userService.getProfile(req.userId!);
       res.status(HttpStatus.OK).json({ success: true, data: profile });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : USER_MESSAGES.PROFILE_FETCH_FAILED;
@@ -22,8 +21,7 @@ export class UserController {
 
   changePassword = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.userId!;
-      await this._userService.changePassword(userId, req.body);
+      await this._userService.changePassword(req.userId!, req.body);
       res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PASSWORD_CHANGE_SUCCESS });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : USER_MESSAGES.PASSWORD_CHANGE_FAILED;
@@ -33,8 +31,7 @@ export class UserController {
 
   updateProfile = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.userId!;
-      const result = await this._userService.updateUserProfile(userId, req.body);
+      const result = await this._userService.updateUserProfile(req.userId!, req.body);
       res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PROFILE_UPDATE_SUCCESS, data: result });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : USER_MESSAGES.PROFILE_UPDATE_FAILED;

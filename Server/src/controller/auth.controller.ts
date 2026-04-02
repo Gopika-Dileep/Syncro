@@ -4,10 +4,11 @@ import type { IAuthService } from '../interfaces/services/IAuthService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { AUTH_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
+import { env } from '../config/env';
 
 @injectable()
 export class AuthController {
-  constructor(@inject(TYPES.AuthService) private _authService: IAuthService) {}
+  constructor(@inject(TYPES.AuthService) private _authService: IAuthService) { }
 
   register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -27,9 +28,9 @@ export class AuthController {
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: env.COOKIE_SECURE,
+        sameSite: env.COOKIE_SAME_SITE,
+        maxAge: env.REFRESH_TOKEN_COOKIE_MAX_AGE,
       });
       res
         .status(HttpStatus.OK)
@@ -55,9 +56,9 @@ export class AuthController {
       const result = await this._authService.login(req.body);
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: env.COOKIE_SECURE,
+        sameSite: env.COOKIE_SAME_SITE,
+        maxAge: env.REFRESH_TOKEN_COOKIE_MAX_AGE,
       });
       res
         .status(HttpStatus.OK)

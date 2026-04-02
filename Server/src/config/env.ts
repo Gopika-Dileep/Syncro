@@ -7,6 +7,7 @@ function getEnv(key: string): string {
 }
 
 export const env = {
+  NODE_ENV: getEnv('NODE_ENV'),
   PORT: getEnv('PORT'),
   FRONTEND_URL: getEnv('FRONTEND_URL'),
   MONGO_URI: getEnv('MONGO_URI'),
@@ -22,4 +23,7 @@ export const env = {
   OTP_EXPIRY: Number(getEnv('OTP_EXPIRY')),
   PASSWORD_RESET_EXPIRY: Number(getEnv('PASSWORD_RESET_EXPIRY')),
   BCRYPT_SALT_ROUNDS: Number(getEnv('BCRYPT_SALT_ROUNDS')),
+  REFRESH_TOKEN_COOKIE_MAX_AGE: Number(getEnv('REFRESH_TOKEN_COOKIE_MAX_AGE')),
+  COOKIE_SECURE: getEnv('COOKIE_SECURE') === 'true',
+  COOKIE_SAME_SITE: getEnv('COOKIE_SAME_SITE') as 'lax' | 'strict' | 'none',
 };
