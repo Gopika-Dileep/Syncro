@@ -20,8 +20,8 @@ export default function ForgotPassword() {
             const data = await forgotPasswordApi(email);
             toast.success(data.message || "A reset link has been sent to your email.");
             setMessage(data.message || "A reset link has been sent to your email.");
-        } catch (err: any) {
-            const msg = err.response?.data?.message || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            const msg = (err as any).response?.data?.message || (err as any).message || "Something went wrong";
             toast.error(msg);
             setError(msg);
         } finally {

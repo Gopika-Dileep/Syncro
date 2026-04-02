@@ -38,26 +38,26 @@ const permissions = [
   { module: 'team', action: 'view', scope: 'team', permission_key: 'team:view:team' },
   { module: 'team', action: 'view', scope: 'all', permission_key: 'team:view:all' },
   { module: 'team', action: 'performance', scope: 'team', permission_key: 'team:performance:team' },
-  { module: 'team', action: 'performance', scope: 'all', permission_key: 'team:performance:all' }
+  { module: 'team', action: 'performance', scope: 'all', permission_key: 'team:performance:all' },
 ];
 
 async function seed() {
-    try {
-        const mongoUri = process.env.MONGO_URI;
-        if (!mongoUri) throw new Error("MONGO_URI not found");
+  try {
+    const mongoUri = process.env.MONGO_URI;
+    if (!mongoUri) throw new Error('MONGO_URI not found');
 
-        await mongoose.connect(mongoUri);
-        console.log("Connected to MongoDB for permission seeding...");
+    await mongoose.connect(mongoUri);
+    console.log('Connected to MongoDB for permission seeding...');
 
-        await permissionDefinitionModel.deleteMany({});
-        await permissionDefinitionModel.insertMany(permissions);
+    await permissionDefinitionModel.deleteMany({});
+    await permissionDefinitionModel.insertMany(permissions);
 
-        console.log(`Successfully seeded ${permissions.length} granular permissions.`);
-        process.exit(0);
-    } catch (error: unknown) {
-        console.error("Seeding error:", error);
-        process.exit(1);
-    }
+    console.log(`Successfully seeded ${permissions.length} granular permissions.`);
+    process.exit(0);
+  } catch (error: unknown) {
+    console.error('Seeding error:', error);
+    process.exit(1);
+  }
 }
 
 seed();

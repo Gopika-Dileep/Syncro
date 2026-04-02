@@ -1,21 +1,23 @@
-import mongoose, { Schema } from "mongoose";
-
+import mongoose, { Schema } from 'mongoose';
 
 export interface ITeam extends Document {
-    name:string;
-    company_id:mongoose.Types.ObjectId;
+  name: string;
+  company_id: mongoose.Types.ObjectId;
 }
 
-const teamSchema = new Schema<ITeam>({
-    name:{
-        type:String,
-        required:true
+const teamSchema = new Schema<ITeam>(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-    company_id:{
-        type:Schema.Types.ObjectId,
-        ref: "Company",
-        required:true
-    }
-},{timestamps:true});
+    company_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+    },
+  },
+  { timestamps: true },
+);
 
-export const teamModel = mongoose.model<ITeam>("Team",teamSchema);
+export const teamModel = mongoose.model<ITeam>('Team', teamSchema);
