@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { forgotPasswordApi } from "../../api/authapi"
 import { Link } from "react-router-dom";
 import { Mail, Zap, ArrowLeft, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
@@ -20,8 +21,13 @@ export default function ForgotPassword() {
             const data = await forgotPasswordApi(email);
             toast.success(data.message || "A reset link has been sent to your email.");
             setMessage(data.message || "A reset link has been sent to your email.");
-        } catch (err: unknown) {
-            const msg = (err as any).response?.data?.message || (err as any).message || "Something went wrong";
+        } catch (err) {
+            let msg = "Something went wrong";
+            if (axios.isAxiosError(err)) {
+                msg = err.response?.data?.message || err.message || msg;
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
             toast.error(msg);
             setError(msg);
         } finally {
@@ -31,11 +37,11 @@ export default function ForgotPassword() {
 
     return (
         <div className="h-screen bg-[#fcfcfc] flex font-sans overflow-hidden">
-            
+
             {/* ── Left Side: Auth Form area ── */}
             <div className="w-full lg:w-[480px] flex flex-col justify-center items-center p-6 bg-white relative z-10 shadow-xl overflow-hidden animate-in fade-in slide-in-from-left-6 duration-700">
                 <div className="w-full max-w-[340px]">
-                    
+
                     {/* Brand Identity */}
                     <div className="mb-5 text-center lg:text-left flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/10 group">
@@ -138,15 +144,15 @@ export default function ForgotPassword() {
 
             {/* ── Right Side: Design Content Panel Area ── */}
             <div className="hidden lg:flex flex-1 bg-[#1a1c1f] relative items-center justify-center overflow-hidden border-l border-white/5">
-                <img 
-                    src={authBannerDark} 
-                    alt="Network Asset" 
+                <img
+                    src={authBannerDark}
+                    alt="Network Asset"
                     className="absolute inset-0 w-full h-full object-cover opacity-60 animate-in fade-in duration-1000"
                 />
-                
+
                 <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/80 z-10"></div>
                 <div className="absolute inset-0 bg-black/20 z-10"></div>
-                
+
                 <div className="relative z-20 p-20 max-w-[700px] animate-in fade-in slide-in-from-right-8 duration-700 delay-300">
                     <div className="inline-block px-10 py-[1.5px] bg-[#fa8029] mb-12 shadow-2xl shadow-orange-500/30"></div>
                     <h2 className="text-[54px] font-black text-white leading-[0.95] tracking-tighter uppercase mb-10 italic">

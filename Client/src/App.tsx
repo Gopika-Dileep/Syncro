@@ -16,7 +16,7 @@ import Notifications from './pages/company/Notifications'
 import Settings from './pages/company/Settings'
 import AddEmployee from './pages/company/AddEmployee'
 import EmployeeLayout from './layouts/EmployeeLayout'
-import EmployeeDashboard from './pages/employee/EmployeeDashbord'
+import EmployeeDashboard from './pages/employee/EmployeeDashboard'
 import Sprints from './pages/employee/Sprints'
 import Backlogs from './pages/employee/Backlogs'
 import Teams from './pages/company/Teams'
@@ -44,9 +44,9 @@ function App() {
             >
               <Route path='dashboard' element={<CompanyDashboard />} />
               <Route path='employees' element={<Employees />} />
-              <Route path='employees/:userId' element={<GetEmployee/>} />
+              <Route path='employees/:userId' element={<GetEmployee />} />
               <Route path='employees/add' element={<AddEmployee />} />
-              <Route path='employees/edit/:userId' element={<AddEmployee/>}/>
+              <Route path='employees/edit/:userId' element={<AddEmployee />} />
               <Route path='projects' element={<Projects />} />
               <Route path='teams' element={<Teams />} />
               <Route path='notifications' element={<Notifications />} />

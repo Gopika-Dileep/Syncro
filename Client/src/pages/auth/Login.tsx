@@ -1,10 +1,11 @@
 import { loginApi } from "@/api/authapi";
+import axios from "axios";
 import { setCredentials } from "@/store/slices/authSlice";
 import type { AppDispatch } from "@/store/store";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
-import { Zap, Mail, Eye, EyeOff, Loader2, ArrowRight, Lock, Globe, ShieldCheck } from "lucide-react";
+import { Zap, Mail, Eye, EyeOff, Loader2, ArrowRight, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { getZodErrors, loginSchema } from "@/lib/schema";
 import authBannerDark from "@/assets/auth_banner_dark.png";
@@ -34,7 +35,7 @@ export default function Login() {
         e.preventDefault();
         setError("");
         setFieldErrors({});
-        
+
         const validation = loginSchema.safeParse(form);
         if (!validation.success) {
             setFieldErrors(getZodErrors(validation.error));
@@ -47,8 +48,13 @@ export default function Login() {
             dispatch(setCredentials({ user: data.user, token: data.token, permissions: data.permissions }));
             toast.success("Welcome back.");
             navigate(data.user.role === "company" ? "/company/dashboard" : "/employee/dashboard");
-        } catch (err: any) {
-            const msg = err.response?.data?.message || err.message || "Invalid credentials";
+        } catch (err) {
+            let msg = "Invalid credentials";
+            if (axios.isAxiosError(err)) {
+                msg = err.response?.data?.message || err.message || msg;
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
             toast.error(msg);
             setError(msg);
         } finally {
@@ -58,11 +64,11 @@ export default function Login() {
 
     return (
         <div className="h-screen bg-[#fcfcfc] flex font-sans overflow-hidden">
-            
+
             {/* ── Left Side: Auth Form area (Light UI) ── */}
             <div className="w-full lg:w-[480px] flex flex-col justify-center items-center p-6 bg-white relative z-10 shadow-xl overflow-hidden animate-in fade-in slide-in-from-left-6 duration-700">
                 <div className="w-full max-w-[340px]">
-                    
+
                     {/* Brand Identity */}
                     <div className="mb-5 text-center lg:text-left flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/10 group">
@@ -173,16 +179,16 @@ export default function Login() {
 
             {/* ── Right Side: Design Content Panel Area (Dark-Mode Variation) ── */}
             <div className="hidden lg:flex flex-1 bg-[#1a1c1f] relative items-center justify-center overflow-hidden border-l border-white/5">
-                <img 
-                    src={authBannerDark} 
-                    alt="Network Asset" 
+                <img
+                    src={authBannerDark}
+                    alt="Network Asset"
                     className="absolute inset-0 w-full h-full object-cover opacity-60 animate-in fade-in duration-1000"
                 />
-                
+
                 {/* Dark Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/80 z-10"></div>
                 <div className="absolute inset-0 bg-black/20 z-10"></div>
-                
+
                 <div className="relative z-20 p-20 max-w-[700px] animate-in fade-in slide-in-from-right-8 duration-700 delay-300">
                     <div className="inline-block px-10 py-[1.5px] bg-[#fa8029] mb-12 shadow-2xl shadow-orange-500/30"></div>
                     <h2 className="text-[54px] font-black text-white leading-[0.95] tracking-tighter uppercase mb-10 italic">
@@ -193,18 +199,18 @@ export default function Login() {
                     <p className="text-white/60 text-[18px] font-medium leading-relaxed max-w-[500px] italic">
                         Building the next generation of team synchronization. Modern workflows, real-time collaboration, and enterprise performance.
                     </p>
-                    
+
                     {/* Visual accent */}
                     <div className="mt-16 flex items-center gap-10 opacity-60">
-                         <div className="flex flex-col">
-                             <span className="text-white text-[24px] font-black leading-none">99.9%</span>
-                             <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-2">Uptime Node</span>
-                         </div>
-                         <div className="w-[1px] h-10 bg-white/10"></div>
-                         <div className="flex flex-col">
-                             <span className="text-white text-[24px] font-black leading-none">Global</span>
-                             <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-2">Scalability</span>
-                         </div>
+                        <div className="flex flex-col">
+                            <span className="text-white text-[24px] font-black leading-none">99.9%</span>
+                            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-2">Uptime Node</span>
+                        </div>
+                        <div className="w-[1px] h-10 bg-white/10"></div>
+                        <div className="flex flex-col">
+                            <span className="text-white text-[24px] font-black leading-none">Global</span>
+                            <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-2">Scalability</span>
+                        </div>
                     </div>
                 </div>
             </div>

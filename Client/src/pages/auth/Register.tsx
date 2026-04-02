@@ -1,4 +1,5 @@
 import { registerApi } from "@/api/authapi";
+import axios from "axios";
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { User, Mail, Building2, Zap, Loader2, ArrowRight, Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
@@ -42,8 +43,13 @@ export default function Register() {
             await registerApi(form.name, form.email, form.password, form.companyName);
             toast.success("Registration initiated.");
             navigate('/verify-otp', { state: { email: form.email } });
-        } catch (err: any) {
-            const msg = err.response?.data?.message || err.message || "Something went wrong";
+        } catch (err) {
+            let msg = "Something went wrong";
+            if (axios.isAxiosError(err)) {
+                msg = err.response?.data?.message || err.message || msg;
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
             toast.error(msg);
             setError(msg);
         } finally {
@@ -53,11 +59,11 @@ export default function Register() {
 
     return (
         <div className="h-screen bg-[#fcfcfc] flex font-sans overflow-hidden">
-            
+
             {/* ── Left Side: Auth Form area ── */}
             <div className="w-full lg:w-[480px] flex flex-col justify-center items-center p-6 bg-white relative z-10 shadow-xl overflow-hidden animate-in fade-in slide-in-from-left-6 duration-700">
                 <div className="w-full max-w-[340px]">
-                    
+
                     {/* Brand Identity */}
                     <div className="mb-5 text-center lg:text-left flex items-center gap-2.5">
                         <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/10 group">
@@ -197,14 +203,14 @@ export default function Register() {
             {/* ── Right Side: Design Content Panel Area ── */}
             <div className="hidden lg:flex flex-1 bg-white relative items-center justify-center overflow-hidden border-l border-[#f5f5f5]">
                 {/* Generated Light Mode Background Image */}
-                <img 
-                    src={authBanner} 
-                    alt="Network Asset" 
+                <img
+                    src={authBanner}
+                    alt="Network Asset"
                     className="absolute inset-0 w-full h-full object-cover opacity-80 animate-in fade-in duration-1000"
                 />
-                
+
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/60 z-10"></div>
-                
+
                 <div className="relative z-20 p-12 max-w-[600px] animate-in fade-in slide-in-from-right-8 duration-700 delay-300">
                     <div className="inline-block px-8 py-[1px] bg-[#fa8029] mb-8 shadow-2xl shadow-orange-500/30"></div>
                     <h2 className="text-[42px] font-black text-[#1f2124] leading-[0.95] tracking-tighter uppercase mb-6 italic">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/store/store";
 import { resendOtpApi, verifyOtpApi } from "@/api/authapi";
@@ -42,8 +43,13 @@ export default function VerifyOtp() {
             dispatch(setCredentials({ user: data.user, token: data.token, permissions: data.permissions }));
             toast.success("Identity verified!");
             navigate(data.user.role === 'employee' ? '/employee/dashboard' : '/company/dashboard');
-        } catch (err: any) {
-            const msg = err.response?.data?.message || "Verification failed. Check your code.";
+        } catch (err) {
+            let msg = "Verification failed. Check your code.";
+            if (axios.isAxiosError(err)) {
+                msg = err.response?.data?.message || msg;
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
             toast.error(msg);
             setError(msg);
         } finally {
@@ -60,7 +66,7 @@ export default function VerifyOtp() {
             setCanResend(false);
             setOtp("");
             setError("");
-        } catch (err: any) {
+        } catch {
             toast.error("Failed to resend. Retry shortly.");
             setError("Failed to resend. Retry shortly.");
         } finally {

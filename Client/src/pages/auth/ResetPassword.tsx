@@ -1,4 +1,5 @@
 import { resetPasswordApi } from "@/api/authapi";
+import axios from "axios";
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Lock, Zap, CheckCircle2, Loader2, ArrowLeft, Eye, EyeOff, ShieldCheck } from "lucide-react";
@@ -52,8 +53,13 @@ export default function ResetPassword() {
             toast.success("Password reset successfully!");
             setMessage(data.message || "Your password has been reset successfully.");
             setTimeout(() => navigate('/login'), 1500);
-        } catch (err: any) {
-            const msg = err.response?.data?.message || err.message || "Reset failed. The link may be expired.";
+        } catch (err) {
+            let msg = "Reset failed. The link may be expired.";
+            if (axios.isAxiosError(err)) {
+                msg = err.response?.data?.message || err.message || msg;
+            } else if (err instanceof Error) {
+                msg = err.message;
+            }
             toast.error(msg);
             setError(msg);
         } finally {

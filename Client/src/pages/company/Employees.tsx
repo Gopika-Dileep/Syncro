@@ -1,4 +1,5 @@
 import { toggleBlockEmployeeApi, getEmployeesApi } from "@/api/companyApi";
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -132,8 +133,12 @@ export default function Employees() {
             const data = await toggleBlockEmployeeApi(userId);
             updateBlockStatus(userId, data.isBlocked);
             toast.success(`Employee ${data.isBlocked ? "blocked" : "unblocked"} successfully`);
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to update employee status");
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(err.response?.data?.message || "Failed to update employee status");
+            } else {
+                toast.error("An unexpected error occurred");
+            }
         }
     };
 

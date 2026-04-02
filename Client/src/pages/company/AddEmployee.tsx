@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { 
-    ArrowLeft, ShieldCheck, ChevronDown, Check, Loader2, 
-    Layout, Layers, Zap, CheckCircle, Users as UsersIcon 
+import axios from "axios";
+import {
+    ArrowLeft, ShieldCheck, ChevronDown, Check,
+    Layout, Layers, Zap, CheckCircle, Users as UsersIcon
 } from "lucide-react";
 import { toast } from "sonner";
-import { 
-    addEmployeeApi, 
-    getEmployeeDetailsApi, 
-    updateEmployeeApi, 
-    type AddEmployeeForm, 
-    type EmployeePermissions 
+import {
+    addEmployeeApi,
+    getEmployeeDetailsApi,
+    updateEmployeeApi,
+    type AddEmployeeForm,
+    type EmployeePermissions
 } from "../../api/companyApi";
 import { employeeSchema, getZodErrors, type EmployeeformInput } from "@/lib/schema";
 
@@ -53,7 +54,7 @@ export default function AddEmployee() {
                         });
                         if (emp.permissions) setPermissions(emp.permissions);
                     }
-                } catch (err) { toast.error("Failed to fetch profile"); } finally { setFetching(false); }
+                } catch { toast.error("Failed to fetch profile"); } finally { setFetching(false); }
             };
             fetchEmployee();
         }
@@ -61,18 +62,20 @@ export default function AddEmployee() {
 
     const handlePermissionToggle = (module: keyof EmployeePermissions, field: string, subField?: string) => {
         setPermissions((prev) => {
-            const updatedModule = { ...prev[module] } as any;
+            const updatedModule = { ...prev[module] } as Record<string, boolean | Record<string, boolean>>;
             if (subField) {
-                const newValue = !updatedModule[field][subField];
-                updatedModule[field] = { ...updatedModule[field], [subField]: newValue };
+                const currentField = updatedModule[field] as Record<string, boolean>;
+                const newValue = !currentField[subField];
+                updatedModule[field] = { ...currentField, [subField]: newValue };
+                const updated = updatedModule[field] as Record<string, boolean>;
                 if (newValue) {
-                    if (subField === 'team') updatedModule[field].all = false;
-                    if (subField === 'all') updatedModule[field].team = false;
+                    if (subField === 'team' && 'all' in updated) updated.all = false;
+                    if (subField === 'all' && 'team' in updated) updated.team = false;
                 }
             } else {
-                updatedModule[field] = !updatedModule[field];
+                updatedModule[field] = !updatedModule[field] as boolean;
             }
-            return { ...prev, [module]: updatedModule };
+            return { ...prev, [module]: updatedModule as EmployeePermissions[typeof module] };
         });
     };
 
@@ -83,7 +86,7 @@ export default function AddEmployee() {
         try {
             const validation = employeeSchema.safeParse(formData);
             if (!validation.success) {
-                setFieldErrors(getZodErrors(validation.error) as any);
+                setFieldErrors(getZodErrors(validation.error) as Partial<Record<keyof EmployeeformInput, string>>);
                 setLoading(false);
                 return;
             }
@@ -96,8 +99,14 @@ export default function AddEmployee() {
                 toast.success("New account provisioned.");
             }
             setTimeout(() => navigate("/company/employees"), 1000);
-        } catch (err: any) {
-            const backendMsg = err.response?.data?.message || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            let backendMsg = "Something went wrong";
+            if (axios.isAxiosError(err)) {
+                backendMsg = err.response?.data?.message || err.message || backendMsg;
+            } else if (err instanceof Error) {
+                backendMsg = err.message;
+            }
+
             if (backendMsg.toLowerCase().includes("email already exists")) {
                 setFieldErrors(prev => ({ ...prev, email: "This email is already registered." }));
             } else {
@@ -110,18 +119,18 @@ export default function AddEmployee() {
 
     if (fetching) return (
         <div className="p-4 md:p-6 flex flex-col items-center justify-center min-h-[400px] gap-3 font-sans">
-             <div className="w-5 h-5 border-2 border-[#ebebeb] border-t-[#1f2124] rounded-full animate-spin" />
-             <p className="text-[12px] text-[#bbb]">Fetching details...</p>
+            <div className="w-5 h-5 border-2 border-[#ebebeb] border-t-[#1f2124] rounded-full animate-spin" />
+            <p className="text-[12px] text-[#bbb]">Fetching details...</p>
         </div>
     );
 
     return (
         <div className="p-4 md:p-6 font-sans flex flex-col gap-6 bg-[#f7f7f7] min-h-screen">
-            
+
             {/* Header */}
             <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
                         onClick={() => navigate('/company/employees')}
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-[#aaa] hover:bg-white hover:text-[#1f2124] border border-transparent hover:border-[#ebebeb] transition-all"
                     >
@@ -132,15 +141,15 @@ export default function AddEmployee() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
                         onClick={() => navigate(-1)}
-                        type="button" 
+                        type="button"
                         className="text-[12px] font-semibold text-[#888] hover:text-[#1f2124] transition-colors px-2"
                     >
                         Cancel
                     </button>
-                    <button 
-                        onClick={(e) => handleSubmit(e as any)}
+                    <button
+                        onClick={handleSubmit}
                         disabled={loading}
                         className="bg-[#fa8029] hover:bg-[#e67320] text-white px-5 py-2.5 rounded-full font-bold text-[11px] md:text-[12px] transition-all active:scale-95 whitespace-nowrap shadow-sm shadow-orange-950/20"
                     >
@@ -150,7 +159,7 @@ export default function AddEmployee() {
             </header>
 
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
-                
+
                 {/* 1. Identity Form Card */}
                 <div className="bg-white border border-[#ebebeb] rounded-sm overflow-hidden flex flex-col shadow-sm">
                     <div className="px-5 py-4 border-b border-[#f5f5f5] flex items-center gap-2 bg-[#fafafa]/30 font-sans">
@@ -223,8 +232,8 @@ export default function AddEmployee() {
                     </div>
 
                     <div className="p-5 space-y-2">
-                        <ModuleItem 
-                            icon={<Layout size={13}/>} title="Project Management"
+                        <ModuleItem
+                            icon={<Layout size={13} />} title="Project Management"
                             items={[
                                 { label: "Create", checked: permissions.project.create, onClick: () => handlePermissionToggle('project', 'create') },
                                 { label: "View Team", checked: permissions.project.view.team, onClick: () => handlePermissionToggle('project', 'view', 'team') },
@@ -234,8 +243,8 @@ export default function AddEmployee() {
                                 { label: "Delete", checked: permissions.project.delete, onClick: () => handlePermissionToggle('project', 'delete') },
                             ]}
                         />
-                        <ModuleItem 
-                            icon={<Layers size={13}/>} title="User Story (Backlog)"
+                        <ModuleItem
+                            icon={<Layers size={13} />} title="User Story (Backlog)"
                             items={[
                                 { label: "Create", checked: permissions.userStory.create, onClick: () => handlePermissionToggle('userStory', 'create') },
                                 { label: "View All", checked: permissions.userStory.view.all, onClick: () => handlePermissionToggle('userStory', 'view', 'all') },
@@ -243,8 +252,8 @@ export default function AddEmployee() {
                                 { label: "Assign", checked: permissions.userStory.assign, onClick: () => handlePermissionToggle('userStory', 'assign') },
                             ]}
                         />
-                        <ModuleItem 
-                            icon={<Zap size={13}/>} title="Sprint Planning"
+                        <ModuleItem
+                            icon={<Zap size={13} />} title="Sprint Planning"
                             items={[
                                 { label: "Create", checked: permissions.sprint.create, onClick: () => handlePermissionToggle('sprint', 'create') },
                                 { label: "View All", checked: permissions.sprint.view.all, onClick: () => handlePermissionToggle('sprint', 'view', 'all') },
@@ -253,8 +262,8 @@ export default function AddEmployee() {
                                 { label: "Complete", checked: permissions.sprint.complete, onClick: () => handlePermissionToggle('sprint', 'complete') },
                             ]}
                         />
-                        <ModuleItem 
-                            icon={<CheckCircle size={13}/>} title="Task Workflow"
+                        <ModuleItem
+                            icon={<CheckCircle size={13} />} title="Task Workflow"
                             items={[
                                 { label: "Create", checked: permissions.task.create, onClick: () => handlePermissionToggle('task', 'create') },
                                 { label: "View Team", checked: permissions.task.view.team, onClick: () => handlePermissionToggle('task', 'view', 'team') },
@@ -265,8 +274,8 @@ export default function AddEmployee() {
                                 { label: "Update All", checked: permissions.task.update.all, onClick: () => handlePermissionToggle('task', 'update', 'all') },
                             ]}
                         />
-                        <ModuleItem 
-                            icon={<UsersIcon size={13}/>} title="Team Dynamics"
+                        <ModuleItem
+                            icon={<UsersIcon size={13} />} title="Team Dynamics"
                             items={[
                                 { label: "View Team", checked: permissions.team.view.team, onClick: () => handlePermissionToggle('team', 'view', 'team') },
                                 { label: "View All", checked: permissions.team.view.all, onClick: () => handlePermissionToggle('team', 'view', 'all') },
@@ -283,7 +292,13 @@ export default function AddEmployee() {
 
 // ── UI HELPERS ────────────────────────────────────────────────────────────
 
-function ModuleItem({ icon, title, items }: any) {
+interface ModuleItemProps {
+    icon: React.ReactNode;
+    title: string;
+    items: { label: string; checked: boolean; onClick: () => void }[];
+}
+
+function ModuleItem({ icon, title, items }: ModuleItemProps) {
     const [open, setOpen] = useState(false);
     return (
         <div className="border-b border-[#f5f5f5] last:border-0 overflow-hidden transition-all duration-300">
@@ -296,7 +311,7 @@ function ModuleItem({ icon, title, items }: any) {
             </button>
             {open && (
                 <div className="pb-5 pt-1 px-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                    {items.map((it: any, i: number) => (
+                    {items.map((it, i) => (
                         <button key={i} type="button" onClick={it.onClick} className={`flex items-center gap-2 p-2 rounded-sm border transition-all ${it.checked ? 'bg-[#1f2124] border-[#1f2124] text-white shadow-sm' : 'bg-transparent border-[#f0f0f0] text-[#999] hover:border-[#fa8029]/30'}`}>
                             <div className={`w-3 h-3 rounded-full flex items-center justify-center border ${it.checked ? 'bg-[#fa8029] border-[#fa8029]' : 'border-[#ddd]'}`}>
                                 {it.checked && <Check size={8} strokeWidth={4} className="text-white" />}
@@ -310,24 +325,34 @@ function ModuleItem({ icon, title, items }: any) {
     );
 }
 
-function InputGroup({ label, name, value, onChange, type = "text", required, isReadOnly, error }: any) {
+interface InputGroupProps {
+    label: string;
+    name: string;
+    value: string;
+    onChange: (v: string) => void;
+    type?: string;
+    required?: boolean;
+    isReadOnly?: boolean;
+    error?: string;
+}
+
+function InputGroup({ label, name, value, onChange, type = "text", required, isReadOnly, error }: InputGroupProps) {
     return (
         <div className="space-y-1.5 flex-1 min-w-[200px]">
             <label className="text-[11px] font-medium text-[#bbb] tracking-wide uppercase px-0.5">{label}</label>
-            <input 
-                name={name} 
-                type={type} 
-                value={value} 
-                onChange={(e) => onChange(e.target.value)} 
-                required={required} 
+            <input
+                name={name}
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                required={required}
                 readOnly={isReadOnly}
-                className={`w-full px-3.5 py-2 rounded-sm border text-[13px] font-semibold outline-none transition-all duration-200 ${
-                    error 
-                        ? 'border-rose-300 bg-rose-50/20 focus:border-rose-500' 
-                        : isReadOnly 
-                            ? 'bg-[#f7f7f7] border-[#ebebeb] text-[#bbb] cursor-not-allowed' 
-                            : 'bg-[#fafafa] border-[#ebebeb] focus:bg-white focus:border-[#fa8029]/50 shadow-sm'
-                }`} 
+                className={`w-full px-3.5 py-2 rounded-sm border text-[13px] font-semibold outline-none transition-all duration-200 ${error
+                    ? 'border-rose-300 bg-rose-50/20 focus:border-rose-500'
+                    : isReadOnly
+                        ? 'bg-[#f7f7f7] border-[#ebebeb] text-[#bbb] cursor-not-allowed'
+                        : 'bg-[#fafafa] border-[#ebebeb] focus:bg-white focus:border-[#fa8029]/50 shadow-sm'
+                    }`}
             />
             {error && <p className="text-[10px] font-bold text-rose-500 px-0.5">{error}</p>}
         </div>

@@ -1,4 +1,5 @@
 import { changePasswordAPi, getProfileApi, updateProfileApi, type UserProfile } from "@/api/userApi";
+import axios from "axios";
 import {
     Mail, Building, Briefcase, Loader2,
     ShieldCheck, Eye, EyeOff, Calendar, Users, Edit3, X, ArrowLeft, Shield,
@@ -31,7 +32,7 @@ const SettingsPage: React.FC = () => {
         try {
             const data = await getProfileApi();
             setProfile(data);
-        } catch (err) {
+        } catch {
             setError("Failed to load profile settings");
         } finally {
             setLoading(false);
@@ -40,8 +41,8 @@ const SettingsPage: React.FC = () => {
 
     if (loading) return (
         <div className="p-4 md:p-6 flex flex-col items-center justify-center min-h-[400px] gap-3 font-sans">
-             <div className="w-5 h-5 border-2 border-[#ebebeb] border-t-[#1f2124] rounded-full animate-spin" />
-             <p className="text-[12px] text-[#bbb]">Opening settings...</p>
+            <div className="w-5 h-5 border-2 border-[#ebebeb] border-t-[#1f2124] rounded-full animate-spin" />
+            <p className="text-[12px] text-[#bbb]">Opening settings...</p>
         </div>
     );
 
@@ -49,8 +50,8 @@ const SettingsPage: React.FC = () => {
         <div className="p-4 md:p-6 font-sans">
             <div className="bg-white p-10 rounded-sm border border-[#ebebeb] text-center max-w-sm mx-auto shadow-sm">
                 <p className="text-[#1f2124] font-bold text-[14px] mb-4">{error || "Account not found"}</p>
-                <button 
-                    onClick={() => window.location.reload()} 
+                <button
+                    onClick={() => window.location.reload()}
                     className="px-8 py-2.5 bg-[#1f2124] text-white rounded-full text-[11px] font-bold hover:bg-black transition-all"
                 >
                     Retry Connection
@@ -61,11 +62,11 @@ const SettingsPage: React.FC = () => {
 
     return (
         <div className="p-4 md:p-6 font-sans flex flex-col gap-6 bg-[#f7f7f7] min-h-screen">
-            
+
             {/* ── Header ── */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-7xl mx-auto w-full">
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
                         onClick={() => navigate(-1)}
                         className="w-10 h-10 flex items-center justify-center rounded-xl text-[#aaa] hover:bg-white hover:text-[#1f2124] border border-transparent hover:border-[#ebebeb] transition-all shadow-sm active:scale-95"
                     >
@@ -77,7 +78,7 @@ const SettingsPage: React.FC = () => {
                     </div>
                 </div>
                 {profile?.user.role !== "company" && (
-                    <button 
+                    <button
                         onClick={() => setIsEditModalOpen(true)}
                         className="flex items-center gap-2 bg-[#fa8029] hover:bg-[#e67320] text-white px-5 py-2.5 rounded-full font-bold text-[12px] transition-all active:scale-95 shadow-sm shadow-orange-950/20"
                     >
@@ -88,17 +89,17 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start max-w-7xl mx-auto w-full">
-                
+
                 {/* ── Personal Information Card ── */}
                 <div className="bg-white border border-[#ebebeb] rounded-sm flex flex-col shadow-sm overflow-hidden">
                     <div className="px-6 py-5 border-b border-[#f5f5f5] flex items-center gap-2 bg-[#fafafa]/50">
                         <Users size={15} className="text-[#fa8029]" />
                         <h2 className="text-[11px] font-black uppercase tracking-[0.15em] text-[#1f2124]">Identity Details</h2>
                     </div>
-                    
+
                     <div className="p-8">
                         <div className="flex items-center gap-6 mb-10">
-                            <div 
+                            <div
                                 className="h-20 w-20 rounded-2xl flex items-center justify-center text-[24px] font-black text-white shadow-lg border-[4px] border-white ring-1 ring-[#f0f0f0]"
                                 style={{ backgroundColor: avatarColor(profile.user.name) }}
                             >
@@ -111,7 +112,7 @@ const SettingsPage: React.FC = () => {
                             <div className="flex-1">
                                 <h2 className="text-[20px] font-black text-[#1f2124] tracking-tight leading-none mb-2">{profile.user.name}</h2>
                                 <div className="flex flex-wrap gap-3 items-center">
-                                    <p className="text-[13px] text-[#aaa] font-bold flex items-center gap-1.5"><Mail size={13} className="text-[#fa8029]/60"/> {profile.user.email}</p>
+                                    <p className="text-[13px] text-[#aaa] font-bold flex items-center gap-1.5"><Mail size={13} className="text-[#fa8029]/60" /> {profile.user.email}</p>
                                     <span className="px-2.5 py-0.5 bg-[#1f2124] text-white text-[9px] font-black uppercase tracking-widest rounded-sm border border-[#1f2124]">
                                         {profile.user.role}
                                     </span>
@@ -121,14 +122,14 @@ const SettingsPage: React.FC = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 border-t border-[#f8f8f8] pt-10">
                             {profile.company && (
-                                <SettingsField icon={<Building size={14}/>} label="Organization" value={profile.company.name} />
+                                <SettingsField icon={<Building size={14} />} label="Organization" value={profile.company.name} />
                             )}
                             {profile.employee && (
                                 <>
-                                    <SettingsField icon={<Briefcase size={14}/>} label="Professional Role" value={profile.employee.designation || "Senior Member"} />
-                                    <SettingsField icon={<Calendar size={14}/>} label="Joining Date" value={profile.employee.date_of_joining ? new Date(profile.employee.date_of_joining).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : "Recently"} />
-                                    <SettingsField icon={<Users size={14}/>} label="Allocated Team" value={profile.employee.team?.name || "Unassigned"} />
-                                    <SettingsField icon={<Smartphone size={14}/>} label="Direct Contact" value={profile.employee.phone || "Not linked"} />
+                                    <SettingsField icon={<Briefcase size={14} />} label="Professional Role" value={profile.employee.designation || "Senior Member"} />
+                                    <SettingsField icon={<Calendar size={14} />} label="Joining Date" value={profile.employee.date_of_joining ? new Date(profile.employee.date_of_joining).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : "Recently"} />
+                                    <SettingsField icon={<Users size={14} />} label="Allocated Team" value={profile.employee.team?.name || "Unassigned"} />
+                                    <SettingsField icon={<Smartphone size={14} />} label="Direct Contact" value={profile.employee.phone || "Not linked"} />
                                 </>
                             )}
                         </div>
@@ -155,16 +156,16 @@ const SettingsPage: React.FC = () => {
                         <h2 className="text-[11px] font-black uppercase tracking-[0.15em] text-[#1f2124]">Change Password</h2>
                     </div>
                     <div className="p-8">
-                         <SecuritySection />
+                        <SecuritySection />
                     </div>
                 </div>
             </div>
 
             {isEditModalOpen && profile && (
-                <EditProfileModal 
-                    profile={profile} 
-                    onClose={() => setIsEditModalOpen(false)} 
-                    onUpdate={fetchProfile} 
+                <EditProfileModal
+                    profile={profile}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onUpdate={fetchProfile}
                 />
             )}
         </div>
@@ -219,8 +220,12 @@ const SecuritySection: React.FC = () => {
                 icon: <ShieldCheck className="text-emerald-500" />
             });
             setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Verification failed");
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(err.response?.data?.message || "Verification failed");
+            } else {
+                toast.error("An unexpected error occurred");
+            }
         } finally {
             setLoading(false);
         }
@@ -265,7 +270,16 @@ const SecuritySection: React.FC = () => {
     );
 };
 
-const PasswordField = ({ label, value, show, error, onToggle, onChange }: any) => (
+interface PasswordFieldProps {
+    label: string;
+    value: string;
+    show: boolean;
+    error?: string;
+    onToggle: () => void;
+    onChange: (value: string) => void;
+}
+
+const PasswordField = ({ label, value, show, error, onToggle, onChange }: PasswordFieldProps) => (
     <div className="space-y-2">
         <label className="text-[11px] font-bold text-[#bbb] uppercase tracking-wider px-1">{label}</label>
         <div className="relative group">
@@ -273,11 +287,10 @@ const PasswordField = ({ label, value, show, error, onToggle, onChange }: any) =
                 type={show ? "text" : "password"}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className={`w-full px-5 py-3.5 pr-12 rounded-xl border text-[14px] font-bold outline-none transition-all ${
-                    error 
-                    ? 'border-rose-200 bg-rose-50/10 focus:border-rose-500' 
+                className={`w-full px-5 py-3.5 pr-12 rounded-xl border text-[14px] font-bold outline-none transition-all ${error
+                    ? 'border-rose-200 bg-rose-50/10 focus:border-rose-500'
                     : 'bg-[#fcfcfc] border-[#ebebeb] focus:bg-white focus:border-[#fa8029] focus:ring-4 focus:ring-orange-500/5'
-                }`}
+                    }`}
                 placeholder="••••••••"
             />
             <button
@@ -292,10 +305,10 @@ const PasswordField = ({ label, value, show, error, onToggle, onChange }: any) =
     </div>
 );
 
-const EditProfileModal: React.FC<{ 
-    profile: UserProfile; 
-    onClose: () => void; 
-    onUpdate: () => void 
+const EditProfileModal: React.FC<{
+    profile: UserProfile;
+    onClose: () => void;
+    onUpdate: () => void
 }> = ({ profile, onClose, onUpdate }) => {
     const [name, setName] = useState(profile.user.name);
     const [email, setEmail] = useState(profile.user.email);
@@ -320,8 +333,12 @@ const EditProfileModal: React.FC<{
                 icon: <Check className="text-emerald-500" />
             });
             onUpdate(); onClose();
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Sync failed");
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                toast.error(err.response?.data?.message || "Sync failed");
+            } else {
+                toast.error("An unexpected error occurred");
+            }
         } finally {
             setLoading(false);
         }
@@ -334,29 +351,29 @@ const EditProfileModal: React.FC<{
                     <div>
                         <h2 className="text-[14px] font-black uppercase tracking-widest text-[#1f2124]">Modify Profile Details</h2>
                     </div>
-                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-xl text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#1f2124] transition-all"><X size={20}/></button>
+                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-xl text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#1f2124] transition-all"><X size={20} /></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} noValidate className="p-8 overflow-y-auto max-h-[85vh]">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <InputGroup label="Full Name" value={name} error={fieldErrors.name} onChange={(v: string) => setName(v)} />
                         <InputGroup label="Official Email" value={email} error={fieldErrors.email} onChange={(v: string) => setEmail(v)} />
                         <InputGroup label="Direct Contact" value={phone} error={fieldErrors.phone} onChange={(v: string) => setPhone(v)} />
-                        
+
                         <div className="md:col-span-2 space-y-2">
                             <label className="text-[11px] font-bold text-[#bbb] uppercase tracking-wider px-1">Technical Skills <span className="text-[#ddd] normal-case font-medium">(comma separated)</span></label>
-                            <textarea 
-                                value={skillsText} 
+                            <textarea
+                                value={skillsText}
                                 onChange={(e) => setSkillsText(e.target.value)}
                                 className={`w-full px-5 py-4 bg-[#fcfcfc] border ${fieldErrors.skills ? 'border-rose-200 bg-rose-50/10' : 'border-[#ebebeb]'} rounded-xl text-[14px] font-bold h-24 outline-none resize-none focus:bg-white focus:border-[#fa8029] focus:ring-4 focus:ring-orange-500/5 shadow-sm transition-all`}
                             />
                         </div>
                     </div>
-                    
+
                     <div className="pt-8 flex items-center justify-end gap-3 border-t border-gray-50 mt-8">
-                         <button type="button" onClick={onClose} className="px-6 py-3 text-[13px] font-bold text-[#888] hover:text-[#1f2124] transition-colors">Discard</button>
-                         <button 
-                            type="submit" 
+                        <button type="button" onClick={onClose} className="px-6 py-3 text-[13px] font-bold text-[#888] hover:text-[#1f2124] transition-colors">Discard</button>
+                        <button
+                            type="submit"
                             disabled={loading}
                             className="px-10 py-3 bg-[#1f2124] text-white rounded-xl text-[13px] font-black hover:bg-black transition-all disabled:opacity-50 shadow-lg active:scale-95"
                         >
@@ -372,14 +389,13 @@ const EditProfileModal: React.FC<{
 const InputGroup = ({ label, value, error, onChange }: { label: string, value: string, error?: string, onChange: (v: string) => void }) => (
     <div className="space-y-2 flex-1">
         <label className="text-[11px] font-bold text-[#bbb] uppercase tracking-wider px-1">{label}</label>
-        <input 
-            value={value} 
+        <input
+            value={value}
             onChange={(e) => onChange(e.target.value)}
-            className={`w-full px-5 py-3.5 rounded-xl border text-[14px] font-bold outline-none transition-all ${
-                error 
-                    ? 'border-rose-200 bg-rose-50/10 focus:border-rose-500' 
-                    : 'bg-[#fcfcfc] border-[#ebebeb] focus:bg-white focus:border-[#fa8029] focus:ring-4 focus:ring-orange-500/5'
-            }`} 
+            className={`w-full px-5 py-3.5 rounded-xl border text-[14px] font-bold outline-none transition-all ${error
+                ? 'border-rose-200 bg-rose-50/10 focus:border-rose-500'
+                : 'bg-[#fcfcfc] border-[#ebebeb] focus:bg-white focus:border-[#fa8029] focus:ring-4 focus:ring-orange-500/5'
+                }`}
         />
         {error && <p className="text-[10px] text-rose-500 font-bold px-2">{error}</p>}
     </div>

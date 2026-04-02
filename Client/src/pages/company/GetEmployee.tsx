@@ -1,8 +1,8 @@
 import { getEmployeeDetailsApi, type UserProfile, type EmployeePermissions } from "@/api/companyApi";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { 
-    Mail, Phone, Calendar, 
+import {
+    Mail, Phone, Calendar,
     ArrowLeft, Users, Edit2, Shield,
     Layout, Layers, Zap, CheckCircle, Check
 } from "lucide-react";
@@ -41,7 +41,7 @@ export default function GetEmployee() {
                 } else {
                     setError(response.message || "Failed to fetch details");
                 }
-            } catch (err: unknown) {
+            } catch {
                 setError("An error occurred while fetching data");
             } finally {
                 setLoading(false);
@@ -52,8 +52,8 @@ export default function GetEmployee() {
 
     if (loading) return (
         <div className="p-4 md:p-6 flex flex-col items-center justify-center min-h-[400px] gap-3 font-sans">
-             <div className="w-5 h-5 border-2 border-[#ebebeb] border-t-[#1f2124] rounded-full animate-spin" />
-             <p className="text-[12px] text-[#bbb]">Loading profile...</p>
+            <div className="w-5 h-5 border-2 border-[#ebebeb] border-t-[#1f2124] rounded-full animate-spin" />
+            <p className="text-[12px] text-[#bbb]">Loading profile...</p>
         </div>
     );
 
@@ -61,8 +61,8 @@ export default function GetEmployee() {
         <div className="p-4 md:p-6 font-sans">
             <div className="bg-white p-8 rounded-sm border border-[#ebebeb] text-center max-w-sm mx-auto">
                 <p className="text-[#1f2124] font-bold text-[13px] mb-4">{error || "Employee not found"}</p>
-                <button 
-                    onClick={() => navigate(-1)} 
+                <button
+                    onClick={() => navigate(-1)}
                     className="px-6 py-2 bg-[#1f2124] text-white rounded-full text-[11px] font-bold hover:bg-black transition-all"
                 >
                     Go Back
@@ -75,11 +75,11 @@ export default function GetEmployee() {
 
     return (
         <div className="p-4 md:p-6 font-sans flex flex-col gap-6">
-            
+
             {/* ── Header ── */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
                         onClick={() => navigate('/company/employees')}
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-[#aaa] hover:bg-white hover:text-[#1f2124] border border-transparent hover:border-[#ebebeb] transition-all"
                     >
@@ -89,7 +89,7 @@ export default function GetEmployee() {
                         <h1 className="text-[14px] md:text-[16px] font-bold text-[#1f2124]">Employee Profile</h1>
                     </div>
                 </div>
-                <button 
+                <button
                     onClick={() => navigate(`/company/employees/edit/${user._id}`)}
                     className="flex items-center gap-1.5 bg-[#fa8029] hover:bg-[#e67320] text-white px-4 py-2 rounded-full font-bold text-[11px] md:text-[12px] transition-all active:scale-95 whitespace-nowrap shadow-sm shadow-orange-950/20"
                 >
@@ -99,13 +99,13 @@ export default function GetEmployee() {
             </div>
 
             <div className="flex flex-col gap-6">
-                
+
                 {/* ── Main Data Card ── */}
                 <div className="bg-white border border-[#ebebeb] rounded-sm flex flex-col shadow-sm">
-                    
+
                     {/* Identity (Smaller Header) */}
                     <div className="px-5 py-5 border-b border-[#f5f5f5] flex items-center gap-4 bg-[#fafafa]/30">
-                        <div 
+                        <div
                             className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-black text-white shrink-0 shadow-sm"
                             style={{ backgroundColor: avatarColor(user.name) }}
                         >
@@ -126,10 +126,10 @@ export default function GetEmployee() {
 
                     {/* Core Fields Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#f5f5f5]">
-                        <MiniField label="Email" value={user.email} icon={<Mail size={13}/>} />
-                        <MiniField label="Phone" value={profile.phone || "N/A"} icon={<Phone size={13}/>} />
-                        <MiniField label="Team" value={profile.team?.name || "N/A"} icon={<Users size={13}/>} />
-                        <MiniField label="Join Date" value={formatDate(profile.date_of_joining)} icon={<Calendar size={13}/>} />
+                        <MiniField label="Email" value={user.email} icon={<Mail size={13} />} />
+                        <MiniField label="Phone" value={profile.phone || "N/A"} icon={<Phone size={13} />} />
+                        <MiniField label="Team" value={profile.team?.name || "N/A"} icon={<Users size={13} />} />
+                        <MiniField label="Join Date" value={formatDate(profile.date_of_joining)} icon={<Calendar size={13} />} />
                     </div>
 
                     {/* Expertise */}
@@ -155,27 +155,27 @@ export default function GetEmployee() {
                         <Shield size={14} className="text-[#fa8029]" />
                         <h3 className="text-[12px] font-bold text-[#1f2124] uppercase tracking-wider">Access Permissions</h3>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                        <PermissionModule 
-                            title="Projects" icon={<Layout size={14}/>} 
-                            active={getProjectPermissions(profile.permissions?.project)} 
+                        <PermissionModule
+                            title="Projects" icon={<Layout size={14} />}
+                            active={getProjectPermissions(profile.permissions?.project)}
                         />
-                        <PermissionModule 
-                            title="User Stories" icon={<Layers size={14}/>} 
-                            active={getUserStoryPermissions(profile.permissions?.userStory)} 
+                        <PermissionModule
+                            title="User Stories" icon={<Layers size={14} />}
+                            active={getUserStoryPermissions(profile.permissions?.userStory)}
                         />
-                        <PermissionModule 
-                            title="Sprints" icon={<Zap size={14}/>} 
-                            active={getSprintPermissions(profile.permissions?.sprint)} 
+                        <PermissionModule
+                            title="Sprints" icon={<Zap size={14} />}
+                            active={getSprintPermissions(profile.permissions?.sprint)}
                         />
-                        <PermissionModule 
-                            title="Tasks" icon={<CheckCircle size={14}/>} 
-                            active={getTaskPermissions(profile.permissions?.task)} 
+                        <PermissionModule
+                            title="Tasks" icon={<CheckCircle size={14} />}
+                            active={getTaskPermissions(profile.permissions?.task)}
                         />
-                        <PermissionModule 
-                            title="Teams" icon={<Users size={14}/>} 
-                            active={getTeamPermissions(profile.permissions?.team)} 
+                        <PermissionModule
+                            title="Teams" icon={<Users size={14} />}
+                            active={getTeamPermissions(profile.permissions?.team)}
                         />
                     </div>
                 </div>
@@ -190,10 +190,10 @@ function MiniField({ label, value, icon }: { label: string, value: string, icon:
         <div className="p-5 flex flex-col gap-1">
             <p className="text-[10px] font-bold text-[#bbb] uppercase tracking-tight leading-none">{label}</p>
             <div className="flex items-center gap-2">
-                 <div className="text-[#fa8029]/70 shrink-0">
+                <div className="text-[#fa8029]/70 shrink-0">
                     {icon}
-                 </div>
-                 <p className="text-[13px] font-bold text-[#1f2124] tracking-tight">{value}</p>
+                </div>
+                <p className="text-[13px] font-bold text-[#1f2124] tracking-tight">{value}</p>
             </div>
         </div>
     );
@@ -223,7 +223,7 @@ function PermissionModule({ title, icon, active }: { title: string, icon: React.
 }
 
 // Permission Helpers
-function getProjectPermissions(p: any) {
+function getProjectPermissions(p: EmployeePermissions['project'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.create) res.push("Create");
@@ -234,7 +234,7 @@ function getProjectPermissions(p: any) {
     if (p.delete) res.push("Delete");
     return res;
 }
-function getUserStoryPermissions(p: any) {
+function getUserStoryPermissions(p: EmployeePermissions['userStory'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.create) res.push("Create");
@@ -243,7 +243,7 @@ function getUserStoryPermissions(p: any) {
     if (p.assign) res.push("Assign");
     return res;
 }
-function getSprintPermissions(p: any) {
+function getSprintPermissions(p: EmployeePermissions['sprint'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.create) res.push("Create");
@@ -253,7 +253,7 @@ function getSprintPermissions(p: any) {
     if (p.complete) res.push("Complete");
     return res;
 }
-function getTaskPermissions(p: any) {
+function getTaskPermissions(p: EmployeePermissions['task'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.create) res.push("Create");
@@ -265,7 +265,7 @@ function getTaskPermissions(p: any) {
     if (p.update?.all) res.push("Update (All)");
     return res;
 }
-function getTeamPermissions(p: any) {
+function getTeamPermissions(p: EmployeePermissions['team'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.view?.team) res.push("View (Team)");
