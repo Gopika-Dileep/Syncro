@@ -2,6 +2,6 @@ import { ChangePasswordRequestDTO, UpdateProfileRequestDTO, UserProfileResponseD
 
 export interface IUserService {
   getProfile(userId: string): Promise<UserProfileResponseDTO>;
-  changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<void>;
+  changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<{ message: string }>;
   updateUserProfile(userId: string, data: UpdateProfileRequestDTO): Promise<UserProfileResponseDTO>;
 }

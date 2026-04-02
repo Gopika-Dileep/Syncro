@@ -8,15 +8,12 @@ import { TYPES } from '../di/types';
 
 @injectable()
 export class EmployeeController {
-  constructor(@inject(TYPES.EmployeeService) private _employeeService: IEmployeeService) {}
+  constructor(@inject(TYPES.EmployeeService) private _employeeService: IEmployeeService) { }
 
   addEmployee = async (req: Request, res: Response): Promise<void> => {
     try {
-      await this._employeeService.addEmployee(req.userId!, req.body);
-      res.status(HttpStatus.CREATED).json({
-        success: true,
-        message: EMPLOYEE_MESSAGES.ADD_SUCCESS,
-      });
+      const result = await this._employeeService.addEmployee(req.userId!, req.body);
+      res.status(HttpStatus.CREATED).json({ success: true, message: result.message });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : EMPLOYEE_MESSAGES.ADD_FAILED;
       res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
@@ -37,9 +34,7 @@ export class EmployeeController {
   toggleBlockEmployee = async (req: Request, res: Response): Promise<void> => {
     try {
       const isBlocked = await this._employeeService.toggleBlockEmployee(req.userId!, req.params.userId as string);
-      res
-        .status(HttpStatus.OK)
-        .json({ success: true, isBlocked, message: EMPLOYEE_MESSAGES.TOGGLE_BLOCK_SUCCESS(isBlocked) });
+      res.status(HttpStatus.OK).json({ success: true, isBlocked, message: EMPLOYEE_MESSAGES.TOGGLE_BLOCK_SUCCESS(isBlocked) });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : EMPLOYEE_MESSAGES.FETCH_DATA_FAILED;
       res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });

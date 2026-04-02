@@ -10,6 +10,7 @@ import { ChangePasswordRequestDTO, UpdateProfileRequestDTO, UserProfileResponseD
 import { UserMapper } from '../mappers/user.mapper';
 import { TYPES } from '../di/types';
 import { env } from '../config/env';
+import { USER_MESSAGES } from '../constants/messages';
 
 @injectable()
 export class UserService implements IUserService {
@@ -21,9 +22,7 @@ export class UserService implements IUserService {
 
   async getProfile(userId: string): Promise<UserProfileResponseDTO> {
     const user = await this._authRepo.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    if (!user) throw new Error('User not found');
 
     let company: ICompany | null = null;
     let employee: IPopulatedEmployee | null = null;
@@ -37,32 +36,26 @@ export class UserService implements IUserService {
     return UserMapper.toUserProfileDTO(user, company, employee);
   }
 
-  async changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<void> {
+  async changePassword(userId: string, data: ChangePasswordRequestDTO): Promise<{ message: string }> {
     const user = await this._authRepo.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    if (!user) throw new Error('User not found');
 
     const isMatch = await bcrypt.compare(data.currentPassword, user.password);
-    if (!isMatch) {
-      throw new Error("Current password doesn't match");
-    }
+    if (!isMatch) throw new Error("Current password doesn't match");
 
     const hashed = await bcrypt.hash(data.newPassword, env.BCRYPT_SALT_ROUNDS);
     await this._authRepo.updatePassword(userId, hashed);
+
+    return { message: USER_MESSAGES.PASSWORD_CHANGE_SUCCESS };
   }
 
   async updateUserProfile(userId: string, data: UpdateProfileRequestDTO): Promise<UserProfileResponseDTO> {
     const userUpdate = UserMapper.toUserUpdateEntity(data);
-    if (Object.keys(userUpdate).length > 0) {
-      await this._authRepo.updateUser(userId, userUpdate);
-    }
+    if (Object.keys(userUpdate).length > 0) await this._authRepo.updateUser(userId, userUpdate);
 
     const employeeUpdate = UserMapper.toEmployeeUpdateEntity(data);
-    if (Object.keys(employeeUpdate).length > 0) {
-      await this._employeeRepo.updateEmployee(userId, employeeUpdate);
-    }
+    if (Object.keys(employeeUpdate).length > 0) await this._employeeRepo.updateEmployee(userId, employeeUpdate);
 
-    return await this.getProfile(userId);
+    return this.getProfile(userId);
   }
 }

@@ -21,8 +21,8 @@ export class UserController {
 
   changePassword = async (req: Request, res: Response): Promise<void> => {
     try {
-      await this._userService.changePassword(req.userId!, req.body);
-      res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PASSWORD_CHANGE_SUCCESS });
+      const result = await this._userService.changePassword(req.userId!, req.body);
+      res.status(HttpStatus.OK).json({ success: true, message: result.message });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : USER_MESSAGES.PASSWORD_CHANGE_FAILED;
       res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });

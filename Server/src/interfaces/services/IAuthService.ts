@@ -15,6 +15,6 @@ export interface IAuthService {
   login(data: LoginRequestDTO): Promise<AuthResponseDTO>;
   refresh(refreshToken: string): Promise<Omit<AuthResponseDTO, 'refreshToken'>>;
   logout(refreshToken: string): Promise<void>;
-  forgotPassword(data: ForgotPasswordRequestDTO): Promise<void>;
-  resetPassword(data: ResetPasswordRequestDTO): Promise<void>;
+  forgotPassword(data: ForgotPasswordRequestDTO): Promise<{ message: string }>;
+  resetPassword(data: ResetPasswordRequestDTO): Promise<{ message: string }>;
 }
