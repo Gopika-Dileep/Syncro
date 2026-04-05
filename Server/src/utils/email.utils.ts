@@ -13,12 +13,7 @@ export const sendPasswordResetEmail = async (toEmail: string, resetToken: string
   });
 };
 
-export const sendEmployeeInvitationEmail = async (
-  toEmail: string,
-  employeeName: string,
-  companyName: string,
-  password: string,
-): Promise<void> => {
+export const sendEmployeeInvitationEmail = async (toEmail: string, employeeName: string, companyName: string, password: string): Promise<void> => {
   const { subject, html } = employeeInvitationTemplate(employeeName, companyName, password);
 
   await transporter.sendMail({

@@ -9,15 +9,7 @@ import { sendOtpEmail, sendPasswordResetEmail } from '../utils/email.utils';
 import { ICompanyRepository } from '../interfaces/repositories/ICompanyRepository';
 import { IPermissionRepository } from '../interfaces/repositories/IPermissionRepository';
 import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
-import {
-  RegisterRequestDTO,
-  LoginRequestDTO,
-  VerifyOtpRequestDTO,
-  ResendOtpRequestDTO,
-  ForgotPasswordRequestDTO,
-  ResetPasswordRequestDTO,
-  AuthResponseDTO,
-} from '../dto/auth.dto';
+import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO } from '../dto/auth.dto';
 import { AuthMapper } from '../mappers/auth.mapper';
 import { TYPES } from '../di/types';
 import { env } from '../config/env';
@@ -30,17 +22,17 @@ export class AuthService implements IAuthService {
     @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository,
     @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
-  ) { }
+  ) {}
 
   async registration(data: RegisterRequestDTO): Promise<{ message: string }> {
     const { name, email, password, companyName } = data;
-    const existing = await this._authRepo.findByEmail(email);
+    const existing = await this._authRepo.findOne({ email });
     if (existing) throw new Error('email already exist');
 
     const hashed = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
-    const user = await this._authRepo.createUser(name, email, hashed, 'company');
+    const user = await this._authRepo.create({ name, email, password: hashed, role: 'company' });
 
-    await this._companyRepo.createCompany(user._id.toString(), companyName);
+    await this._companyRepo.create({ user_id: user._id.toString(), name: companyName });
 
     const otp = crypto.randomInt(100000, 999999).toString();
     console.log('otp', otp);
@@ -56,10 +48,10 @@ export class AuthService implements IAuthService {
 
     if (!storedOtp || storedOtp !== otp) throw new Error('Invalid or expired OTP');
 
-    const user = await this._authRepo.findByEmail(email);
+    const user = await this._authRepo.findOne({ email });
     if (!user) throw new Error('User not found');
 
-    await this._authRepo.verifyUser(user._id.toString());
+    await this._authRepo.updateById(user._id.toString(), { is_verified: true });
     if (user.is_blocked) throw new Error('Your account has been blocked. Please contact support.');
 
     let permissions: string[] = [];
@@ -72,7 +64,7 @@ export class AuthService implements IAuthService {
       if (employeeData && employeeData.company_id) companyName = employeeData.company_id.name;
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString());
     } else {
-      const company = await this._companyRepo.findCompanyByUserId(user._id.toString());
+      const company = await this._companyRepo.findOne({ user_id: user._id.toString() });
       companyName = company?.name || null;
     }
 
@@ -80,14 +72,14 @@ export class AuthService implements IAuthService {
     const accessToken = generateAccessToken(userDTO.id, userDTO.role, permissions, userDTO.name, userDTO.designation, userDTO.companyName);
     const refreshToken = generateRefreshToken(userDTO.id);
 
-    await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken);
+    await this._authRepo.updateById(user._id.toString(), { refreshToken });
     await redis.del(`otp:${email}`);
     return AuthMapper.toAuthResponseDTO(accessToken, refreshToken, userDTO, permissions);
   }
 
   async resendOtp(data: ResendOtpRequestDTO): Promise<{ message: string }> {
     const { email } = data;
-    const user = await this._authRepo.findByEmail(email);
+    const user = await this._authRepo.findOne({ email });
     if (!user) throw new Error('User not found');
     if (user.is_verified) throw new Error('user is already verified');
 
@@ -101,7 +93,7 @@ export class AuthService implements IAuthService {
 
   async login(data: LoginRequestDTO): Promise<AuthResponseDTO> {
     const { email, password } = data;
-    const user = await this._authRepo.findByEmail(email);
+    const user = await this._authRepo.findOne({ email });
     if (!user) throw new Error('user not found');
     if (!user.is_verified) throw new Error('User is not verified');
     if (user.is_blocked) throw new Error('Your account has been blocked. Please contact support.');
@@ -119,7 +111,7 @@ export class AuthService implements IAuthService {
       if (employeeData && employeeData.company_id) companyName = employeeData.company_id.name;
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString());
     } else {
-      const company = await this._companyRepo.findCompanyByUserId(user._id.toString());
+      const company = await this._companyRepo.findOne({ user_id: user._id.toString() });
       companyName = company?.name || null;
     }
 
@@ -127,7 +119,7 @@ export class AuthService implements IAuthService {
     const accessToken = generateAccessToken(userDTO.id, userDTO.role, permissions, userDTO.name, userDTO.designation, userDTO.companyName);
     const refreshToken = generateRefreshToken(userDTO.id);
 
-    await this._authRepo.updateRefreshToken(user._id.toString(), refreshToken);
+    await this._authRepo.updateById(user._id.toString(), { refreshToken });
     return AuthMapper.toAuthResponseDTO(accessToken, refreshToken, userDTO, permissions);
   }
 
@@ -148,7 +140,7 @@ export class AuthService implements IAuthService {
       if (employeeData && employeeData.company_id) companyName = employeeData.company_id.name;
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString());
     } else {
-      const company = await this._companyRepo.findCompanyByUserId(user._id.toString());
+      const company = await this._companyRepo.findOne({ user_id: user._id.toString() });
       companyName = company?.name || null;
     }
 
@@ -159,12 +151,12 @@ export class AuthService implements IAuthService {
 
   async logout(refreshToken: string): Promise<void> {
     const decoded = verifyRefreshToken(refreshToken);
-    await this._authRepo.clearRefreshToken(decoded.id);
+    await this._authRepo.updateById(decoded.id, { refreshToken: null });
   }
 
   async forgotPassword(data: ForgotPasswordRequestDTO): Promise<{ message: string }> {
     const { email } = data;
-    const user = await this._authRepo.findByEmail(email);
+    const user = await this._authRepo.findOne({ email });
     if (!user) throw new Error('User not found');
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -180,7 +172,7 @@ export class AuthService implements IAuthService {
     if (!userId) throw new Error('Invalid or expired reset token');
 
     const hashed = await bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS);
-    await this._authRepo.updatePassword(userId, hashed);
+    await this._authRepo.updateById(userId, { password: hashed });
     await redis.del(`password_reset:${token}`);
 
     return { message: AUTH_MESSAGES.RESET_SUCCESS };

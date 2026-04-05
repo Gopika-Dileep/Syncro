@@ -1,10 +1,4 @@
-import {
-  EmployeeResponseDTO,
-  PaginatedEmployeeResponseDTO,
-  AddEmployeeRequestDTO,
-  GetEmployeesRequestDTO,
-  UpdateEmployeeRequestDTO,
-} from '../../dto/employee.dto';
+import { EmployeeResponseDTO, PaginatedEmployeeResponseDTO, AddEmployeeRequestDTO, GetEmployeesRequestDTO, UpdateEmployeeRequestDTO } from '../../dto/employee.dto';
 
 export interface IEmployeeService {
   addEmployee(companyId: string, data: AddEmployeeRequestDTO): Promise<{ message: string }>;

@@ -1,11 +1,11 @@
 import { env } from '../config/env';
 
 export const passwordResetTemplate = (resetToken: string): { subject: string; html: string } => {
-    const resetLink = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const resetLink = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-    return {
-        subject: `Password Reset Request - ${env.EMAIL_FROM_NAME}`,
-        html: `
+  return {
+    subject: `Password Reset Request - ${env.EMAIL_FROM_NAME}`,
+    html: `
             <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px;">
                 <h2 style="color: #4f46e5;">Reset your password</h2>
                 <p>We received a request to reset your Syncro account password.</p>
@@ -22,19 +22,15 @@ export const passwordResetTemplate = (resetToken: string): { subject: string; ht
                 </p>
             </div>
         `,
-    };
+  };
 };
 
-export const employeeInvitationTemplate = (
-    employeeName: string,
-    companyName: string,
-    password: string,
-): { subject: string; html: string } => {
-    const loginLink = `${env.FRONTEND_URL}/login`;
+export const employeeInvitationTemplate = (employeeName: string, companyName: string, password: string): { subject: string; html: string } => {
+  const loginLink = `${env.FRONTEND_URL}/login`;
 
-    return {
-        subject: `You're invited to join ${companyName} `,
-        html: `
+  return {
+    subject: `You're invited to join ${companyName} `,
+    html: `
             <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px;">
                 <h2 style="color: #4f46e5;">Welcome to ${companyName}!</h2>
                 <p>Hi <strong>${employeeName}</strong>,</p>
@@ -56,13 +52,13 @@ export const employeeInvitationTemplate = (
                 </p>
             </div>
         `,
-    };
+  };
 };
 
 export const otpEmailTemplate = (otp: string): { subject: string; html: string } => {
-    return {
-        subject: `Your Registration OTP - ${env.EMAIL_FROM_NAME}`,
-        html: `
+  return {
+    subject: `Your Registration OTP - ${env.EMAIL_FROM_NAME}`,
+    html: `
             <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px;">
                 <h2 style="color: #4f46e5;">Verify your email address</h2>
                 <p>Thank you for registering. Please use the following OTP to complete your registration:</p>
@@ -75,5 +71,5 @@ export const otpEmailTemplate = (otp: string): { subject: string; html: string }
                 </p>
             </div>
         `,
-    };
+  };
 };

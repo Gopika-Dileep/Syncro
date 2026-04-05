@@ -1,19 +1,10 @@
-import {
-  UserProfileResponseDTO,
-  CompanyProfileDTO,
-  EmployeeProfileDTO,
-  UpdateProfileRequestDTO,
-} from '../dto/user.dto';
+import { UserProfileResponseDTO, CompanyProfileDTO, EmployeeProfileDTO, UpdateProfileRequestDTO } from '../dto/user.dto';
 import { ICompany } from '../models/company.model';
 import { IPopulatedEmployee } from '../models/employee.model';
 import { IUser } from '../models/user.model';
 
 export class UserMapper {
-  static toUserProfileDTO(
-    user: IUser,
-    company: ICompany | null,
-    employee: IPopulatedEmployee | null,
-  ): UserProfileResponseDTO {
+  static toUserProfileDTO(user: IUser, company: ICompany | null, employee: IPopulatedEmployee | null): UserProfileResponseDTO {
     return {
       user: {
         _id: user._id.toString(),

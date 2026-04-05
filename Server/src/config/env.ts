@@ -26,4 +26,5 @@ export const env = {
   REFRESH_TOKEN_COOKIE_MAX_AGE: Number(getEnv('REFRESH_TOKEN_COOKIE_MAX_AGE')),
   COOKIE_SECURE: getEnv('COOKIE_SECURE') === 'true',
   COOKIE_SAME_SITE: getEnv('COOKIE_SAME_SITE') as 'lax' | 'strict' | 'none',
+  LOG_RETENTION_DAYS: getEnv('LOG_RETENTION_DAYS'),
 };

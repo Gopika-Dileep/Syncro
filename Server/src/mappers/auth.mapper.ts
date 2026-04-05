@@ -12,12 +12,7 @@ export class AuthMapper {
     };
   }
 
-  static toAuthResponseDTO(
-    accessToken: string,
-    refreshToken: string,
-    userDTO: AuthUserDTO,
-    permissions: string[],
-  ): AuthResponseDTO {
+  static toAuthResponseDTO(accessToken: string, refreshToken: string, userDTO: AuthUserDTO, permissions: string[]): AuthResponseDTO {
     return {
       accessToken,
       refreshToken,
@@ -26,11 +21,7 @@ export class AuthMapper {
     };
   }
 
-  static toRefreshResponseDTO(
-    accessToken: string,
-    userDTO: AuthUserDTO,
-    permissions: string[],
-  ): Omit<AuthResponseDTO, 'refreshToken'> {
+  static toRefreshResponseDTO(accessToken: string, userDTO: AuthUserDTO, permissions: string[]): Omit<AuthResponseDTO, 'refreshToken'> {
     return {
       accessToken,
       user: userDTO,
@@ -38,14 +29,7 @@ export class AuthMapper {
     };
   }
 
-  static toFullAuthResponse(
-    accessToken: string,
-    refreshToken: string,
-    user: IUser,
-    permissions: string[],
-    designation: string | null,
-    companyName: string | null,
-  ): AuthResponseDTO {
+  static toFullAuthResponse(accessToken: string, refreshToken: string, user: IUser, permissions: string[], designation: string | null, companyName: string | null): AuthResponseDTO {
     return {
       accessToken,
       refreshToken,

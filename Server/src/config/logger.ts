@@ -1,4 +1,6 @@
 import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
+import { env } from './env';
 
 const levels = {
   error: 0,
@@ -18,25 +20,40 @@ const colors = {
 
 winston.addColors(colors);
 
-const format = winston.format.combine(
+const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
   winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`),
 );
 
+const fileFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`),
+);
+
 const transports = [
-  new winston.transports.Console(),
-  new winston.transports.File({
-    filename: 'logs/error.log',
-    level: 'error',
+  new winston.transports.Console({
+    format: consoleFormat,
   }),
-  new winston.transports.File({ filename: 'logs/combined.log' }),
+  new DailyRotateFile({
+    filename: 'logs/error-%DATE%.log',
+    datePattern: 'YYYY-MM-DD',
+    level: 'error',
+    maxFiles: env.LOG_RETENTION_DAYS,
+    zippedArchive: true,
+  }),
+  new DailyRotateFile({
+    filename: 'logs/combined-%DATE%.log',
+    datePattern: 'YYYY-MM-DD',
+    maxFiles: env.LOG_RETENTION_DAYS,
+    zippedArchive: true,
+  }),
 ];
 
 const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'development' ? 'debug' : 'warn',
+  level: env.NODE_ENV === 'development' ? 'debug' : 'warn',
   levels,
-  format,
+  format: fileFormat,
   transports,
 });
 

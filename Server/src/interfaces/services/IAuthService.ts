@@ -1,12 +1,4 @@
-import {
-  RegisterRequestDTO,
-  LoginRequestDTO,
-  VerifyOtpRequestDTO,
-  ResendOtpRequestDTO,
-  ForgotPasswordRequestDTO,
-  ResetPasswordRequestDTO,
-  AuthResponseDTO,
-} from '../../dto/auth.dto';
+import { RegisterRequestDTO, LoginRequestDTO, VerifyOtpRequestDTO, ResendOtpRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO, AuthResponseDTO } from '../../dto/auth.dto';
 
 export interface IAuthService {
   registration(data: RegisterRequestDTO): Promise<{ message: string }>;

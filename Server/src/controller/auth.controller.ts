@@ -1,58 +1,54 @@
 import { injectable, inject } from 'inversify';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import type { IAuthService } from '../interfaces/services/IAuthService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { AUTH_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
 import { cookieUtils } from '../utils/cookie.utils';
-
+import { handleAsyncError } from '../utils/error.utils';
 @injectable()
 export class AuthController {
-  constructor(@inject(TYPES.AuthService) private _authService: IAuthService) { }
+  constructor(@inject(TYPES.AuthService) private _authService: IAuthService) {}
 
-  register = async (req: Request, res: Response): Promise<void> => {
+  register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._authService.registration(req.body);
       res.status(HttpStatus.CREATED).json({ success: true, message: result.message });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : AUTH_MESSAGES.REGISTRATION_FAILED;
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 
-  verifyOtp = async (req: Request, res: Response): Promise<void> => {
+  verifyOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._authService.verifyOtp(req.body);
       cookieUtils.setRefreshToken(res, result.refreshToken);
       res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : AUTH_MESSAGES.OTP_VERIFICATION_FAILED;
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 
-  resendOtp = async (req: Request, res: Response): Promise<void> => {
+  resendOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._authService.resendOtp(req.body);
       res.status(HttpStatus.OK).json({ success: true, message: result.message });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : AUTH_MESSAGES.OTP_RESEND_FAILED;
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 
-  login = async (req: Request, res: Response): Promise<void> => {
+  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._authService.login(req.body);
       cookieUtils.setRefreshToken(res, result.refreshToken);
       res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : AUTH_MESSAGES.LOGIN_FAILED;
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 
-  refresh = async (req: Request, res: Response): Promise<void> => {
+  refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const refreshToken = cookieUtils.getRefreshToken(req);
       if (!refreshToken) {
@@ -61,41 +57,37 @@ export class AuthController {
       }
       const result = await this._authService.refresh(refreshToken);
       res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : AUTH_MESSAGES.REFRESH_FAILED;
-      res.status(HttpStatus.FORBIDDEN).json({ success: false, message });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 
-  logout = async (req: Request, res: Response): Promise<void> => {
+  logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const refreshToken = cookieUtils.getRefreshToken(req);
       if (refreshToken) await this._authService.logout(refreshToken);
       cookieUtils.clearRefreshToken(res);
       res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.LOGGED_OUT });
-    } catch {
-      cookieUtils.clearRefreshToken(res);
-      res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.LOGGED_OUT });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 
-  forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._authService.forgotPassword(req.body);
       res.status(HttpStatus.OK).json({ success: true, message: result.message });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : AUTH_MESSAGES.RESET_FAILED;
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 
-  resetPassword = async (req: Request, res: Response): Promise<void> => {
+  resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._authService.resetPassword(req.body);
       res.status(HttpStatus.OK).json({ success: true, message: result.message });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : AUTH_MESSAGES.RESET_FAILED;
-      res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+    } catch (error) {
+      handleAsyncError(error, next);
     }
   };
 }

@@ -19,17 +19,7 @@ export class UserRouter {
 
   private _initializeRoutes(): void {
     this.router.get(ENDPOINTS.USER.PROFILE, authMiddleware, userController.getProfile);
-    this.router.post(
-      ENDPOINTS.USER.CHANGE_PASSWORD,
-      authMiddleware,
-      validateRequest(ChangePasswordRequestSchema),
-      userController.changePassword,
-    );
-    this.router.put(
-      ENDPOINTS.USER.PROFILE,
-      authMiddleware,
-      validateRequest(UpdateProfileRequestSchema),
-      userController.updateProfile,
-    );
+    this.router.post(ENDPOINTS.USER.CHANGE_PASSWORD, authMiddleware, validateRequest(ChangePasswordRequestSchema), userController.changePassword);
+    this.router.put(ENDPOINTS.USER.PROFILE, authMiddleware, validateRequest(UpdateProfileRequestSchema), userController.updateProfile);
   }
 }

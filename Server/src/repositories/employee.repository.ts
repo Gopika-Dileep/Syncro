@@ -2,19 +2,15 @@ import { injectable } from 'inversify';
 import { PipelineStage, Types } from 'mongoose';
 import { IEmployee, IPopulatedEmployee, employeeModel } from '../models/employee.model';
 import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
+import { BaseRepository } from './base.repository';
 
 @injectable()
-export class EmployeeRepository implements IEmployeeRepository {
-  async createEmployee(userId: string, companyId: string, data: Partial<IEmployee>): Promise<IEmployee> {
-    return employeeModel.create({ user_id: userId, company_id: companyId, ...data });
+export class EmployeeRepository extends BaseRepository<IEmployee> implements IEmployeeRepository {
+  constructor() {
+    super(employeeModel);
   }
 
-  async getEmployeesByCompanyId(
-    companyId: string,
-    page: number,
-    limit: number,
-    search: string,
-  ): Promise<{ employees: IPopulatedEmployee[]; total: number }> {
+  async getEmployeesByCompanyId(companyId: string, page: number, limit: number, search: string): Promise<{ employees: IPopulatedEmployee[]; total: number }> {
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
@@ -34,11 +30,7 @@ export class EmployeeRepository implements IEmployeeRepository {
     if (search) {
       pipeline.push({
         $match: {
-          $or: [
-            { 'user_id.name': { $regex: search, $options: 'i' } },
-            { 'user_id.email': { $regex: search, $options: 'i' } },
-            { designation: { $regex: search, $options: 'i' } },
-          ],
+          $or: [{ 'user_id.name': { $regex: search, $options: 'i' } }, { 'user_id.email': { $regex: search, $options: 'i' } }, { designation: { $regex: search, $options: 'i' } }],
         },
       });
     }
@@ -57,14 +49,6 @@ export class EmployeeRepository implements IEmployeeRepository {
   }
 
   async findByUserId(userId: string): Promise<IPopulatedEmployee | null> {
-    return employeeModel
-      .findOne({ user_id: userId })
-      .populate('user_id', 'name email role created_at')
-      .populate('company_id', 'name')
-      .lean() as unknown as IPopulatedEmployee;
-  }
-
-  async updateEmployee(userId: string, data: Partial<IEmployee>): Promise<IEmployee | null> {
-    return await employeeModel.findOneAndUpdate({ user_id: userId }, { $set: data }, { returnDocument: 'after' });
+    return employeeModel.findOne({ user_id: userId }).populate('user_id', 'name email role created_at').populate('company_id', 'name').lean() as unknown as IPopulatedEmployee;
   }
 }

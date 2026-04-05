@@ -6,6 +6,7 @@ import cors from 'cors';
 import { CompanyRouter } from './routes/company.routes';
 import { UserRouter } from './routes/user.routes';
 import { morganMiddleware } from './middleware/morgan.middleware';
+import { errorMiddleware } from './middleware/error.middleware';
 
 export default class App {
   public app: Application;
@@ -13,6 +14,7 @@ export default class App {
     this.app = express();
     this._configureMiddleware();
     this._configureRoutes();
+    this.app.use(errorMiddleware);
   }
   private _configureRoutes(): void {
     this.app.use('/api/auth', new AuthRouter().router);

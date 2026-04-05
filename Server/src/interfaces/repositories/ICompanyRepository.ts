@@ -1,6 +1,4 @@
 import { ICompany } from '../../models/company.model';
+import { IBaseRepository } from './IBaseRepository';
 
-export interface ICompanyRepository {
-  createCompany(userId: string, companyName: string): Promise<ICompany>;
-  findCompanyByUserId(userId: string): Promise<ICompany | null>;
-}
+export interface ICompanyRepository extends IBaseRepository<ICompany> {}

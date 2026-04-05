@@ -1,14 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 
-export const generateAccessToken = (
-  userId: string,
-  role: string,
-  permissions: string[] = [],
-  name: string,
-  designation: string | null,
-  companyName: string | null,
-) => {
+export const generateAccessToken = (userId: string, role: string, permissions: string[] = [], name: string, designation: string | null, companyName: string | null) => {
   return jwt.sign({ id: userId, role, permissions, name, designation, companyName }, env.ACCESS_TOKEN_SECRET, {
     expiresIn: env.ACCESS_TOKEN_EXPIRY as any,
   });

@@ -20,8 +20,6 @@ export const checkPermission = (requiredKey: string) => {
       return next();
     }
 
-    return res
-      .status(HttpStatus.FORBIDDEN)
-      .json({ success: false, message: COMMON_MESSAGES.ACCESS_DENIED(requiredKey) });
+    return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: COMMON_MESSAGES.ACCESS_DENIED(requiredKey) });
   };
 };
