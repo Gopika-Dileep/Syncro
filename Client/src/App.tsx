@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'
+import Landing from './pages/Landing'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import VerifyOtp from './pages/auth/VerifyOtp'
@@ -29,6 +30,7 @@ function App() {
         <Toaster richColors position="top-right" />
         <AuthInitializer>
           <Routes>
+            <Route path='/' element={<PublicRoute><Landing /></PublicRoute>} />
             <Route path='/login' element={<PublicRoute><Login /></PublicRoute>} />
             <Route path='/register' element={<PublicRoute><Register /></PublicRoute>} />
             <Route path='/verify-otp' element={<PublicRoute><VerifyOtp /></PublicRoute>} />
