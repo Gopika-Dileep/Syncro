@@ -22,7 +22,7 @@ export class EmployeeService implements IEmployeeService {
     @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
     @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository,
-  ) {}
+  ) { }
 
   async addEmployee(userId: string, data: AddEmployeeRequestDTO): Promise<{ message: string }> {
     const company = await this._companyRepo.findOne({ user_id: userId });
@@ -43,7 +43,7 @@ export class EmployeeService implements IEmployeeService {
 
     const joiningDate = parseDate(data.date_of_joining);
     const dateOfBirth = parseDate(data.date_of_birth);
-    const employeeEntity = EmployeeMapper.toCreateEntity(data, joiningDate, dateOfBirth);
+    const employeeEntity = EmployeeMapper.toCreate(data, joiningDate, dateOfBirth);
 
     await this._employeeRepo.create({ user_id: user._id.toString(), company_id: company._id.toString(), ...employeeEntity });
     await sendEmployeeInvitationEmail(data.email, data.name, company.name, randomPassword);
@@ -88,7 +88,7 @@ export class EmployeeService implements IEmployeeService {
 
     const joiningDate = data.date_of_joining ? parseDate(data.date_of_joining) : undefined;
     const dateOfBirth = data.date_of_birth ? parseDate(data.date_of_birth) : undefined;
-    const employeeEntity = EmployeeMapper.toUpdateEntity(data, joiningDate, dateOfBirth);
+    const employeeEntity = EmployeeMapper.toUpdate(data, joiningDate, dateOfBirth);
 
     const updatedEmployee = await this._employeeRepo.updateOne({ user_id: userId }, { $set: employeeEntity });
     if (!updatedEmployee) throw new Error('failed to update employee details');

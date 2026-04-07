@@ -34,7 +34,7 @@ export class EmployeeMapper {
     return employees.map((emp) => this.toResponseDTO(emp));
   }
 
-  static toCreateEntity(data: AddEmployeeRequestDTO, joiningDate?: Date | null, dateOfBirth?: Date | null) {
+  static toCreate(data: AddEmployeeRequestDTO, joiningDate?: Date | null, dateOfBirth?: Date | null) {
     return {
       ...(data.designation && { designation: data.designation }),
       ...(joiningDate && { date_of_joining: joiningDate }),
@@ -45,7 +45,7 @@ export class EmployeeMapper {
     };
   }
 
-  static toUpdateEntity(data: UpdateEmployeeRequestDTO, joiningDate?: Date | null, dateOfBirth?: Date | null) {
+  static toUpdate(data: UpdateEmployeeRequestDTO, joiningDate?: Date | null, dateOfBirth?: Date | null) {
     return {
       ...(data.designation && { designation: data.designation }),
       ...(data.phone && { phone: data.phone }),
