@@ -1,8 +1,7 @@
-import { IEmployee, IPopulatedEmployee } from "../../models/employee.model";
+import { IEmployee, IPopulatedEmployee } from '../../models/employee.model';
+import { IBaseRepository } from './IBaseRepository';
 
-export interface IEmployeeRepository {
-    createEmployee(userId:string,companyId:string, data:Partial <IEmployee>):Promise<IEmployee>
-    getEmployeesByCompanyId(companyId: string, page: number, limit: number, search: string): Promise<{ employees: IPopulatedEmployee[], total: number }>
-    findByUserId(userId:string):Promise<IPopulatedEmployee | null>
-    updateEmployee(userId:string,data:Partial<IEmployee>):Promise<IEmployee |null>
+export interface IEmployeeRepository extends IBaseRepository<IEmployee> {
+  getEmployeesByCompanyId(companyId: string, page: number, limit: number, search: string): Promise<{ employees: IPopulatedEmployee[]; total: number }>;
+  findByUserId(userId: string): Promise<IPopulatedEmployee | null>;
 }

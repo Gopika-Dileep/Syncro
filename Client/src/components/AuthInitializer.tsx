@@ -1,5 +1,5 @@
-import { refreshTokenApi } from "@/api/authapi"
-import { restoreSession, setInitialized } from "@/store/slices/authSlice"
+import { refreshTokenApi } from "@/features/auth/api/authapi"
+import { setAuth, setInitialized } from "@/store/slices/authSlice"
 import type { AppDispatch } from "@/store/store"
 import { useEffect } from "react"
 import { useDispatch } from "react-redux"
@@ -14,7 +14,7 @@ export default function AuthInitializer({children}:Props){
         const tryRefresh = async()=>{
             try{
                 const data = await refreshTokenApi()
-                dispatch(restoreSession({ 
+                dispatch(setAuth({ 
                     user: data.user, 
                     token: data.token, 
                     permissions: data.permissions 

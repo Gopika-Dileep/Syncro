@@ -1,7 +1,5 @@
-import { ICompany } from "../../models/company.model";
+import { ICompany } from '../../models/company.model';
+import { IBaseRepository } from './IBaseRepository';
 
-
-export interface ICompanyRepository{
-    createCompany(userId:string,companyName:String):Promise<ICompany>
-    findCompanyByUserId(userId:string):Promise<ICompany|null>
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ICompanyRepository extends IBaseRepository<ICompany> {}

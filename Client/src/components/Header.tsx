@@ -2,7 +2,7 @@ import { Bell, LogOut, Menu } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "@/store/slices/authSlice";
-import { logoutApi } from "@/api/authapi";
+import { logoutApi } from "@/features/auth/api/authapi";
 import type { RootState } from "@/store/store";
 
 // Map route segments to readable page titles

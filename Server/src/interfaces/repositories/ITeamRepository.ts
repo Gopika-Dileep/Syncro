@@ -1,8 +1,5 @@
-import { ITeam } from "../../models/team.model";
+import { ITeam } from '../../models/team.model';
+import { IBaseRepository } from './IBaseRepository';
 
-
-export interface ITeamRepository {
-    createTeam(name:string,companyId:string):Promise<ITeam>;
-    findByCompanyId(companyId:string):Promise<ITeam[]>;
-    findByNameAndCompany(name:string,companyId:string):Promise<ITeam |null>
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ITeamRepository extends IBaseRepository<ITeam> {}

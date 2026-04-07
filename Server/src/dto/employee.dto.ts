@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const EmployeePermissionsSchema = z.object({
   project: z.object({
@@ -32,13 +32,15 @@ export const EmployeePermissionsSchema = z.object({
   }),
 });
 
-
 export const AddEmployeeRequestSchema = z.object({
   body: z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email format"),
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Invalid email format'),
     designation: z.string().optional(),
-    phone: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits").optional(),
+    phone: z
+      .string()
+      .regex(/^\d{10}$/, 'Phone number must be 10 digits')
+      .optional(),
     address: z.string().optional(),
     skills: z.array(z.string()).optional(),
     date_of_joining: z.string().optional(),
@@ -49,12 +51,15 @@ export const AddEmployeeRequestSchema = z.object({
 
 export const UpdateEmployeeRequestSchema = z.object({
   params: z.object({
-    userId: z.string().min(1, "User ID is required"),
+    userId: z.string().min(1, 'User ID is required'),
   }),
   body: z.object({
     name: z.string().min(2).optional(),
     designation: z.string().optional(),
-    phone: z.string().regex(/^\d{10}$/).optional(),
+    phone: z
+      .string()
+      .regex(/^\d{10}$/)
+      .optional(),
     address: z.string().optional(),
     skills: z.array(z.string()).optional(),
     date_of_birth: z.string().optional(),
@@ -67,16 +72,14 @@ export const GetEmployeesRequestSchema = z.object({
   query: z.object({
     page: z.coerce.number().min(1).default(1),
     limit: z.coerce.number().min(1).default(5),
-    search: z.string().default(""),
+    search: z.string().default(''),
   }),
 });
 
-
 export type EmployeePermissionsDTO = z.infer<typeof EmployeePermissionsSchema>;
-export type GetEmployeesRequestDTO = z.infer<typeof GetEmployeesRequestSchema>["query"];
-export type AddEmployeeRequestDTO = z.infer<typeof AddEmployeeRequestSchema>["body"];
-export type UpdateEmployeeRequestDTO = z.infer<typeof UpdateEmployeeRequestSchema>["body"];
-
+export type GetEmployeesRequestDTO = z.infer<typeof GetEmployeesRequestSchema>['query'];
+export type AddEmployeeRequestDTO = z.infer<typeof AddEmployeeRequestSchema>['body'];
+export type UpdateEmployeeRequestDTO = z.infer<typeof UpdateEmployeeRequestSchema>['body'];
 
 export interface EmployeeResponseDTO {
   _id: string;
@@ -99,7 +102,7 @@ export interface EmployeeResponseDTO {
   skills?: string[];
   date_of_joining?: string;
   date_of_birth?: string;
-  permissions?: z.infer<typeof EmployeePermissionsSchema>;
+  permissions?: EmployeePermissionsDTO;
   created_at: string;
 }
 
