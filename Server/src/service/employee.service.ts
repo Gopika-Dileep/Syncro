@@ -22,7 +22,7 @@ export class EmployeeService implements IEmployeeService {
     @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
     @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository,
-  ) { }
+  ) {}
 
   async addEmployee(userId: string, data: AddEmployeeRequestDTO): Promise<{ message: string }> {
     const company = await this._companyRepo.findOne({ user_id: userId });

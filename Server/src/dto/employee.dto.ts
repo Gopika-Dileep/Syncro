@@ -56,7 +56,10 @@ export const UpdateEmployeeRequestSchema = z.object({
   body: z.object({
     name: z.string().min(2).optional(),
     designation: z.string().optional(),
-    phone: z.string().regex(/^\d{10}$/).optional(),
+    phone: z
+      .string()
+      .regex(/^\d{10}$/)
+      .optional(),
     address: z.string().optional(),
     skills: z.array(z.string()).optional(),
     date_of_birth: z.string().optional(),
