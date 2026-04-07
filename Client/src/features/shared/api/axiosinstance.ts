@@ -1,4 +1,4 @@
-import { setToken, logout } from '@/store/slices/authSlice'
+import { setAuth, logout } from '@/store/slices/authSlice'
 import { store } from '@/store/store'
 import axios from 'axios'
 import { ENDPOINTS } from '@/constants/endpoints'
@@ -40,9 +40,9 @@ axiosInstance.interceptors.response.use((response) => {
                     {},
                     { withCredentials: true }
                 )
-                const newToken = res.data.token
-                store.dispatch(setToken(newToken))
-                originalRequest.headers.Authorization = `Bearer ${newToken}`
+                const { token, user, permissions } = res.data
+                store.dispatch(setAuth({ token, user, permissions }))
+                originalRequest.headers.Authorization = `Bearer ${token}`
                 return axiosInstance(originalRequest)
             } catch {
                 store.dispatch(logout())

@@ -3,7 +3,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/store/store";
 import { resendOtpApi, verifyOtpApi } from "@/features/auth/api/authapi";
-import { setCredentials } from "@/store/slices/authSlice";
+import { setAuth } from "@/store/slices/authSlice";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Zap, Clock, Loader2, ArrowLeft, ArrowRight, RotateCw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -40,7 +40,7 @@ export default function VerifyOtp() {
         setLoading(true);
         try {
             const data = await verifyOtpApi(email, otp);
-            dispatch(setCredentials({ user: data.user, token: data.token, permissions: data.permissions }));
+            dispatch(setAuth({ user: data.user, token: data.token, permissions: data.permissions }));
             toast.success("Identity verified!");
             navigate(data.user.role === 'employee' ? '/employee/dashboard' : '/company/dashboard');
         } catch (err) {

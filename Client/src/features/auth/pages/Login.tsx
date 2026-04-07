@@ -1,6 +1,6 @@
 import { loginApi } from "@/features/auth/api/authapi";
 import axios from "axios";
-import { setCredentials } from "@/store/slices/authSlice";
+import { setAuth } from "@/store/slices/authSlice";
 import type { AppDispatch } from "@/store/store";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -45,7 +45,7 @@ export default function Login() {
         setLoading(true);
         try {
             const data = await loginApi(form.email, form.password);
-            dispatch(setCredentials({ user: data.user, token: data.token, permissions: data.permissions }));
+            dispatch(setAuth({ user: data.user, token: data.token, permissions: data.permissions }));
             toast.success("Welcome back.");
             navigate(data.user.role === "company" ? "/company/dashboard" : "/employee/dashboard");
         } catch (err) {
