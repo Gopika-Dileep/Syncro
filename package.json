@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "inversify": "^8.1.0",
-    "reflect-metadata": "^0.2.2"
-  }
-}
