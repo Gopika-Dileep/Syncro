@@ -1,4 +1,4 @@
-import { refreshTokenApi } from "@/api/authapi"
+import { refreshTokenApi } from "@/features/auth/api/authapi"
 import { restoreSession, setInitialized } from "@/store/slices/authSlice"
 import type { AppDispatch } from "@/store/store"
 import { useEffect } from "react"

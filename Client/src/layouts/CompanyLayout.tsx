@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Outlet } from "react-router-dom"
-import CompanySidebar from "../components/company/CompanySidebar"
+import CompanySidebar from "@/features/company/components/CompanySidebar"
 import Header from "../components/Header"
 
 export default function CompanyLayout() {

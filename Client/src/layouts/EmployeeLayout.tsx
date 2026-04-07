@@ -1,5 +1,5 @@
 import { useState } from "react"
-import EmployeeSidebar from "@/components/employee/EmployeeSidebar"
+import EmployeeSidebar from "@/features/employee/components/EmployeeSidebar"
 import Header from "@/components/Header"
 import { Outlet } from "react-router-dom"
 
