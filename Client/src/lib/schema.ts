@@ -35,6 +35,7 @@ export const employeeSchema = z.object({
     .regex(/^[A-Za-z\s]+$/, "Only letters and spaces are allowed"),
   phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
   date_of_joining: z.string().min(1, "Joining date is required"),
+  team_id: z.string().optional(),
 });
 
 export const otpSchema = z.object({

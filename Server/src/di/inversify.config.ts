@@ -36,9 +36,9 @@ container.bind<IEmployeeService>(TYPES.EmployeeService).to(EmployeeService);
 container.bind<ITeamService>(TYPES.TeamService).to(TeamService);
 container.bind<IUserService>(TYPES.UserService).to(UserService);
 
-container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
-container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController).inSingletonScope();
-container.bind<TeamController>(TYPES.TeamController).to(TeamController).inSingletonScope();
-container.bind<UserController>(TYPES.UserController).to(UserController).inSingletonScope();
+container.bind<AuthController>(TYPES.AuthController).to(AuthController);
+container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);
+container.bind<TeamController>(TYPES.TeamController).to(TeamController);
+container.bind<UserController>(TYPES.UserController).to(UserController);
 
 export { container };

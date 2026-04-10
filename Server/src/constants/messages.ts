@@ -38,6 +38,10 @@ export const TEAM_MESSAGES = {
   CREATE_FAILED: 'Failed to create team',
   FETCH_SUCCESS: 'Teams fetched successfully',
   FETCH_FAILED: 'Failed to fetch teams',
+  UPDATE_SUCCESS: 'Team updated successfully',
+  UPDATE_FAILED: 'Failed to update team',
+  DELETE_SUCCESS: 'Team deleted successfully',
+  DELETE_FAILED: 'Failed to delete team',
 };
 
 export const USER_MESSAGES = {

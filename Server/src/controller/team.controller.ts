@@ -33,4 +33,25 @@ export class TeamController {
       handleAsyncError(error, next);
     }
   };
+
+  updateTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { teamId } = req.params;
+      const { name } = req.body;
+      const team = await this._teamService.updateTeam(teamId as string, name);
+      res.status(HttpStatus.OK).json({ success: true, data: team, message: TEAM_MESSAGES.UPDATE_SUCCESS });
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  deleteTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { teamId } = req.params;
+      await this._teamService.deleteTeam(teamId as string);
+      res.status(HttpStatus.OK).json({ success: true, message: TEAM_MESSAGES.DELETE_SUCCESS });
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
 }

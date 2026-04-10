@@ -46,6 +46,7 @@ export interface AddEmployeeForm {
     phone: string;
     designation: string;
     date_of_joining: string;
+    team_id?: string;
     permissions: EmployeePermissions;
 }
 
@@ -112,3 +113,13 @@ export const getTeamsApi = async (): Promise<{ success: boolean; data: Team[] }>
     const response = await axiosInstance.get(ENDPOINTS.COMPANY.TEAMS);
     return response.data;
 }
+
+export const updateTeamApi = async (teamId: string, name: string): Promise<{ success: boolean; data: Team }> => {
+    const response = await axiosInstance.put(ENDPOINTS.COMPANY.UPDATE_TEAM(teamId), { name });
+    return response.data;
+};
+
+export const deleteTeamApi = async (teamId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await axiosInstance.delete(ENDPOINTS.COMPANY.DELETE_TEAM(teamId));
+    return response.data;
+};

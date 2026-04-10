@@ -20,6 +20,8 @@ export const ENDPOINTS = {
     GET_EMPLOYEE_DETAILS: '/employee/:userId',
     UPDATE_EMPLOYEE_DETAILS: '/employee/:userId',
     TEAMS: '/teams',
+    UPDATE_TEAM: '/team/:teamId',
+    DELETE_TEAM: '/team/:teamId',
   },
   USER: {
     BASE: '/user',

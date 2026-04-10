@@ -1,6 +1,8 @@
-import { ITeam } from '../../models/team.model';
+import { TeamResponseDTO } from '../../dto/team.dto';
 
 export interface ITeamService {
-  createTeam(name: string, userId: string): Promise<ITeam>;
-  getTeams(userId: string): Promise<ITeam[]>;
+  createTeam(name: string, userId: string): Promise<TeamResponseDTO>;
+  getTeams(userId: string): Promise<TeamResponseDTO[]>;
+  updateTeam(teamId: string, name: string): Promise<TeamResponseDTO>;
+  deleteTeam(teamId: string): Promise<void>;
 }
