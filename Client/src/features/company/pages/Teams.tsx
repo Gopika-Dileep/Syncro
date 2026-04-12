@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Users, Edit2, Trash2, MoreHorizontal, X } from "lucide-react";
-import { getTeamsApi, createTeamApi, type Team } from "@/features/company/api/companyApi";
+import { toast } from "sonner";
+import { getTeamsApi, createTeamApi, updateTeamApi, deleteTeamApi, type Team } from "@/features/company/api/companyApi";
 import DataTable, { type Column } from "@/components/DataTable";
 
 const AVATAR_COLORS = ["#fa8029", "#60a5fa", "#34d399", "#a78bfa", "#f472b6", "#fbbf24"];
@@ -10,7 +11,14 @@ const avatarColor = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_
 // ─── Portal dropdown ─────────────────────────────────────────────────────────
 interface DropdownPos { top: number; right: number }
 
-function TeamMenu({ pos, onClose }: { pos: DropdownPos; onClose: () => void }) {
+interface ActionMenuProps {
+    pos: DropdownPos;
+    onClose: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+}
+
+function TeamMenu({ pos, onClose, onEdit, onDelete }: ActionMenuProps) {
     return createPortal(
         <>
             <div className="fixed inset-0 z-[999]" onClick={onClose} />
@@ -19,14 +27,14 @@ function TeamMenu({ pos, onClose }: { pos: DropdownPos; onClose: () => void }) {
                 style={{ top: pos.top, right: pos.right }}
             >
                 <button
-                    onClick={onClose}
+                    onClick={() => { onClose(); onEdit(); }}
                     className="flex items-center gap-2.5 w-full px-3.5 py-2 text-[12px] text-[#555] hover:bg-[#f7f7f7] transition-colors"
                 >
                     <Edit2 size={13} className="text-[#bbb]" /> Edit
                 </button>
                 <div className="border-t border-[#f5f5f5] my-1" />
                 <button
-                    onClick={onClose}
+                    onClick={() => { onClose(); onDelete(); }}
                     className="flex items-center gap-2.5 w-full px-3.5 py-2 text-[12px] font-medium text-rose-500 hover:bg-rose-50 transition-colors"
                 >
                     <Trash2 size={13} /> Delete
@@ -45,10 +53,14 @@ export default function Teams() {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [error, setError] = useState("");
+
+    const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+
     const [formError, setFormError] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [page, setPage] = useState(1);
     const [openId, setOpenId] = useState<string | null>(null);
+    const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
     const limit = 8;
@@ -68,20 +80,44 @@ export default function Teams() {
         }
     };
 
-    const handleCreateTeam = async (e: React.FormEvent) => {
+    const handleSaveTeam = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newTeamName.trim()) return;
         setLoading(true);
         setFormError("");
         try {
-            await createTeamApi(newTeamName);
+            if (editingTeam) {
+                await updateTeamApi(editingTeam._id, newTeamName);
+                toast.success("Team updated successfully");
+            } else {
+                await createTeamApi(newTeamName);
+                toast.success("Team created successfully");
+            }
             setNewTeamName("");
+            setEditingTeam(null);
             setShowModal(false);
             fetchTeams();
-        } catch (err: unknown) {
-            setFormError(err instanceof Error ? err.message : "Failed to create team");
+        } catch (err: any) {
+            setFormError(err.response?.data?.message || "Operation failed");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteTeam = async (team: Team) => {
+        setTeamToDelete(team);
+    };
+
+    const confirmDelete = async () => {
+        if (!teamToDelete) return;
+        try {
+            await deleteTeamApi(teamToDelete._id);
+            toast.success("Team deleted successfully");
+            fetchTeams();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to delete team");
+        } finally {
+            setTeamToDelete(null);
         }
     };
 
@@ -138,7 +174,16 @@ export default function Teams() {
                     </button>
 
                     {openId === team._id && (
-                        <TeamMenu pos={dropPos} onClose={() => setOpenId(null)} />
+                        <TeamMenu
+                            pos={dropPos}
+                            onClose={() => setOpenId(null)}
+                            onEdit={() => {
+                                setEditingTeam(team);
+                                setNewTeamName(team.name);
+                                setShowModal(true);
+                            }}
+                            onDelete={() => handleDeleteTeam(team)}
+                        />
                     )}
                 </div>
             ),
@@ -176,16 +221,18 @@ export default function Teams() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-xl w-full max-w-sm shadow-xl overflow-hidden">
                         <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0]">
-                            <h2 className="text-[14px] font-bold text-[#1f2124]">Create New Team</h2>
+                            <h2 className="text-[14px] font-bold text-[#1f2124]">
+                                {editingTeam ? "Update Team" : "Create New Team"}
+                            </h2>
                             <button
-                                onClick={() => { setShowModal(false); setFormError(""); }}
+                                onClick={() => { setShowModal(false); setEditingTeam(null); setNewTeamName(""); setFormError(""); }}
                                 className="w-7 h-7 flex items-center justify-center rounded-lg text-[#bbb] hover:bg-[#f5f5f5] transition-colors"
                             >
                                 <X size={15} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateTeam} className="p-5 space-y-4">
+                        <form onSubmit={handleSaveTeam} className="p-5 space-y-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-[#bbb] uppercase tracking-widest mb-2">
                                     Team Name
@@ -216,10 +263,42 @@ export default function Teams() {
                                     disabled={loading}
                                     className="flex-1 py-2.5 bg-[#fa8029] hover:bg-[#e67320] text-white rounded-lg text-[12px] font-semibold transition-all disabled:opacity-50 active:scale-95"
                                 >
-                                    {loading ? "Creating…" : "Create Team"}
+                                    {loading ? "Processing…" : (editingTeam ? "Save Changes" : "Create Team")}
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Delete Confirmation Modal ── */}
+            {teamToDelete && (
+                <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6 text-center">
+                            <div className="w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="text-rose-500" size={24} />
+                            </div>
+                            <h3 className="text-[16px] font-bold text-[#1f2124] mb-2">Delete Team</h3>
+                            <p className="text-[13px] text-[#888] leading-relaxed">
+                                Are you sure you want to delete <span className="font-bold text-[#555]">'{teamToDelete.name}'</span>? 
+                                <br />All employees in this team will be unassigned.
+                            </p>
+                        </div>
+                        <div className="flex gap-2 p-4 pt-0">
+                            <button
+                                onClick={() => setTeamToDelete(null)}
+                                className="flex-1 py-2.5 border border-[#ebebeb] rounded-lg text-[12px] font-semibold text-[#555] hover:bg-[#f7f7f7] transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-[12px] font-semibold transition-all active:scale-95"
+                            >
+                                Delete Team
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

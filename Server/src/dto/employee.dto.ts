@@ -45,6 +45,7 @@ export const AddEmployeeRequestSchema = z.object({
     skills: z.array(z.string()).optional(),
     date_of_joining: z.string().optional(),
     date_of_birth: z.string().optional(),
+    team_id: z.string().optional(),
     permissions: EmployeePermissionsSchema,
   }),
 });
@@ -64,6 +65,7 @@ export const UpdateEmployeeRequestSchema = z.object({
     skills: z.array(z.string()).optional(),
     date_of_birth: z.string().optional(),
     date_of_joining: z.string().optional(),
+    team_id: z.string().optional(),
     permissions: EmployeePermissionsSchema.partial().optional(),
   }),
 });
@@ -95,7 +97,10 @@ export interface EmployeeResponseDTO {
     _id: string;
     name: string;
   };
-  team_id?: string;
+  team?: {
+    _id: string;
+    name: string;
+  };
   designation?: string;
   phone?: string;
   address?: string;

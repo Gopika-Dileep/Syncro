@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import {
@@ -10,8 +10,10 @@ import {
     addEmployeeApi,
     getEmployeeDetailsApi,
     updateEmployeeApi,
+    getTeamsApi,
     type AddEmployeeForm,
-    type EmployeePermissions
+    type EmployeePermissions,
+    type Team
 } from "@/features/company/api/companyApi";
 import { employeeSchema, getZodErrors, type EmployeeformInput } from "@/lib/schema";
 
@@ -33,8 +35,9 @@ export default function AddEmployee() {
     const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof EmployeeformInput, string>>>({});
 
     const [formData, setFormData] = useState({
-        name: "", email: "", phone: "", designation: "", date_of_joining: ""
+        name: "", email: "", phone: "", designation: "", date_of_joining: "", team_id: ""
     });
+    const [teams, setTeams] = useState<Team[]>([]);
 
     const [permissions, setPermissions] = useState<EmployeePermissions>(initialPermissions);
 
@@ -51,6 +54,7 @@ export default function AddEmployee() {
                             phone: emp.phone || "",
                             designation: emp.designation || "",
                             date_of_joining: emp.date_of_joining ? new Date(emp.date_of_joining).toISOString().split('T')[0] : "",
+                            team_id: emp.team_id || ""
                         });
                         if (emp.permissions) setPermissions(emp.permissions);
                     }
@@ -59,6 +63,15 @@ export default function AddEmployee() {
             fetchEmployee();
         }
     }, [userId, isEditMode]);
+    useEffect(() => {
+        const fetchTeams = async () => {
+            try {
+                const response = await getTeamsApi();
+                if (response.success) setTeams(response.data);
+            } catch { toast.error("Failed to load departments"); }
+        };
+        fetchTeams();
+    }, []);
 
     const handlePermissionToggle = (module: keyof EmployeePermissions, field: string, subField?: string) => {
         setPermissions((prev) => {
@@ -161,7 +174,7 @@ export default function AddEmployee() {
             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
 
                 {/* 1. Identity Form Card */}
-                <div className="bg-white border border-[#ebebeb] rounded-sm overflow-hidden flex flex-col shadow-sm">
+                <div className="bg-white border border-[#ebebeb] rounded-sm flex flex-col shadow-sm">
                     <div className="px-5 py-4 border-b border-[#f5f5f5] flex items-center gap-2 bg-[#fafafa]/30 font-sans">
                         <UsersIcon size={14} className="text-[#fa8029]" />
                         <h2 className="text-[10px] font-bold uppercase tracking-wider text-[#1f2124]">Identity Details</h2>
@@ -219,6 +232,14 @@ export default function AddEmployee() {
                                 }}
                                 error={fieldErrors.date_of_joining}
                                 type="date"
+                            />
+                            <SelectGroup
+                                label="Assigned Team"
+                                name="team_id"
+                                value={formData.team_id}
+                                options={teams.map(t => ({ label: t.name, value: t._id }))}
+                                onChange={(v: string) => setFormData({ ...formData, team_id: v })}
+                                placeholder="Select a team"
                             />
                         </div>
                     </div>
@@ -354,6 +375,87 @@ function InputGroup({ label, name, value, onChange, type = "text", required, isR
                         : 'bg-[#fafafa] border-[#ebebeb] focus:bg-white focus:border-[#fa8029]/50 shadow-sm'
                     }`}
             />
+            {error && <p className="text-[10px] font-bold text-rose-500 px-0.5">{error}</p>}
+        </div>
+    );
+}
+
+interface SelectGroupProps {
+    label: string;
+    name: string;
+    value: string;
+    onChange: (v: string) => void;
+    options: { label: string; value: string }[];
+    placeholder?: string;
+    error?: string;
+}
+
+function SelectGroup({ label, value, onChange, options, placeholder, error }: SelectGroupProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const selectedOption = options.find(opt => opt.value === value);
+
+    return (
+        <div className="space-y-1.5 flex-1 min-w-[200px]" ref={containerRef}>
+            <label className="text-[11px] font-medium text-[#bbb] tracking-wide uppercase px-0.5">{label}</label>
+            <div className="relative">
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`w-full flex items-center justify-between px-3.5 py-2 rounded-sm border text-[13px] font-semibold outline-none transition-all duration-200 ${error
+                        ? 'border-rose-300 bg-rose-50/20 focus:border-rose-500'
+                        : 'bg-[#fafafa] border-[#ebebeb] focus:bg-white focus:border-[#fa8029]/50 shadow-sm'
+                        }`}
+                >
+                    <span className={selectedOption ? "text-[#1f2124]" : "text-[#bbb]"}>
+                        {selectedOption ? selectedOption.label : (placeholder || "Select...")}
+                    </span>
+                    <ChevronDown size={14} className={`text-[#bbb] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-[#ebebeb] rounded-lg shadow-xl py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {placeholder && (
+                            <button
+                                type="button"
+                                onClick={() => { onChange(""); setIsOpen(false); }}
+                                className="w-full text-left px-4 py-2 text-[13px] text-[#bbb] hover:bg-[#f7f7f7] transition-colors"
+                            >
+                                {placeholder}
+                            </button>
+                        )}
+                        {options.map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                                className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${value === opt.value
+                                    ? 'bg-[#fa8029]/10 text-[#fa8029] font-bold'
+                                    : 'text-[#555] hover:bg-[#f7f7f7]'
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                        {options.length === 0 && (
+                            <div className="px-4 py-3 text-center">
+                                <p className="text-[11px] text-[#bbb]">No options available</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
             {error && <p className="text-[10px] font-bold text-rose-500 px-0.5">{error}</p>}
         </div>
     );

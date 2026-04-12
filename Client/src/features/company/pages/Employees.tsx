@@ -15,6 +15,7 @@ interface Employee {
     date_of_joining?: string;
     phone?: string;
     skills: string[];
+    team?: { _id: string; name: string };
 }
 
 const getInitials = (name: string) =>
@@ -178,6 +179,15 @@ export default function Employees() {
             render: (emp) => (
                 <span className="text-[13px] text-[#555]">
                     {emp.designation || <span className="text-[#ddd]">—</span>}
+                </span>
+            ),
+        },
+        {
+            key: "team",
+            header: "Team",
+            render: (emp) => (
+                <span className="text-[13px] font-medium text-[#fa8029]">
+                    {emp.team?.name || <span className="text-[#ddd]">Unassigned</span>}
                 </span>
             ),
         },

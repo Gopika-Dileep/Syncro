@@ -16,6 +16,8 @@ export const ENDPOINTS = {
         GET_EMPLOYEE_DETAILS: (userId: string) => `/company/employee/${userId}`,
         UPDATE_EMPLOYEE_DETAILS: (userId: string) => `/company/employee/${userId}`,
         TEAMS: "/company/teams",
+        UPDATE_TEAM: (teamId: string) => `/company/team/${teamId}`,
+        DELETE_TEAM: (teamId: string) => `/company/team/${teamId}`,
     },
     USER: {
         PROFILE: "/user/profile",

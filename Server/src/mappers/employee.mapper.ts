@@ -18,7 +18,10 @@ export class EmployeeMapper {
         _id: employee.company_id?._id?.toString() || employee.company_id?.toString(),
         name: employee.company_id?.name || '',
       },
-      team_id: employee.team_id?._id?.toString() || employee.team_id?.toString(),
+      team: employee.team_id ? {
+        _id: employee.team_id._id.toString(),
+        name: employee.team_id.name
+      } : undefined,
       designation: employee.designation,
       phone: employee.phone,
       address: employee.address,
@@ -42,6 +45,7 @@ export class EmployeeMapper {
       ...(data.phone && { phone: data.phone }),
       ...(data.address && { address: data.address }),
       ...(data.skills && { skills: data.skills }),
+      ...(data.team_id && { team_id: data.team_id }),
     };
   }
 
@@ -53,6 +57,7 @@ export class EmployeeMapper {
       ...(data.skills && { skills: data.skills }),
       ...(joiningDate && { date_of_joining: joiningDate }),
       ...(dateOfBirth && { date_of_birth: dateOfBirth }),
+      ...(data.team_id !== undefined && { team_id: data.team_id === "" ? null : data.team_id }),
     };
   }
 }

@@ -7,5 +7,7 @@ export interface IBaseRepository<T> {
   find(filter: Record<string, unknown>, options?: mongoose.QueryOptions): Promise<T[]>;
   updateById(id: string, update: Record<string, unknown>, options?: mongoose.QueryOptions): Promise<T | null>;
   updateOne(filter: Record<string, unknown>, update: Record<string, unknown>, options?: mongoose.QueryOptions): Promise<T | null>;
+  updateMany(filter: Record<string, unknown>, update: Record<string, unknown>): Promise<void>;
   deleteById(id: string): Promise<T | null>;
+  deleteMany(filter: Record<string, unknown>): Promise<void>;
 }

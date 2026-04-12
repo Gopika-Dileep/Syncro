@@ -25,6 +25,20 @@ export class EmployeeRepository extends BaseRepository<IEmployee> implements IEm
         },
       },
       { $unwind: '$user_id' },
+      {
+        $lookup: {
+          from: 'teams',
+          localField: 'team_id',
+          foreignField: '_id',
+          as: 'team_id',
+        },
+      },
+      {
+        $unwind: {
+          path: '$team_id',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ];
 
     if (search) {
@@ -49,6 +63,6 @@ export class EmployeeRepository extends BaseRepository<IEmployee> implements IEm
   }
 
   async findByUserId(userId: string): Promise<IPopulatedEmployee | null> {
-    return employeeModel.findOne({ user_id: userId }).populate('user_id', 'name email role created_at').populate('company_id', 'name').lean() as unknown as IPopulatedEmployee;
+    return employeeModel.findOne({ user_id: userId }).populate('user_id', 'name email role created_at').populate('company_id', 'name').populate('team_id', 'name').lean() as unknown as IPopulatedEmployee;
   }
 }

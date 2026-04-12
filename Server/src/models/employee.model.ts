@@ -13,7 +13,7 @@ export interface IEmployee extends Document {
   created_at: Date;
 }
 
-export interface IPopulatedEmployee extends Omit<IEmployee, 'user_id' | 'company_id'> {
+export interface IPopulatedEmployee extends Omit<IEmployee, 'user_id' | 'company_id' | 'team_id'> {
   user_id: {
     _id: string | Types.ObjectId;
     name: string;
@@ -23,6 +23,10 @@ export interface IPopulatedEmployee extends Omit<IEmployee, 'user_id' | 'company
     is_blocked: boolean;
   };
   company_id: {
+    _id: string | Types.ObjectId;
+    name: string;
+  };
+  team_id?: {
     _id: string | Types.ObjectId;
     name: string;
   };
