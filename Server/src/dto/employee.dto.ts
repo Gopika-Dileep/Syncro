@@ -3,32 +3,31 @@ import { z } from 'zod';
 export const EmployeePermissionsSchema = z.object({
   project: z.object({
     create: z.boolean(),
-    view: z.object({ team: z.boolean(), all: z.boolean() }),
-    update: z.object({ team: z.boolean(), all: z.boolean() }),
-    delete: z.boolean(),
+    view: z.object({ all: z.boolean() }),
+    update: z.object({ own: z.boolean(), all: z.boolean() }),
+    delete: z.object({ own: z.boolean(), all: z.boolean() }),
   }),
   task: z.object({
     create: z.boolean(),
     view: z.object({ team: z.boolean(), all: z.boolean() }),
-    assign: z.object({ team: z.boolean(), all: z.boolean() }),
-    update: z.object({ team: z.boolean(), all: z.boolean() }),
+    assign: z.boolean(),
+    update: z.object({ own: z.boolean(), all: z.boolean() }),
   }),
   sprint: z.object({
     create: z.boolean(),
     view: z.object({ all: z.boolean() }),
-    update: z.boolean(),
+    update: z.object({ own: z.boolean(), all: z.boolean() }),
     start: z.boolean(),
     complete: z.boolean(),
   }),
   userStory: z.object({
     create: z.boolean(),
     view: z.object({ all: z.boolean() }),
-    update: z.boolean(),
+    update: z.object({ own: z.boolean(), all: z.boolean() }),
     assign: z.boolean(),
   }),
   team: z.object({
     view: z.object({ team: z.boolean(), all: z.boolean() }),
-    performance: z.object({ team: z.boolean(), all: z.boolean() }),
   }),
 });
 

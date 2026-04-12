@@ -20,6 +20,11 @@ import { EmployeeService } from '../service/employee.service';
 import { TeamService } from '../service/team.service';
 import { UserService } from '../service/user.service';
 import { EmployeeController } from '../controller/employee.controller';
+import { ProjectRepository } from '../repositories/project.repository';
+import { ProjectService } from '../service/project.service';
+import { ProjectController } from '../controller/project.controller';
+import { IProjectRepository } from '../interfaces/repositories/IProjectRepository';
+import { IProjectService } from '../interfaces/services/IProjectService';
 import { TeamController } from '../controller/team.controller';
 import { UserController } from '../controller/user.controller';
 
@@ -30,15 +35,18 @@ container.bind<ICompanyRepository>(TYPES.CompanyRepository).to(CompanyRepository
 container.bind<IEmployeeRepository>(TYPES.EmployeeRepository).to(EmployeeRepository);
 container.bind<IPermissionRepository>(TYPES.PermissionRepository).to(PermissionRepository);
 container.bind<ITeamRepository>(TYPES.TeamRepository).to(TeamRepository);
+container.bind<IProjectRepository>(TYPES.ProjectRepository).to(ProjectRepository);
 
 container.bind<IAuthService>(TYPES.AuthService).to(AuthService);
 container.bind<IEmployeeService>(TYPES.EmployeeService).to(EmployeeService);
 container.bind<ITeamService>(TYPES.TeamService).to(TeamService);
 container.bind<IUserService>(TYPES.UserService).to(UserService);
+container.bind<IProjectService>(TYPES.ProjectService).to(ProjectService);
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);
 container.bind<TeamController>(TYPES.TeamController).to(TeamController);
 container.bind<UserController>(TYPES.UserController).to(UserController);
+container.bind<ProjectController>(TYPES.ProjectController).to(ProjectController);
 
 export { container };

@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
-import { LayoutDashboard, FolderKanban, ListTodo, Zap, Settings, Users } from "lucide-react";
+import { LayoutDashboard, FolderKanban, ListTodo, Zap, Settings, Users, Bell } from "lucide-react";
 import { usePermission } from '@/features/employee/hooks/usePermission';
 
 interface EmployeeSidebarProps {
@@ -10,30 +10,41 @@ interface EmployeeSidebarProps {
 
 export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
     const user = useSelector((state: RootState) => state.auth.user);
-    const { can } = usePermission();
+    const { hasModuleAccess } = usePermission();
 
     const navItems = [
         { label: "Dashboard", path: "/employee/dashboard", icon: LayoutDashboard },
-        { label: "My Projects", path: "/employee/projects", icon: FolderKanban },
-        { label: "Tasks", path: "/employee/tasks", icon: ListTodo },
+        { 
+            label: "My Projects", 
+            path: "/employee/projects", 
+            icon: FolderKanban,
+            visible: hasModuleAccess('project')
+        },
+        { 
+            label: "Tasks", 
+            path: "/employee/tasks", 
+            icon: ListTodo,
+            visible: hasModuleAccess('task')
+        },
         {
             label: "Backlog",
             path: "/employee/backlogs",
             icon: ListTodo,
-            visible: can('userStory:view:all')
+            visible: hasModuleAccess('userStory')
         },
         {
             label: "Sprints",
             path: "/employee/sprints",
             icon: Zap,
-            visible: can('sprint:create')
+            visible: hasModuleAccess('sprint')
         },
         {
             label: "My Team",
             path: "/employee/teams",
             icon: Users,
-            visible: can('team:view:team')
+            visible: hasModuleAccess('team')
         },
+        { label: "Notifications", path: "/employee/notifications", icon: Bell },
         { label: "Settings", path: "/employee/settings", icon: Settings },
     ];
 
