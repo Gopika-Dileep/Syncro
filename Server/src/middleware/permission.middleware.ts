@@ -10,7 +10,7 @@ export interface AuthenticatedRequest extends Request {
 
 export const checkPermission = (requiredKey: string) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (req.userRole === ' company') {
+    if (req.userRole === 'company') {
       return next();
     }
 

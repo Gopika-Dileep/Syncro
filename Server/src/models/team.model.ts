@@ -3,6 +3,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ITeam extends Document {
   name: string;
   company_id: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const teamSchema = new Schema<ITeam>(

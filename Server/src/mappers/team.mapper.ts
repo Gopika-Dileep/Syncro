@@ -7,7 +7,7 @@ export class TeamMapper {
       _id: team._id.toString(),
       name: team.name,
       company_id: team.company_id.toString(),
-      created_at: (team as any).createdAt ? new Date((team as any).createdAt).toISOString() : undefined,
+      created_at: team.createdAt ? team.createdAt.toISOString() : undefined,
     };
   }
 

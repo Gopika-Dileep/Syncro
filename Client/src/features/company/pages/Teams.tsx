@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Users, Edit2, Trash2, MoreHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
+import axios from "axios";
 import { getTeamsApi, createTeamApi, updateTeamApi, deleteTeamApi, type Team } from "@/features/company/api/companyApi";
 import DataTable, { type Column } from "@/components/DataTable";
 
@@ -97,8 +98,12 @@ export default function Teams() {
             setEditingTeam(null);
             setShowModal(false);
             fetchTeams();
-        } catch (err: any) {
-            setFormError(err.response?.data?.message || "Operation failed");
+        } catch (err: unknown) {
+            let msg = "Operation failed";
+            if (axios.isAxiosError(err)) {
+                msg = err.response?.data?.message || err.message || msg;
+            }
+            setFormError(msg);
         } finally {
             setLoading(false);
         }
@@ -114,8 +119,12 @@ export default function Teams() {
             await deleteTeamApi(teamToDelete._id);
             toast.success("Team deleted successfully");
             fetchTeams();
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to delete team");
+        } catch (err: unknown) {
+            let msg = "Failed to delete team";
+            if (axios.isAxiosError(err)) {
+                msg = err.response?.data?.message || err.message || msg;
+            }
+            toast.error(msg);
         } finally {
             setTeamToDelete(null);
         }

@@ -22,5 +22,9 @@ export const ENDPOINTS = {
     USER: {
         PROFILE: "/user/profile",
         CHANGE_PASSWORD: "/user/change-password",
+    },
+    PROJECTS: {
+        BASE: "/projects",
+        BY_ID: (id: string) => `/projects/${id}`,
     }
 };

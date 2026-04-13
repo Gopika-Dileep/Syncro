@@ -11,32 +11,31 @@ export interface PermissionScopes {
 export interface EmployeePermissions {
     project: {
         create: boolean;
-        view: { team: boolean; all: boolean };
-        update: { team: boolean; all: boolean };
-        delete: boolean;
+        view: { all: boolean };
+        update: { own: boolean; all: boolean };
+        delete: { own: boolean; all: boolean };
     };
     task: {
         create: boolean;
         view: { team: boolean; all: boolean };
-        assign: { team: boolean; all: boolean };
-        update: { team: boolean; all: boolean };
+        assign: boolean;
+        update: { own: boolean; all: boolean };
     };
     sprint: {
         create: boolean;
         view: { all: boolean };
-        update: boolean;
+        update: { own: boolean; all: boolean };
         start: boolean;
         complete: boolean;
     };
     userStory: {
         create: boolean;
         view: { all: boolean };
-        update: boolean;
+        update: { own: boolean; all: boolean };
         assign: boolean;
     };
     team: {
         view: { team: boolean; all: boolean };
-        performance: { team: boolean; all: boolean };
     };
 }
 

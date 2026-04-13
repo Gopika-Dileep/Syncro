@@ -22,6 +22,10 @@ import Sprints from '@/features/employee/pages/Sprints'
 import Backlogs from '@/features/employee/pages/Backlogs'
 import Teams from '@/features/company/pages/Teams'
 import GetEmployee from '@/features/company/pages/GetEmployee'
+import EmployeeProjects from '@/features/employee/pages/Projects'
+import AddProject from '@/features/employee/pages/AddProject'
+import Tasks from './features/employee/pages/Task'
+import Team from './features/employee/pages/Team'
 
 function App() {
   return (
@@ -63,8 +67,12 @@ function App() {
               }
             >
               <Route path='dashboard' element={<EmployeeDashboard />} />
-              <Route path='projects' element={<Projects />} />
+              <Route path='projects' element={<EmployeeProjects />} />
+              <Route path='projects/add' element={<AddProject />} />
+              <Route path='projects/edit/:projectId' element={<AddProject />} />
               <Route path='backlogs' element={<Backlogs />} />
+              <Route path='tasks' element={<Tasks/>}/>
+              <Route path='teams'  element={<Team/>}/>
               <Route path='sprints' element={<Sprints />} />
               <Route path='notifications' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
