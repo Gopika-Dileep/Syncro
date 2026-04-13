@@ -18,6 +18,8 @@ const permissions = [
   { module: 'userStory', action: 'update', scope: 'any', permission_key: 'userStory:update' },
   { module: 'userStory', action: 'update', scope: 'all', permission_key: 'userStory:update:all' },
   { module: 'userStory', action: 'assign', scope: 'any', permission_key: 'userStory:assign' },
+  { module: 'userStory', action: 'delete', scope: 'any', permission_key: 'userStory:delete' },
+  { module: 'userStory', action: 'delete', scope: 'all', permission_key: 'userStory:delete:all' },
 
   // MODULE: sprint
   { module: 'sprint', action: 'create', scope: 'any', permission_key: 'sprint:create' },

@@ -16,7 +16,13 @@ router.post('/', checkPermission('project:create'), validateRequest(CreateProjec
 router.get(
   '/',
   (req, res, next) => {
-    if (req.permissions?.includes('project:view:all') || req.permissions?.includes('project:create')) {
+    if (
+      req.userRole === 'company' ||
+      req.permissions?.includes('project:view:all') ||
+      req.permissions?.includes('project:create') ||
+      req.permissions?.includes('userStory:view:all') ||
+      req.permissions?.includes('userStory:create')
+    ) {
       return next();
     }
     return checkPermission('project:view:all')(req, res, next);
@@ -26,7 +32,13 @@ router.get(
 router.get(
   '/:projectId',
   (req, res, next) => {
-    if (req.permissions?.includes('project:view:all') || req.permissions?.includes('project:create')) {
+    if (
+      req.userRole === 'company' ||
+      req.permissions?.includes('project:view:all') ||
+      req.permissions?.includes('project:create') ||
+      req.permissions?.includes('userStory:view:all') ||
+      req.permissions?.includes('userStory:create')
+    ) {
       return next();
     }
     return checkPermission('project:view:all')(req, res, next);

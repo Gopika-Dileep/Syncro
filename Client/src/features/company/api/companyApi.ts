@@ -25,6 +25,7 @@ export interface EmployeePermissions {
         create: boolean;
         view: { all: boolean };
         update: { own: boolean; all: boolean };
+        delete: { own: boolean; all: boolean };
         start: boolean;
         complete: boolean;
     };
@@ -32,6 +33,7 @@ export interface EmployeePermissions {
         create: boolean;
         view: { all: boolean };
         update: { own: boolean; all: boolean };
+        delete: { own: boolean; all: boolean };
         assign: boolean;
     };
     team: {

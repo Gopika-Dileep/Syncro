@@ -19,8 +19,8 @@ import { employeeSchema, getZodErrors, type EmployeeformInput } from "@/lib/sche
 
 const initialPermissions: EmployeePermissions = {
     project: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false } },
-    userStory: { create: false, view: { all: false }, update: { own: false, all: false }, assign: false },
-    sprint: { create: false, view: { all: false }, update: { own: false, all: false }, start: false, complete: false },
+    userStory: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, assign: false },
+    sprint: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, start: false, complete: false },
     task: { create: false, view: { team: false, all: false }, assign: false, update: { own: false, all: false } },
     team: { view: { team: false, all: false } }
 };
@@ -54,9 +54,25 @@ export default function AddEmployee() {
                             phone: emp.phone || "",
                             designation: emp.designation || "",
                             date_of_joining: emp.date_of_joining ? new Date(emp.date_of_joining).toISOString().split('T')[0] : "",
-                            team_id: emp.team_id || ""
+                            team_id: emp.team?._id || ""
                         });
-                        if (emp.permissions) setPermissions(emp.permissions);
+                        if (emp.permissions) {
+                            // Deep merge to ensure newly added permission schema fields exist for older database records
+                            setPermissions(() => {
+                                const merged = JSON.parse(JSON.stringify(initialPermissions));
+                                const mergeDefaults = (target: any, source: any) => {
+                                    for (const key in source) {
+                                        if (source[key] instanceof Object && !Array.isArray(source[key]) && target[key]) {
+                                            mergeDefaults(target[key], source[key]);
+                                        } else {
+                                            target[key] = source[key];
+                                        }
+                                    }
+                                };
+                                mergeDefaults(merged, emp.permissions);
+                                return merged;
+                            });
+                        }
                     }
                 } catch { toast.error("Failed to fetch profile"); } finally { setFetching(false); }
             };
@@ -81,12 +97,13 @@ export default function AddEmployee() {
                 const newValue = !currentField[subField];
                 updatedModule[field] = { ...currentField, [subField]: newValue };
                 
-                // Mutual exclusivity for view scopes if needed
-                if (newValue && subField === 'all' && 'team' in currentField) {
-                    updatedModule[field].team = false;
-                }
-                if (newValue && subField === 'team' && 'all' in currentField) {
-                    updatedModule[field].all = false;
+                // Mutual exclusivity for scopes if needed
+                if (newValue) {
+                    if (subField === 'all' && 'team' in currentField) updatedModule[field].team = false;
+                    if (subField === 'team' && 'all' in currentField) updatedModule[field].all = false;
+                    
+                    if (subField === 'all' && 'own' in currentField) updatedModule[field].own = false;
+                    if (subField === 'own' && 'all' in currentField) updatedModule[field].all = false;
                 }
             } else {
                 updatedModule[field] = !updatedModule[field];
@@ -274,6 +291,8 @@ export default function AddEmployee() {
                                 { label: "View All", checked: permissions.userStory.view.all, onClick: () => handlePermissionToggle('userStory', 'view', 'all') },
                                 { label: "Update Own", checked: permissions.userStory.update.own, onClick: () => handlePermissionToggle('userStory', 'update', 'own') },
                                 { label: "Update All", checked: permissions.userStory.update.all, onClick: () => handlePermissionToggle('userStory', 'update', 'all') },
+                                { label: "Delete Own", checked: permissions.userStory.delete.own, onClick: () => handlePermissionToggle('userStory', 'delete', 'own') },
+                                { label: "Delete All", checked: permissions.userStory.delete.all, onClick: () => handlePermissionToggle('userStory', 'delete', 'all') },
                                 { label: "Assign", checked: permissions.userStory.assign, onClick: () => handlePermissionToggle('userStory', 'assign') },
                             ]}
                         />
@@ -284,6 +303,8 @@ export default function AddEmployee() {
                                 { label: "View All", checked: permissions.sprint.view.all, onClick: () => handlePermissionToggle('sprint', 'view', 'all') },
                                 { label: "Update Own", checked: permissions.sprint.update.own, onClick: () => handlePermissionToggle('sprint', 'update', 'own') },
                                 { label: "Update All", checked: permissions.sprint.update.all, onClick: () => handlePermissionToggle('sprint', 'update', 'all') },
+                                { label: "Delete Own", checked: permissions.sprint.delete.own, onClick: () => handlePermissionToggle('sprint', 'delete', 'own') },
+                                { label: "Delete All", checked: permissions.sprint.delete.all, onClick: () => handlePermissionToggle('sprint', 'delete', 'all') },
                                 { label: "Start", checked: permissions.sprint.start, onClick: () => handlePermissionToggle('sprint', 'start') },
                                 { label: "Complete", checked: permissions.sprint.complete, onClick: () => handlePermissionToggle('sprint', 'complete') },
                             ]}

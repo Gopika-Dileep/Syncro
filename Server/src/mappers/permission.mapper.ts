@@ -29,6 +29,8 @@ export class PermissionMapper {
       if (p.sprint.view.all) keys.push('sprint:view:all');
       if (p.sprint.update.own) keys.push('sprint:update');
       if (p.sprint.update.all) keys.push('sprint:update:all');
+      if (p.sprint.delete?.own) keys.push('sprint:delete');
+      if (p.sprint.delete?.all) keys.push('sprint:delete:all');
       if (p.sprint.start) keys.push('sprint:start');
       if (p.sprint.complete) keys.push('sprint:complete');
     }
@@ -38,6 +40,8 @@ export class PermissionMapper {
       if (p.userStory.view.all) keys.push('userStory:view:all');
       if (p.userStory.update.own) keys.push('userStory:update');
       if (p.userStory.update.all) keys.push('userStory:update:all');
+      if (p.userStory.delete?.own) keys.push('userStory:delete');
+      if (p.userStory.delete?.all) keys.push('userStory:delete:all');
       if (p.userStory.assign) keys.push('userStory:assign');
     }
 
@@ -53,8 +57,8 @@ export class PermissionMapper {
     const p: EmployeePermissionsDTO = {
       project: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false } },
       task: { create: false, view: { team: false, all: false }, assign: false, update: { own: false, all: false } },
-      sprint: { create: false, view: { all: false }, update: { own: false, all: false }, start: false, complete: false },
-      userStory: { create: false, view: { all: false }, update: { own: false, all: false }, assign: false },
+      sprint: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, start: false, complete: false },
+      userStory: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, assign: false },
       team: { view: { team: false, all: false } },
     };
 

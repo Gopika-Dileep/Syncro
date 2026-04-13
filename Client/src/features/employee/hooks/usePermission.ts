@@ -14,11 +14,12 @@ export const usePermission = (): UsePermissionReturn => {
     const permissions: string[] = user?.permissions || [];
 
     const can = (key: string): boolean => {
+        if (user?.role === 'company') return true;
         return permissions.includes(key);
     };
 
-
     const hasModuleAccess = (moduleName: string): boolean => {
+        if (user?.role === 'company') return true;
         return permissions.some(p => p.startsWith(`${moduleName}:`));
     };
 

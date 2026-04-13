@@ -227,11 +227,11 @@ function getProjectPermissions(p: EmployeePermissions['project'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.create) res.push("Create");
-    if (p.view?.team) res.push("View (Team)");
     if (p.view?.all) res.push("View (All)");
-    if (p.update?.team) res.push("Update (Team)");
+    if (p.update?.own) res.push("Update (Own)");
     if (p.update?.all) res.push("Update (All)");
-    if (p.delete) res.push("Delete");
+    if (p.delete?.own) res.push("Delete (Own)");
+    if (p.delete?.all) res.push("Delete (All)");
     return res;
 }
 function getUserStoryPermissions(p: EmployeePermissions['userStory'] | undefined) {
@@ -239,7 +239,10 @@ function getUserStoryPermissions(p: EmployeePermissions['userStory'] | undefined
     const res = [];
     if (p.create) res.push("Create");
     if (p.view?.all) res.push("View (All)");
-    if (p.update) res.push("Update");
+    if (p.update?.own) res.push("Update (Own)");
+    if (p.update?.all) res.push("Update (All)");
+    if (p.delete?.own) res.push("Delete (Own)");
+    if (p.delete?.all) res.push("Delete (All)");
     if (p.assign) res.push("Assign");
     return res;
 }
@@ -248,7 +251,10 @@ function getSprintPermissions(p: EmployeePermissions['sprint'] | undefined) {
     const res = [];
     if (p.create) res.push("Create");
     if (p.view?.all) res.push("View (All)");
-    if (p.update) res.push("Update");
+    if (p.update?.own) res.push("Update (Own)");
+    if (p.update?.all) res.push("Update (All)");
+    if (p.delete?.own) res.push("Delete (Own)");
+    if (p.delete?.all) res.push("Delete (All)");
     if (p.start) res.push("Start");
     if (p.complete) res.push("Complete");
     return res;
@@ -259,10 +265,9 @@ function getTaskPermissions(p: EmployeePermissions['task'] | undefined) {
     if (p.create) res.push("Create");
     if (p.view?.team) res.push("View (Team)");
     if (p.view?.all) res.push("View (All)");
-    if (p.assign?.team) res.push("Assign (Team)");
-    if (p.assign?.all) res.push("Assign (All)");
-    if (p.update?.team) res.push("Update (Team)");
+    if (p.update?.own) res.push("Update (Own)");
     if (p.update?.all) res.push("Update (All)");
+    if (p.assign) res.push("Assign");
     return res;
 }
 function getTeamPermissions(p: EmployeePermissions['team'] | undefined) {
@@ -270,7 +275,5 @@ function getTeamPermissions(p: EmployeePermissions['team'] | undefined) {
     const res = [];
     if (p.view?.team) res.push("View (Team)");
     if (p.view?.all) res.push("View (All)");
-    if (p.performance?.team) res.push("Performance (Team)");
-    if (p.performance?.all) res.push("Performance (All)");
     return res;
 }
