@@ -54,6 +54,18 @@ export const USER_MESSAGES = {
   ALL_FIELDS_REQUIRED: 'All fields are required',
 };
 
+export const PROJECT_MESSAGES = {
+  CREATE_SUCCESS: 'Project created successfully',
+  CREATE_FAILED: 'Failed to create project',
+  FETCH_SUCCESS: 'Projects fetched successfully',
+  FETCH_FAILED: 'Failed to fetch projects',
+  UPDATE_SUCCESS: 'Project updated successfully',
+  UPDATE_FAILED: 'Failed to update project',
+  DELETE_SUCCESS: 'Project deleted successfully',
+  DELETE_FAILED: 'Failed to delete project',
+  NOT_FOUND: 'Project not found',
+};
+
 export const USER_STORY_MESSAGES = {
   CREATE_SUCCESS: 'User story created successfully',
   CREATE_FAILED: 'Failed to create user story',

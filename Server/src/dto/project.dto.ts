@@ -9,8 +9,8 @@ export const ProjectBaseSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters'),
   status: z.nativeEnum(ProjectStatus),
   priority: z.nativeEnum(ProjectPriority),
-  start_date: z.string().refine((date) => !isNaN(Date.parse(date)), { message: 'Invalid start date' }),
-  target_date: z.string().refine((date) => !isNaN(Date.parse(date)), { message: 'Invalid target date' }),
+  start_date: z.string().min(1, 'Start date is required'),
+  target_date: z.string().min(1, 'Target date is required'),
 });
 
 export const ProjectSchema = ProjectBaseSchema.refine(
@@ -36,8 +36,18 @@ export const UpdateProjectRequestSchema = z.object({
   body: ProjectBaseSchema.partial(),
 });
 
+export const GetProjectsRequestSchema = z.object({
+  query: z.object({
+    page: z.preprocess((val) => Number(val) || 1, z.number().min(1)),
+    limit: z.preprocess((val) => Number(val) || 10, z.number().min(1)),
+    search: z.string().optional().default(''),
+    status: z.string().optional(),
+  }),
+});
+
 export type CreateProjectRequestDTO = z.infer<typeof CreateProjectRequestSchema>['body'];
 export type UpdateProjectRequestDTO = z.infer<typeof UpdateProjectRequestSchema>['body'];
+export type GetProjectsRequestDTO = z.infer<typeof GetProjectsRequestSchema>['query'];
 
 export interface ProjectResponseDTO {
   _id: string;
