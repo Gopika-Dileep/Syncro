@@ -8,7 +8,7 @@ import { USER_STORY_MESSAGES } from '../constants/messages';
 
 @injectable()
 export class UserStoryController {
-  constructor(@inject(TYPES.UserStoryService) private _userStoryService: IUserStoryService) {}
+  constructor(@inject(TYPES.UserStoryService) private _userStoryService: IUserStoryService) { }
 
   createUserStory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

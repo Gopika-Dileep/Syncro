@@ -4,9 +4,9 @@ import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCi
 import { toast } from "sonner";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import { getProjectsApi, type Project } from "@/features/employee/api/projectApi";
-import { 
-    getUserStoriesByProjectApi, 
-    createUserStoryApi, 
+import {
+    getUserStoriesByProjectApi,
+    createUserStoryApi,
     updateUserStoryApi,
     deleteUserStoryApi,
     type UserStory
@@ -70,10 +70,10 @@ function StoryMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete 
 
 export default function Backlogs() {
     const { can } = usePermission();
-    
+
     const [projects, setProjects] = useState<Project[]>([]);
     const [fetchingProjects, setFetchingProjects] = useState(true);
-    
+
     // key: projectId, value: array of stories
     const [storiesConfig, setStoriesConfig] = useState<Record<string, { data: UserStory[], loading: boolean }>>({});
     const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
@@ -81,13 +81,13 @@ export default function Backlogs() {
     // Modals state
     const [isFormModalOpen, setFormModalOpen] = useState(false);
     const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
-    
+
     // Selected states
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedStory, setSelectedStory] = useState<UserStory | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // Confirmation states
     const [storyToMarkReady, setStoryToMarkReady] = useState<UserStory | null>(null);
     const [storyToDelete, setStoryToDelete] = useState<UserStory | null>(null);
@@ -263,10 +263,10 @@ export default function Backlogs() {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-2">
                                 {story.status.toLowerCase() === 'new' && canEditStory && (
-                                    <button 
+                                    <button
                                         onClick={() => setStoryToMarkReady(story)}
                                         className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                     >
@@ -274,7 +274,7 @@ export default function Backlogs() {
                                     </button>
                                 )}
                                 <div className="relative">
-                                    <button 
+                                    <button
                                         ref={(el) => { btnRefs.current[story._id] = el; }}
                                         onClick={() => openMenu(story._id)}
                                         className="p-1.5 text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#555] rounded-lg transition-colors"
@@ -330,7 +330,7 @@ export default function Backlogs() {
                             const isExpanded = expandedProjectId === project._id;
                             return (
                                 <div key={project._id} className="bg-white border border-[#ebebeb] rounded-xl shadow-sm overflow-hidden transition-all duration-300">
-                                    <div 
+                                    <div
                                         onClick={() => toggleProject(project._id)}
                                         className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-[#fafafa] transition-colors group"
                                     >
@@ -359,7 +359,7 @@ export default function Backlogs() {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                                         <div className="overflow-hidden">
                                             {renderStories(project._id)}
@@ -373,7 +373,7 @@ export default function Backlogs() {
             </div>
 
             {/* View/Edit Modals */}
-            <UserStoryModal 
+            <UserStoryModal
                 isOpen={isFormModalOpen}
                 onClose={() => setFormModalOpen(false)}
                 onSubmit={handleFormSubmit}
@@ -382,7 +382,7 @@ export default function Backlogs() {
                 isSubmitting={isSubmitting}
             />
 
-            <UserStoryDetailsModal 
+            <UserStoryDetailsModal
                 isOpen={isDetailsModalOpen}
                 onClose={() => setDetailsModalOpen(false)}
                 story={selectedStory}
@@ -429,7 +429,7 @@ export default function Backlogs() {
                             </div>
                             <h3 className="text-[16px] font-bold text-[#1f2124] mb-2">Delete Story</h3>
                             <p className="text-[13px] text-[#888] leading-relaxed">
-                                Are you sure you want to permanently delete <span className="font-bold text-[#555]">'{storyToDelete.title}'</span>? <br/>This action cannot be undone.
+                                Are you sure you want to permanently delete <span className="font-bold text-[#555]">'{storyToDelete.title}'</span>? <br />This action cannot be undone.
                             </p>
                         </div>
                         <div className="flex gap-2 p-4 pt-0">

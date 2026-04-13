@@ -21,7 +21,7 @@ const initialPermissions: EmployeePermissions = {
     project: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false } },
     userStory: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, assign: false },
     sprint: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, start: false, complete: false },
-    task: { create: false, view: { team: false, all: false }, assign: false, update: { own: false, all: false } },
+    task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: { own: false, all: false }, updateStatus: false },
     team: { view: { team: false, all: false } }
 };
 
@@ -96,12 +96,12 @@ export default function AddEmployee() {
                 const currentField = updatedModule[field] as Record<string, boolean>;
                 const newValue = !currentField[subField];
                 updatedModule[field] = { ...currentField, [subField]: newValue };
-                
+
                 // Mutual exclusivity for scopes if needed
                 if (newValue) {
                     if (subField === 'all' && 'team' in currentField) updatedModule[field].team = false;
                     if (subField === 'team' && 'all' in currentField) updatedModule[field].all = false;
-                    
+
                     if (subField === 'all' && 'own' in currentField) updatedModule[field].own = false;
                     if (subField === 'own' && 'all' in currentField) updatedModule[field].all = false;
                 }
@@ -313,10 +313,12 @@ export default function AddEmployee() {
                             icon={<CheckCircle size={13} />} title="Task Workflow"
                             items={[
                                 { label: "Create", checked: permissions.task.create, onClick: () => handlePermissionToggle('task', 'create') },
+                                { label: "View Assigned", checked: permissions.task.view.assigned, onClick: () => handlePermissionToggle('task', 'view', 'assigned') },
                                 { label: "View Team", checked: permissions.task.view.team, onClick: () => handlePermissionToggle('task', 'view', 'team') },
                                 { label: "View All", checked: permissions.task.view.all, onClick: () => handlePermissionToggle('task', 'view', 'all') },
                                 { label: "Assign", checked: permissions.task.assign, onClick: () => handlePermissionToggle('task', 'assign') },
                                 { label: "Update Own", checked: permissions.task.update.own, onClick: () => handlePermissionToggle('task', 'update', 'own') },
+                                { label: "Update Status", checked: permissions.task.updateStatus, onClick: () => handlePermissionToggle('task', 'updateStatus') },
                                 { label: "Update All", checked: permissions.task.update.all, onClick: () => handlePermissionToggle('task', 'update', 'all') },
                             ]}
                         />

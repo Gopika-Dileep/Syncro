@@ -10,7 +10,7 @@ import { UserStoryMapper } from '../mappers/userStory.mapper';
 export class UserStoryService implements IUserStoryService {
   constructor(
     @inject(TYPES.UserStoryRepository) private _userStoryRepository: IUserStoryRepository,
-  ) {}
+  ) { }
 
   async createUserStory(data: CreateUserStoryRequestDTO): Promise<UserStoryResponseDTO> {
     const userStory = await this._userStoryRepository.create({

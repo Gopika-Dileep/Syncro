@@ -263,10 +263,12 @@ function getTaskPermissions(p: EmployeePermissions['task'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.create) res.push("Create");
+    if (p.view?.assigned) res.push("View (Assigned)");
     if (p.view?.team) res.push("View (Team)");
     if (p.view?.all) res.push("View (All)");
     if (p.update?.own) res.push("Update (Own)");
     if (p.update?.all) res.push("Update (All)");
+    if (p.updateStatus) res.push("Update Status");
     if (p.assign) res.push("Assign");
     return res;
 }
