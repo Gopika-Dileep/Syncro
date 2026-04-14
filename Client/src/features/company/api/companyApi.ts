@@ -17,14 +17,16 @@ export interface EmployeePermissions {
     };
     task: {
         create: boolean;
-        view: { team: boolean; all: boolean };
+        view: { assigned: boolean; team: boolean; all: boolean };
         assign: boolean;
         update: { own: boolean; all: boolean };
+        updateStatus: boolean;
     };
     sprint: {
         create: boolean;
         view: { all: boolean };
         update: { own: boolean; all: boolean };
+        delete: { own: boolean; all: boolean };
         start: boolean;
         complete: boolean;
     };
@@ -32,6 +34,7 @@ export interface EmployeePermissions {
         create: boolean;
         view: { all: boolean };
         update: { own: boolean; all: boolean };
+        delete: { own: boolean; all: boolean };
         assign: boolean;
     };
     team: {

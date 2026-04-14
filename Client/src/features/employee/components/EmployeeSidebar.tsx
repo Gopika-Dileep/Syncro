@@ -14,17 +14,11 @@ export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
 
     const navItems = [
         { label: "Dashboard", path: "/employee/dashboard", icon: LayoutDashboard },
-        { 
-            label: "My Projects", 
-            path: "/employee/projects", 
+        {
+            label: "Projects",
+            path: "/employee/projects",
             icon: FolderKanban,
             visible: hasModuleAccess('project')
-        },
-        { 
-            label: "Tasks", 
-            path: "/employee/tasks", 
-            icon: ListTodo,
-            visible: hasModuleAccess('task')
         },
         {
             label: "Backlog",
@@ -37,6 +31,12 @@ export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
             path: "/employee/sprints",
             icon: Zap,
             visible: hasModuleAccess('sprint')
+        },
+        {
+            label: "Tasks",
+            path: "/employee/tasks",
+            icon: ListTodo,
+            visible: hasModuleAccess('task')
         },
         {
             label: "My Team",
@@ -72,10 +72,9 @@ export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
                             to={item.path}
                             onClick={onClose}
                             className={({ isActive }) =>
-                                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${
-                                    isActive
-                                        ? "bg-white/10 text-white"
-                                        : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${isActive
+                                    ? "bg-white/10 text-white"
+                                    : "text-white/50 hover:bg-white/5 hover:text-white/80"
                                 }`
                             }
                         >

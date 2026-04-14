@@ -27,6 +27,11 @@ import { IProjectRepository } from '../interfaces/repositories/IProjectRepositor
 import { IProjectService } from '../interfaces/services/IProjectService';
 import { TeamController } from '../controller/team.controller';
 import { UserController } from '../controller/user.controller';
+import { UserStoryRepository } from '../repositories/userStory.repository';
+import { UserStoryService } from '../service/userStory.service';
+import { UserStoryController } from '../controller/userStory.controller';
+import { IUserStoryRepository } from '../interfaces/repositories/IUserStoryRepository';
+import { IUserStoryService } from '../interfaces/services/IUserStoryService';
 
 const container = new Container();
 
@@ -36,17 +41,20 @@ container.bind<IEmployeeRepository>(TYPES.EmployeeRepository).to(EmployeeReposit
 container.bind<IPermissionRepository>(TYPES.PermissionRepository).to(PermissionRepository);
 container.bind<ITeamRepository>(TYPES.TeamRepository).to(TeamRepository);
 container.bind<IProjectRepository>(TYPES.ProjectRepository).to(ProjectRepository);
+container.bind<IUserStoryRepository>(TYPES.UserStoryRepository).to(UserStoryRepository);
 
 container.bind<IAuthService>(TYPES.AuthService).to(AuthService);
 container.bind<IEmployeeService>(TYPES.EmployeeService).to(EmployeeService);
 container.bind<ITeamService>(TYPES.TeamService).to(TeamService);
 container.bind<IUserService>(TYPES.UserService).to(UserService);
 container.bind<IProjectService>(TYPES.ProjectService).to(ProjectService);
+container.bind<IUserStoryService>(TYPES.UserStoryService).to(UserStoryService);
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);
 container.bind<TeamController>(TYPES.TeamController).to(TeamController);
 container.bind<UserController>(TYPES.UserController).to(UserController);
 container.bind<ProjectController>(TYPES.ProjectController).to(ProjectController);
+container.bind<UserStoryController>(TYPES.UserStoryController).to(UserStoryController);
 
 export { container };

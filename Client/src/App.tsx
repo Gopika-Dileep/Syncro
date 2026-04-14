@@ -71,9 +71,9 @@ function App() {
               <Route path='projects/add' element={<AddProject />} />
               <Route path='projects/edit/:projectId' element={<AddProject />} />
               <Route path='backlogs' element={<Backlogs />} />
+              <Route path='sprints' element={<Sprints />} />
               <Route path='tasks' element={<Tasks/>}/>
               <Route path='teams'  element={<Team/>}/>
-              <Route path='sprints' element={<Sprints />} />
               <Route path='notifications' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
             </Route>

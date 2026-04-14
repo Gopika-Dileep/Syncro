@@ -17,6 +17,7 @@ export const EmployeePermissionsSchema = z.object({
     create: z.boolean(),
     view: z.object({ all: z.boolean() }),
     update: z.object({ own: z.boolean(), all: z.boolean() }),
+    delete: z.object({ own: z.boolean(), all: z.boolean() }),
     start: z.boolean(),
     complete: z.boolean(),
   }),
@@ -24,6 +25,7 @@ export const EmployeePermissionsSchema = z.object({
     create: z.boolean(),
     view: z.object({ all: z.boolean() }),
     update: z.object({ own: z.boolean(), all: z.boolean() }),
+    delete: z.object({ own: z.boolean(), all: z.boolean() }),
     assign: z.boolean(),
   }),
   team: z.object({

@@ -26,5 +26,10 @@ export const ENDPOINTS = {
     PROJECTS: {
         BASE: "/projects",
         BY_ID: (id: string) => `/projects/${id}`,
+    },
+    USER_STORIES: {
+        BASE: "/user-stories",
+        BY_PROJECT: (projectId: string) => `/user-stories/project/${projectId}`,
+        BY_ID: (id: string) => `/user-stories/${id}`,
     }
 };

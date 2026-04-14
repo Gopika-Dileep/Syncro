@@ -15,4 +15,7 @@ export const TYPES = {
   TeamController: Symbol.for('TeamController'),
   UserController: Symbol.for('UserController'),
   ProjectController: Symbol.for('ProjectController'),
+  UserStoryRepository: Symbol.for('UserStoryRepository'),
+  UserStoryService: Symbol.for('UserStoryService'),
+  UserStoryController: Symbol.for('UserStoryController'),
 };

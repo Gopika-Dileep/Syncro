@@ -28,4 +28,8 @@ export const ENDPOINTS = {
     PROFILE: '/profile',
     CHANGE_PASSWORD: '/change-password',
   },
+  PROJECTS: {
+    BASE: '/projects',
+    BY_PROJECT_ID: '/:projectId',
+  },
 };
