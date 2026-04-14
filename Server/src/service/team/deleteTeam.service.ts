@@ -16,5 +16,6 @@ export class DeleteTeamService implements IDeleteTeamService {
     if (!deleted) throw new Error('team not found');
 
     await this._employeeRepo.updateMany({ team_id: teamId }, { team_id: null });
+    return;
   }
 }

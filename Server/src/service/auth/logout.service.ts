@@ -13,5 +13,6 @@ export class LogoutService implements ILogoutService {
   async execute(refreshToken: string): Promise<void> {
     const decoded = verifyRefreshToken(refreshToken);
     await this._authRepo.updateById(decoded.id, { refreshToken: null });
+    return;
   }
 }

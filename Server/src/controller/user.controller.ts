@@ -1,17 +1,24 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
-import { IUserService } from '../interfaces/services/IUserService';
+import { IGetProfileService } from '../interfaces/services/user/IGetProfileService';
+import { IChangePasswordService } from '../interfaces/services/user/IChangePasswordService';
+import { IUpdateUserProfileService } from '../interfaces/services/user/IUpdateUserProfileService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { USER_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
+
 @injectable()
 export class UserController {
-  constructor(@inject(TYPES.UserService) private _userService: IUserService) {}
+  constructor(
+    @inject(TYPES.GetProfileService) private _getProfileService: IGetProfileService,
+    @inject(TYPES.ChangePasswordService) private _changePasswordService: IChangePasswordService,
+    @inject(TYPES.UpdateUserProfileService) private _updateUserProfileService: IUpdateUserProfileService,
+  ) {}
 
   getProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const profile = await this._userService.getProfile(req.userId!);
+      const profile = await this._getProfileService.execute(req.userId!);
       res.status(HttpStatus.OK).json({ success: true, data: profile });
     } catch (error) {
       handleAsyncError(error, next);
@@ -20,7 +27,7 @@ export class UserController {
 
   changePassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await this._userService.changePassword(req.userId!, req.body);
+      const result = await this._changePasswordService.execute(req.userId!, req.body);
       res.status(HttpStatus.OK).json({ success: true, message: result.message });
     } catch (error) {
       handleAsyncError(error, next);
@@ -29,7 +36,7 @@ export class UserController {
 
   updateProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const result = await this._userService.updateUserProfile(req.userId!, req.body);
+      const result = await this._updateUserProfileService.execute(req.userId!, req.body);
       res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PROFILE_UPDATE_SUCCESS, data: result });
     } catch (error) {
       handleAsyncError(error, next);

@@ -13,5 +13,6 @@ export class DeleteProjectService implements IDeleteProjectService {
   async execute(projectId: string): Promise<void> {
     const result = await this._projectRepository.deleteById(projectId);
     if (!result) throw new Error(PROJECT_MESSAGES.NOT_FOUND);
+    return;
   }
 }
