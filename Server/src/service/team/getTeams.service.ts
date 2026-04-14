@@ -9,8 +9,8 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class GetTeamsService implements IGetTeamsService {
   constructor(
-    @inject(TYPES.TeamRepository) private _teamRepo: ITeamRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.ITeamRepository) private _teamRepo: ITeamRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
   ) {}
 
   async execute(userId: string): Promise<TeamResponseDTO[]> {

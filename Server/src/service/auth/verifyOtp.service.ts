@@ -13,10 +13,10 @@ import { IVerifyOtpService } from '../../interfaces/services/auth/IVerifyOtpServ
 @injectable()
 export class VerifyOtpService implements IVerifyOtpService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
-    @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository,
-    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IPermissionRepository) private _permissionRepo: IPermissionRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
   ) {}
 
   async execute(data: VerifyOtpRequestDTO): Promise<AuthResponseDTO> {

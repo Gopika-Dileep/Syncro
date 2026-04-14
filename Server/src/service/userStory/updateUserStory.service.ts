@@ -8,7 +8,7 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class UpdateUserStoryService implements IUpdateUserStoryService {
   constructor(
-    @inject(TYPES.UserStoryRepository) private _userStoryRepository: IUserStoryRepository,
+    @inject(TYPES.IUserStoryRepository) private _userStoryRepository: IUserStoryRepository,
   ) {}
 
   async execute(storyId: string, data: UpdateUserStoryRequestDTO): Promise<UserStoryResponseDTO> {

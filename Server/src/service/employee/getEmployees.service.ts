@@ -9,8 +9,8 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class GetEmployeesService implements IGetEmployeesService {
   constructor(
-    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
   ) {}
 
   async execute(userId: string, query: GetEmployeesRequestDTO): Promise<PaginatedEmployeeResponseDTO> {

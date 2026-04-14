@@ -6,7 +6,7 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class DeleteUserStoryService implements IDeleteUserStoryService {
   constructor(
-    @inject(TYPES.UserStoryRepository) private _userStoryRepository: IUserStoryRepository,
+    @inject(TYPES.IUserStoryRepository) private _userStoryRepository: IUserStoryRepository,
   ) {}
 
   async execute(storyId: string): Promise<void> {

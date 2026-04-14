@@ -7,8 +7,8 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class ToggleBlockEmployeeService implements IToggleBlockEmployeeService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
   ) {}
 
   async execute(userId: string, empUserId: string): Promise<boolean> {

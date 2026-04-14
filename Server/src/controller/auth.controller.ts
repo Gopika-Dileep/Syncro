@@ -18,14 +18,14 @@ import { IResetPasswordService } from '../interfaces/services/auth/IResetPasswor
 @injectable()
 export class AuthController {
   constructor(
-    @inject(TYPES.RegisterService) private _registerService: IRegisterService,
-    @inject(TYPES.VerifyOtpService) private _verifyOtpService: IVerifyOtpService,
-    @inject(TYPES.ResendOtpService) private _resendOtpService: IResendOtpService,
-    @inject(TYPES.LoginService) private _loginService: ILoginService,
-    @inject(TYPES.RefreshService) private _refreshService: IRefreshService,
-    @inject(TYPES.LogoutService) private _logoutService: ILogoutService,
-    @inject(TYPES.ForgotPasswordService) private _forgotPasswordService: IForgotPasswordService,
-    @inject(TYPES.ResetPasswordService) private _resetPasswordService: IResetPasswordService
+    @inject(TYPES.IRegisterService) private _registerService: IRegisterService,
+    @inject(TYPES.IVerifyOtpService) private _verifyOtpService: IVerifyOtpService,
+    @inject(TYPES.IResendOtpService) private _resendOtpService: IResendOtpService,
+    @inject(TYPES.ILoginService) private _loginService: ILoginService,
+    @inject(TYPES.IRefreshService) private _refreshService: IRefreshService,
+    @inject(TYPES.ILogoutService) private _logoutService: ILogoutService,
+    @inject(TYPES.IForgotPasswordService) private _forgotPasswordService: IForgotPasswordService,
+    @inject(TYPES.IResetPasswordService) private _resetPasswordService: IResetPasswordService
   ) {}
 
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

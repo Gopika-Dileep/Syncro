@@ -9,13 +9,13 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class CreateUserStoryService implements ICreateUserStoryService {
   constructor(
-    @inject(TYPES.UserStoryRepository) private _userStoryRepository: IUserStoryRepository,
-  ) {}
+    @inject(TYPES.IUserStoryRepository) private _userStoryRepository: IUserStoryRepository,
+  ) { }
 
   async execute(data: CreateUserStoryRequestDTO): Promise<UserStoryResponseDTO> {
     const userStory = await this._userStoryRepository.create({
       ...data,
-      project_id: new Types.ObjectId(data.project_id),
+      project_id: data.project_id,
     });
     return UserStoryMapper.toResponseDTO(userStory);
   }

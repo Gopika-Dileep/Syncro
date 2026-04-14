@@ -14,11 +14,11 @@ import { handleAsyncError } from '../utils/error.utils';
 @injectable()
 export class EmployeeController {
   constructor(
-    @inject(TYPES.AddEmployeeService) private _addEmployeeService: IAddEmployeeService,
-    @inject(TYPES.GetEmployeesService) private _getEmployeesService: IGetEmployeesService,
-    @inject(TYPES.ToggleBlockEmployeeService) private _toggleBlockEmployeeService: IToggleBlockEmployeeService,
-    @inject(TYPES.GetEmployeeDetailsService) private _getEmployeeDetailsService: IGetEmployeeDetailsService,
-    @inject(TYPES.UpdateEmployeeDetailsService) private _updateEmployeeDetailsService: IUpdateEmployeeDetailsService,
+    @inject(TYPES.IAddEmployeeService) private _addEmployeeService: IAddEmployeeService,
+    @inject(TYPES.IGetEmployeesService) private _getEmployeesService: IGetEmployeesService,
+    @inject(TYPES.IToggleBlockEmployeeService) private _toggleBlockEmployeeService: IToggleBlockEmployeeService,
+    @inject(TYPES.IGetEmployeeDetailsService) private _getEmployeeDetailsService: IGetEmployeeDetailsService,
+    @inject(TYPES.IUpdateEmployeeDetailsService) private _updateEmployeeDetailsService: IUpdateEmployeeDetailsService,
   ) {}
 
   addEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -13,11 +13,11 @@ import { USER_STORY_MESSAGES } from '../constants/messages';
 @injectable()
 export class UserStoryController {
   constructor(
-    @inject(TYPES.CreateUserStoryService) private _createUserStoryService: ICreateUserStoryService,
-    @inject(TYPES.GetUserStoriesByProjectService) private _getUserStoriesByProjectService: IGetUserStoriesByProjectService,
-    @inject(TYPES.GetUserStoryByIdService) private _getUserStoryByIdService: IGetUserStoryByIdService,
-    @inject(TYPES.UpdateUserStoryService) private _updateUserStoryService: IUpdateUserStoryService,
-    @inject(TYPES.DeleteUserStoryService) private _deleteUserStoryService: IDeleteUserStoryService,
+    @inject(TYPES.ICreateUserStoryService) private _createUserStoryService: ICreateUserStoryService,
+    @inject(TYPES.IGetUserStoriesByProjectService) private _getUserStoriesByProjectService: IGetUserStoriesByProjectService,
+    @inject(TYPES.IGetUserStoryByIdService) private _getUserStoryByIdService: IGetUserStoryByIdService,
+    @inject(TYPES.IUpdateUserStoryService) private _updateUserStoryService: IUpdateUserStoryService,
+    @inject(TYPES.IDeleteUserStoryService) private _deleteUserStoryService: IDeleteUserStoryService,
   ) { }
 
   createUserStory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

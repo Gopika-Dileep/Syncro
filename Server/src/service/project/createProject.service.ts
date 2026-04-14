@@ -11,9 +11,9 @@ import { PROJECT_MESSAGES } from '../../constants/messages';
 @injectable()
 export class CreateProjectService implements ICreateProjectService {
   constructor(
-    @inject(TYPES.ProjectRepository) private _projectRepository: IProjectRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
-    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
   ) {}
 
   private async resolveCompanyId(userId: string): Promise<string> {

@@ -14,8 +14,8 @@ import { IRegisterService } from '../../interfaces/services/auth/IRegisterServic
 @injectable()
 export class RegisterService implements IRegisterService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
   ) {}
 
   async execute(data: RegisterRequestDTO): Promise<{ message: string }> {

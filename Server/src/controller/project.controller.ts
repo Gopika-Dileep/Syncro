@@ -14,11 +14,11 @@ import { GetProjectsRequestDTO } from '../dto/project.dto';
 @injectable()
 export class ProjectController {
   constructor(
-    @inject(TYPES.CreateProjectService) private _createProjectService: ICreateProjectService,
-    @inject(TYPES.GetProjectsService) private _getProjectsService: IGetProjectsService,
-    @inject(TYPES.GetProjectByIdService) private _getProjectByIdService: IGetProjectByIdService,
-    @inject(TYPES.UpdateProjectService) private _updateProjectService: IUpdateProjectService,
-    @inject(TYPES.DeleteProjectService) private _deleteProjectService: IDeleteProjectService,
+    @inject(TYPES.ICreateProjectService) private _createProjectService: ICreateProjectService,
+    @inject(TYPES.IGetProjectsService) private _getProjectsService: IGetProjectsService,
+    @inject(TYPES.IGetProjectByIdService) private _getProjectByIdService: IGetProjectByIdService,
+    @inject(TYPES.IUpdateProjectService) private _updateProjectService: IUpdateProjectService,
+    @inject(TYPES.IDeleteProjectService) private _deleteProjectService: IDeleteProjectService,
   ) {}
 
   createProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

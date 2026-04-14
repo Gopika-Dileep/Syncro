@@ -12,7 +12,7 @@ import { IForgotPasswordService } from '../../interfaces/services/auth/IForgotPa
 @injectable()
 export class ForgotPasswordService implements IForgotPasswordService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
   ) {}
 
   async execute(data: ForgotPasswordRequestDTO): Promise<{ message: string }> {

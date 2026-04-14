@@ -7,8 +7,8 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class DeleteTeamService implements IDeleteTeamService {
   constructor(
-    @inject(TYPES.TeamRepository) private _teamRepo: ITeamRepository,
-    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.ITeamRepository) private _teamRepo: ITeamRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
   ) {}
 
   async execute(teamId: string): Promise<void> {

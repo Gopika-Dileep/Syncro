@@ -10,7 +10,7 @@ import { USER_MESSAGES } from '../../constants/messages';
 @injectable()
 export class ChangePasswordService implements IChangePasswordService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
   ) {}
 
   async execute(userId: string, data: ChangePasswordRequestDTO): Promise<{ message: string }> {

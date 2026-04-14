@@ -12,10 +12,10 @@ import { IRefreshService } from '../../interfaces/services/auth/IRefreshService'
 @injectable()
 export class RefreshService implements IRefreshService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
-    @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository,
-    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IPermissionRepository) private _permissionRepo: IPermissionRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
   ) {}
 
   async execute(refreshToken: string): Promise<Omit<AuthResponseDTO, 'refreshToken'>> {

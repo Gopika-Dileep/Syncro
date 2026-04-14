@@ -9,7 +9,7 @@ import { PROJECT_MESSAGES } from '../../constants/messages';
 @injectable()
 export class UpdateProjectService implements IUpdateProjectService {
   constructor(
-    @inject(TYPES.ProjectRepository) private _projectRepository: IProjectRepository,
+    @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
   ) {}
 
   async execute(projectId: string, data: UpdateProjectRequestDTO): Promise<ProjectResponseDTO> {

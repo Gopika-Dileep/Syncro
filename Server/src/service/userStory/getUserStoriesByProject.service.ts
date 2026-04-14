@@ -8,7 +8,7 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class GetUserStoriesByProjectService implements IGetUserStoriesByProjectService {
   constructor(
-    @inject(TYPES.UserStoryRepository) private _userStoryRepository: IUserStoryRepository,
+    @inject(TYPES.IUserStoryRepository) private _userStoryRepository: IUserStoryRepository,
   ) {}
 
   async execute(projectId: string): Promise<UserStoryResponseDTO[]> {

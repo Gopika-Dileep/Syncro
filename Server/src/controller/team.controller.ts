@@ -12,10 +12,10 @@ import { handleAsyncError } from '../utils/error.utils';
 @injectable()
 export class TeamController {
   constructor(
-    @inject(TYPES.CreateTeamService) private _createTeamService: ICreateTeamService,
-    @inject(TYPES.GetTeamsService) private _getTeamsService: IGetTeamsService,
-    @inject(TYPES.UpdateTeamService) private _updateTeamService: IUpdateTeamService,
-    @inject(TYPES.DeleteTeamService) private _deleteTeamService: IDeleteTeamService,
+    @inject(TYPES.ICreateTeamService) private _createTeamService: ICreateTeamService,
+    @inject(TYPES.IGetTeamsService) private _getTeamsService: IGetTeamsService,
+    @inject(TYPES.IUpdateTeamService) private _updateTeamService: IUpdateTeamService,
+    @inject(TYPES.IDeleteTeamService) private _deleteTeamService: IDeleteTeamService,
   ) {}
 
   createTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

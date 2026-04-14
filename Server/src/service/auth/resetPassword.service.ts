@@ -11,7 +11,7 @@ import { IResetPasswordService } from '../../interfaces/services/auth/IResetPass
 @injectable()
 export class ResetPasswordService implements IResetPasswordService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
   ) {}
 
   async execute(data: ResetPasswordRequestDTO): Promise<{ message: string }> {

@@ -12,7 +12,7 @@ import { IResendOtpService } from '../../interfaces/services/auth/IResendOtpServ
 @injectable()
 export class ResendOtpService implements IResendOtpService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
   ) {}
 
   async execute(data: ResendOtpRequestDTO): Promise<{ message: string }> {

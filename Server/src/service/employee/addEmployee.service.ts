@@ -18,10 +18,10 @@ import { parseDate } from '../../utils/parseDate.utils';
 @injectable()
 export class AddEmployeeService implements IAddEmployeeService {
   constructor(
-    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
-    @inject(TYPES.CompanyRepository) private _companyRepo: ICompanyRepository,
-    @inject(TYPES.PermissionRepository) private _permissionRepo: IPermissionRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IPermissionRepository) private _permissionRepo: IPermissionRepository,
   ) {}
 
   async execute(userId: string, data: AddEmployeeRequestDTO): Promise<{ message: string }> {

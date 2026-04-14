@@ -8,7 +8,7 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class UpdateTeamService implements IUpdateTeamService {
   constructor(
-    @inject(TYPES.TeamRepository) private _teamRepo: ITeamRepository,
+    @inject(TYPES.ITeamRepository) private _teamRepo: ITeamRepository,
   ) {}
 
   async execute(teamId: string, name: string): Promise<TeamResponseDTO> {

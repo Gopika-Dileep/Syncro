@@ -11,9 +11,9 @@ import { handleAsyncError } from '../utils/error.utils';
 @injectable()
 export class UserController {
   constructor(
-    @inject(TYPES.GetProfileService) private _getProfileService: IGetProfileService,
-    @inject(TYPES.ChangePasswordService) private _changePasswordService: IChangePasswordService,
-    @inject(TYPES.UpdateUserProfileService) private _updateUserProfileService: IUpdateUserProfileService,
+    @inject(TYPES.IGetProfileService) private _getProfileService: IGetProfileService,
+    @inject(TYPES.IChangePasswordService) private _changePasswordService: IChangePasswordService,
+    @inject(TYPES.IUpdateUserProfileService) private _updateUserProfileService: IUpdateUserProfileService,
   ) {}
 
   getProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -10,9 +10,9 @@ import { TYPES } from '../../di/types';
 @injectable()
 export class UpdateUserProfileService implements IUpdateUserProfileService {
   constructor(
-    @inject(TYPES.AuthRepository) private _authRepo: IAuthRepository,
-    @inject(TYPES.EmployeeRepository) private _employeeRepo: IEmployeeRepository,
-    @inject(TYPES.GetProfileService) private _getProfileService: IGetProfileService,
+    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.IGetProfileService) private _getProfileService: IGetProfileService,
   ) {}
 
   async execute(userId: string, data: UpdateProfileRequestDTO): Promise<UserProfileResponseDTO> {
