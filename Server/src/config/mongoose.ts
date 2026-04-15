@@ -7,6 +7,6 @@ export async function connectDb(): Promise<void> {
     console.log('db connected successfully');
   } catch (err) {
     console.log(`error connecting db ${err}`);
-    process.exit(1)
+    process.exit(1);
   }
 }

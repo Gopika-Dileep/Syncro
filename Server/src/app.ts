@@ -8,8 +8,8 @@ import { UserRouter } from './routes/user.routes';
 import { morganMiddleware } from './middleware/morgan.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 
-import projectRouter from './routes/project.routes';
-import userStoryRouter from './routes/userStory.routes';
+import { ProjectRouter } from './routes/project.routes';
+import { UserStoryRouter } from './routes/userStory.routes';
 export default class App {
   public app: Application;
   constructor() {
@@ -22,8 +22,8 @@ export default class App {
     this.app.use('/api/auth', new AuthRouter().router);
     this.app.use('/api/company', new CompanyRouter().router);
     this.app.use('/api/user', new UserRouter().router);
-    this.app.use('/api/projects', projectRouter);
-    this.app.use('/api/user-stories', userStoryRouter);
+    this.app.use('/api/projects', new ProjectRouter().router);
+    this.app.use('/api/user-stories', new UserStoryRouter().router);
   }
   private _configureMiddleware(): void {
     this.app.use(morganMiddleware);

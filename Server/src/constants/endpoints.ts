@@ -30,6 +30,13 @@ export const ENDPOINTS = {
   },
   PROJECTS: {
     BASE: '/projects',
+    ROOT: '/',
     BY_PROJECT_ID: '/:projectId',
+  },
+  USER_STORIES: {
+    BASE: '/user-stories',
+    ROOT: '/',
+    BY_PROJECT: '/project/:projectId',
+    BY_STORY_ID: '/:storyId',
   },
 };
