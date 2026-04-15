@@ -13,14 +13,8 @@ export class ProjectRepository extends BaseRepository<IProject> implements IProj
     return await this._model.find({ company_id: companyId }).sort({ created_at: -1 }).exec();
   }
 
-  async getProjectsWithPagination(
-    companyId: string,
-    page: number,
-    limit: number,
-    search: string,
-    status?: string,
-  ): Promise<{ projects: IProject[]; total: number }> {
-    const filter: any = { company_id: companyId };
+  async getProjectsWithPagination(companyId: string, page: number, limit: number, search: string, status?: string): Promise<{ projects: IProject[]; total: number }> {
+    const filter: Record<string, unknown> = { company_id: companyId };
 
     if (search) {
       filter.name = { $regex: search, $options: 'i' };

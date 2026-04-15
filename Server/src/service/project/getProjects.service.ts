@@ -6,6 +6,8 @@ import { IGetProjectsService } from '../../interfaces/services/project/IGetProje
 import { GetProjectsRequestDTO, PaginatedProjectResponseDTO } from '../../dto/project.dto';
 import { ProjectMapper } from '../../mappers/project.mapper';
 import { TYPES } from '../../di/types';
+import { NotFoundError } from '../../errors/AppError';
+import { PROJECT_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class GetProjectsService implements IGetProjectsService {
@@ -17,23 +19,17 @@ export class GetProjectsService implements IGetProjectsService {
 
   private async resolveCompanyId(userId: string): Promise<string> {
     const company = await this._companyRepo.findOne({ user_id: userId });
-    if (company) return (company._id as any).toString();
+    if (company) return String(company._id);
 
     const employee = await this._employeeRepo.findByUserId(userId);
-    if (employee) return (employee.company_id._id as any).toString();
+    if (employee) return String(employee.company_id._id);
 
-    throw new Error('Company context not found');
+    throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
   }
 
   async execute(userId: string, query: GetProjectsRequestDTO): Promise<PaginatedProjectResponseDTO> {
     const companyId = await this.resolveCompanyId(userId);
-    const { projects, total } = await this._projectRepository.getProjectsWithPagination(
-      companyId,
-      query.page,
-      query.limit,
-      query.search,
-      query.status
-    );
+    const { projects, total } = await this._projectRepository.getProjectsWithPagination(companyId, query.page, query.limit, query.search, query.status);
 
     return {
       projects: ProjectMapper.toResponseList(projects),

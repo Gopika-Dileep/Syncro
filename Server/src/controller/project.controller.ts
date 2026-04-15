@@ -24,10 +24,10 @@ export class ProjectController {
   createProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._createProjectService.execute(req.userId!, req.body);
-      res.status(HttpStatus.CREATED).json({ 
-        success: true, 
-        data: result.project, 
-        message: result.message 
+      res.status(HttpStatus.CREATED).json({
+        success: true,
+        data: result.project,
+        message: result.message,
       });
     } catch (error) {
       handleAsyncError(error, next);
@@ -38,13 +38,13 @@ export class ProjectController {
     try {
       const query = req.query as unknown as GetProjectsRequestDTO;
       const { projects, total } = await this._getProjectsService.execute(req.userId!, query);
-      res.status(HttpStatus.OK).json({ 
-        success: true, 
-        data: projects, 
-        total, 
-        page: query.page, 
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data: projects,
+        total,
+        page: query.page,
         limit: query.limit,
-        message: PROJECT_MESSAGES.FETCH_SUCCESS 
+        message: PROJECT_MESSAGES.FETCH_SUCCESS,
       });
     } catch (error) {
       handleAsyncError(error, next);
@@ -55,10 +55,10 @@ export class ProjectController {
     try {
       const { projectId } = req.params;
       const project = await this._updateProjectService.execute(projectId as string, req.body);
-      res.status(HttpStatus.OK).json({ 
-        success: true, 
-        data: project, 
-        message: PROJECT_MESSAGES.UPDATE_SUCCESS 
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data: project,
+        message: PROJECT_MESSAGES.UPDATE_SUCCESS,
       });
     } catch (error) {
       handleAsyncError(error, next);
@@ -69,9 +69,9 @@ export class ProjectController {
     try {
       const { projectId } = req.params;
       await this._deleteProjectService.execute(projectId as string);
-      res.status(HttpStatus.OK).json({ 
-        success: true, 
-        message: PROJECT_MESSAGES.DELETE_SUCCESS 
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: PROJECT_MESSAGES.DELETE_SUCCESS,
       });
     } catch (error) {
       handleAsyncError(error, next);
@@ -82,10 +82,10 @@ export class ProjectController {
     try {
       const { projectId } = req.params;
       const project = await this._getProjectByIdService.execute(projectId as string);
-      res.status(HttpStatus.OK).json({ 
-        success: true, 
-        data: project, 
-        message: PROJECT_MESSAGES.FETCH_SUCCESS 
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data: project,
+        message: PROJECT_MESSAGES.FETCH_SUCCESS,
       });
     } catch (error) {
       handleAsyncError(error, next);
