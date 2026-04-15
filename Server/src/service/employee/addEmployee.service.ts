@@ -10,6 +10,7 @@ import { AddEmployeeRequestDTO } from '../../dto/employee.dto';
 import { PermissionMapper } from '../../mappers/permission.mapper';
 import { EmployeeMapper } from '../../mappers/employee.mapper';
 import { TYPES } from '../../di/types';
+import { ConflictError, NotFoundError } from '../../errors/AppError';
 import { env } from '../../config/env';
 import { EMPLOYEE_MESSAGES } from '../../constants/messages';
 import { sendEmployeeInvitationEmail } from '../../utils/email.utils';
@@ -26,10 +27,10 @@ export class AddEmployeeService implements IAddEmployeeService {
 
   async execute(userId: string, data: AddEmployeeRequestDTO): Promise<{ message: string }> {
     const company = await this._companyRepo.findOne({ user_id: userId });
-    if (!company) throw new Error('company not found');
+    if (!company) throw new NotFoundError(EMPLOYEE_MESSAGES.COMPANY_NOT_FOUND);
 
     const existingUser = await this._authRepo.findOne({ email: data.email });
-    if (existingUser) throw new Error('employee with this email already exists');
+    if (existingUser) throw new ConflictError(EMPLOYEE_MESSAGES.EMPLOYEE_ALREADY_EXISTS);
 
     const randomPassword = crypto.randomBytes(6).toString('hex');
     const hashedpassword = await bcrypt.hash(randomPassword, env.BCRYPT_SALT_ROUNDS);

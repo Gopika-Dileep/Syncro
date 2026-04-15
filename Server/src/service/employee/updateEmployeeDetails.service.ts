@@ -8,6 +8,8 @@ import { UpdateEmployeeRequestDTO, EmployeeResponseDTO } from '../../dto/employe
 import { EmployeeMapper } from '../../mappers/employee.mapper';
 import { PermissionMapper } from '../../mappers/permission.mapper';
 import { TYPES } from '../../di/types';
+import { NotFoundError } from '../../errors/AppError';
+import { EMPLOYEE_MESSAGES } from '../../constants/messages';
 import { parseDate } from '../../utils/parseDate.utils';
 
 @injectable()
@@ -33,7 +35,7 @@ export class UpdateEmployeeDetailsService implements IUpdateEmployeeDetailsServi
     const employeeEntity = EmployeeMapper.toUpdate(data, joiningDate, dateOfBirth);
 
     const updatedEmployee = await this._employeeRepo.updateOne({ user_id: userId }, { $set: employeeEntity });
-    if (!updatedEmployee) throw new Error('failed to update employee details');
+    if (!updatedEmployee) throw new NotFoundError(EMPLOYEE_MESSAGES.UPDATE_FAILED);
 
     return this._getEmployeeDetailsService.execute(userId);
   }
