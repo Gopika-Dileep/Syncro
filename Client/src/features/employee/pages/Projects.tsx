@@ -7,6 +7,7 @@ import axios from "axios";
 import { getProjectsApi, deleteProjectApi, type Project } from "@/features/employee/api/projectApi";
 import DataTable, { type Column } from "@/components/DataTable";
 import { usePermission } from "@/features/employee/hooks/usePermission";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // ─── Portal dropdown ─────────────────────────────────────────────────────────
 interface DropdownPos { top: number; right: number }
@@ -54,6 +55,7 @@ export default function Projects() {
     const [error, setError] = useState("");
 
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [page, setPage] = useState(1);
     const [openId, setOpenId] = useState<string | null>(null);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
@@ -131,7 +133,7 @@ export default function Projects() {
         }
     };
 
-    const filtered = projects.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filtered = projects.filter((p) => p.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
     const paginated = filtered.slice((page - 1) * limit, page * limit);
 
     const columns: Column<Project>[] = [

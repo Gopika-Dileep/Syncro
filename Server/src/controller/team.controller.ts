@@ -1,9 +1,11 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../middleware/permission.middleware';
 import { ICreateTeamService } from '../interfaces/services/team/ICreateTeamService';
 import { IGetTeamsService } from '../interfaces/services/team/IGetTeamsService';
 import { IUpdateTeamService } from '../interfaces/services/team/IUpdateTeamService';
 import { IDeleteTeamService } from '../interfaces/services/team/IDeleteTeamService';
+import { IGetTeamDirectoryService } from '../interfaces/services/team/IGetTeamDirectoryService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { TEAM_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
@@ -17,6 +19,7 @@ export class TeamController {
     @inject(TYPES.IGetTeamsService) private _getTeamsService: IGetTeamsService,
     @inject(TYPES.IUpdateTeamService) private _updateTeamService: IUpdateTeamService,
     @inject(TYPES.IDeleteTeamService) private _deleteTeamService: IDeleteTeamService,
+    @inject(TYPES.IGetTeamDirectoryService) private _getTeamDirectoryService: IGetTeamDirectoryService,
   ) {}
 
   createTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -60,6 +63,20 @@ export class TeamController {
       const { teamId } = req.params;
       await this._deleteTeamService.execute(teamId as string);
       res.status(HttpStatus.OK).json({ success: true, message: TEAM_MESSAGES.DELETE_SUCCESS });
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  getTeamDirectory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const directory = await this._getTeamDirectoryService.execute(authReq.userId!, authReq.permissions || []);
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data: directory,
+        message: TEAM_MESSAGES.FETCH_SUCCESS,
+      });
     } catch (error) {
       handleAsyncError(error, next);
     }

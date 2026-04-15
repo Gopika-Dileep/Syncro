@@ -5,23 +5,15 @@ import {
     Clock, 
     CheckCircle2, 
     Circle,
-    MoreVertical,
-    Plus,
-    X,
-    Layout,
     ArrowLeft,
     ArrowRight
 } from "lucide-react";
 import { 
     getProjectsApi, 
-    createProjectApi, 
-    updateProjectApi, 
-    deleteProjectApi, 
-    type Project, 
-    type ProjectFormData 
+    type Project
 } from "@/features/company/api/projectApi";
 import { toast } from "sonner";
-import axios from "axios";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const STATUS_COLUMNS = [
     { id: "Active", label: "Active", icon: Clock, color: "text-emerald-500", bg: "bg-emerald-500/10" },
@@ -29,103 +21,32 @@ const STATUS_COLUMNS = [
     { id: "Completed", label: "Completed", icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500/10" }
 ];
 
-const PRIORITIES = ["Low", "Medium", "High"];
-
 export default function Projects() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     
     // Pagination
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const limit = 50; // Kanban shows more
 
-    // Modal states
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [currentProject, setCurrentProject] = useState<Project | null>(null);
-    const [formData, setFormData] = useState<ProjectFormData>({
-        name: "",
-        description: "",
-        status: "Active",
-        priority: "Medium",
-        start_date: new Date().toISOString().split('T')[0],
-        target_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    });
-
     useEffect(() => {
         fetchProjects();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, searchTerm]);
+    }, [page, debouncedSearchTerm]);
 
     const fetchProjects = async () => {
         setLoading(true);
         try {
-            const response = await getProjectsApi(page, limit, searchTerm);
+            const response = await getProjectsApi(page, limit, debouncedSearchTerm);
             setProjects(response.data || []);
             setTotal(response.total || 0);
         } catch {
             toast.error("Failed to load projects");
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleOpenModal = (project?: Project) => {
-        if (project) {
-            setIsEditing(true);
-            setCurrentProject(project);
-            setFormData({
-                name: project.name,
-                description: project.description,
-                status: project.status,
-                priority: project.priority,
-                start_date: new Date(project.start_date).toISOString().split('T')[0],
-                target_date: new Date(project.target_date).toISOString().split('T')[0]
-            });
-        } else {
-            setIsEditing(false);
-            setCurrentProject(null);
-            setFormData({
-                name: "",
-                description: "",
-                status: "Active",
-                priority: "Medium",
-                start_date: new Date().toISOString().split('T')[0],
-                target_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-            });
-        }
-        setIsModalOpen(true);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            if (isEditing && currentProject) {
-                const res = await updateProjectApi(currentProject._id, formData);
-                toast.success(res.message || "Project updated");
-            } else {
-                const res = await createProjectApi(formData);
-                toast.success(res.message || "Project created");
-            }
-            setIsModalOpen(false);
-            fetchProjects();
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err)) {
-                toast.error(err.response?.data?.message || "Operation failed");
-            }
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this project?")) return;
-        try {
-            const res = await deleteProjectApi(id);
-            toast.success(res.message || "Project deleted");
-            fetchProjects();
-        } catch {
-            toast.error("Failed to delete project");
         }
     };
 
@@ -167,12 +88,6 @@ export default function Projects() {
                             onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                         />
                     </div>
-                    <button 
-                        onClick={() => handleOpenModal()}
-                        className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-lg shadow-primary/20"
-                    >
-                        <Plus size={16} /> New Project
-                    </button>
                 </div>
             </div>
 
@@ -207,25 +122,6 @@ export default function Projects() {
                                         <div className="flex justify-between items-start mb-3">
                                             <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getPriorityStyles(project.priority)}`}>
                                                 {project.priority}
-                                            </div>
-                                            <div className="relative group/menu">
-                                                <button className="text-muted-foreground hover:text-foreground p-1 transition-colors">
-                                                    <MoreVertical size={14} />
-                                                </button>
-                                                <div className="absolute right-0 top-full mt-1 hidden group-hover/menu:block z-20 w-36 bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
-                                                    <button 
-                                                        onClick={() => handleOpenModal(project)}
-                                                        className="w-full text-left px-4 py-2.5 text-[12px] font-medium hover:bg-secondary transition-colors"
-                                                    >
-                                                        Edit Project
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(project._id)}
-                                                        className="w-full text-left px-4 py-2.5 text-[12px] font-medium text-rose-500 hover:bg-rose-50 transition-colors"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
 
@@ -276,114 +172,6 @@ export default function Projects() {
                     >
                         <ArrowRight size={16} />
                     </button>
-                </div>
-            )}
-
-            {/* Project Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-border bg-secondary/10">
-                            <div>
-                                <h2 className="text-lg font-black text-foreground uppercase tracking-tight">
-                                    {isEditing ? "Project Configuration" : "New Initiative"}
-                                </h2>
-                                <p className="text-[11px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">
-                                    {isEditing ? "Modify existing project scope" : "Define the scope of your new workspace"}
-                                </p>
-                            </div>
-                            <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors">
-                                <X size={20} />
-                            </button>
-                        </div>
-                        
-                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Project Name</label>
-                                <input 
-                                    required
-                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-muted-foreground/50 transition-all"
-                                    value={formData.name}
-                                    onChange={e => setFormData({...formData, name: e.target.value})}
-                                    placeholder="e.g. Project Catalyst"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Strategic Description</label>
-                                <textarea 
-                                    required
-                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[100px] placeholder:text-muted-foreground/50 transition-all resize-none"
-                                    value={formData.description}
-                                    onChange={e => setFormData({...formData, description: e.target.value})}
-                                    placeholder="Outline the primary objectives and key results..."
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Priority Label</label>
-                                    <div className="relative">
-                                        <select 
-                                            className="w-full appearance-none bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                            value={formData.priority}
-                                            onChange={e => setFormData({...formData, priority: e.target.value})}
-                                        >
-                                            {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
-                                        </select>
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                                            <Layout size={14} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Pipeline Status</label>
-                                    <div className="relative">
-                                        <select 
-                                            className="w-full appearance-none bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                            value={formData.status}
-                                            onChange={e => setFormData({...formData, status: e.target.value})}
-                                        >
-                                            {STATUS_COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                                        </select>
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                                            <Clock size={14} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Commencement</label>
-                                    <input 
-                                        type="date"
-                                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                        value={formData.start_date}
-                                        onChange={e => setFormData({...formData, start_date: e.target.value})}
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Target Completion</label>
-                                    <input 
-                                        type="date"
-                                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                        value={formData.target_date}
-                                        onChange={e => setFormData({...formData, target_date: e.target.value})}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="pt-2">
-                                <button 
-                                    type="submit"
-                                    className="w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-black uppercase tracking-widest text-[12px] transition-all active:scale-[0.98] shadow-xl shadow-primary/20"
-                                >
-                                    {isEditing ? "Synchronize Changes" : "Deploy Project"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             )}
         </div>

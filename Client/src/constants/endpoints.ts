@@ -31,5 +31,9 @@ export const ENDPOINTS = {
         BASE: "/user-stories",
         BY_PROJECT: (projectId: string) => `/user-stories/project/${projectId}`,
         BY_ID: (id: string) => `/user-stories/${id}`,
+    },
+    TEAMS: {
+        BASE: "/teams",
+        DIRECTORY: "/teams/directory",
     }
 };

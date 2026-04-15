@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { getTeamsApi, createTeamApi, updateTeamApi, deleteTeamApi, type Team } from "@/features/company/api/companyApi";
 import DataTable, { type Column } from "@/components/DataTable";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const AVATAR_COLORS = ["#fa8029", "#60a5fa", "#34d399", "#a78bfa", "#f472b6", "#fbbf24"];
 const avatarColor = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -59,6 +60,7 @@ export default function Teams() {
 
     const [formError, setFormError] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [page, setPage] = useState(1);
     const [openId, setOpenId] = useState<string | null>(null);
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -138,7 +140,7 @@ export default function Teams() {
         setOpenId(teamId);
     };
 
-    const filtered = teams.filter((t) => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filtered = teams.filter((t) => t.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
     const paginated = filtered.slice((page - 1) * limit, page * limit);
 
     const columns: Column<Team>[] = [

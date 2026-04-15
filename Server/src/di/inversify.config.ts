@@ -25,10 +25,12 @@ import { ICreateTeamService } from '../interfaces/services/team/ICreateTeamServi
 import { IGetTeamsService } from '../interfaces/services/team/IGetTeamsService';
 import { IUpdateTeamService } from '../interfaces/services/team/IUpdateTeamService';
 import { IDeleteTeamService } from '../interfaces/services/team/IDeleteTeamService';
+import { IGetTeamDirectoryService } from '../interfaces/services/team/IGetTeamDirectoryService';
 import { CreateTeamService } from '../service/team/createTeam.service';
 import { GetTeamsService } from '../service/team/getTeams.service';
 import { UpdateTeamService } from '../service/team/updateTeam.service';
 import { DeleteTeamService } from '../service/team/deleteTeam.service';
+import { GetTeamDirectoryService } from '../service/team/getTeamDirectory.service';
 import { IGetProfileService } from '../interfaces/services/user/IGetProfileService';
 import { IChangePasswordService } from '../interfaces/services/user/IChangePasswordService';
 import { IUpdateUserProfileService } from '../interfaces/services/user/IUpdateUserProfileService';
@@ -100,6 +102,7 @@ container.bind<ICreateTeamService>(TYPES.ICreateTeamService).to(CreateTeamServic
 container.bind<IGetTeamsService>(TYPES.IGetTeamsService).to(GetTeamsService);
 container.bind<IUpdateTeamService>(TYPES.IUpdateTeamService).to(UpdateTeamService);
 container.bind<IDeleteTeamService>(TYPES.IDeleteTeamService).to(DeleteTeamService);
+container.bind<IGetTeamDirectoryService>(TYPES.IGetTeamDirectoryService).to(GetTeamDirectoryService);
 container.bind<IGetProfileService>(TYPES.IGetProfileService).to(GetProfileService);
 container.bind<IChangePasswordService>(TYPES.IChangePasswordService).to(ChangePasswordService);
 container.bind<IUpdateUserProfileService>(TYPES.IUpdateUserProfileService).to(UpdateUserProfileService);

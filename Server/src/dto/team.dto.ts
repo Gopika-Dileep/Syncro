@@ -25,3 +25,16 @@ export interface TeamResponseDTO {
   company_id: string;
   created_at?: string;
 }
+
+export interface MemberDTO {
+  _id: string;
+  name: string;
+  email: string;
+  designation?: string;
+}
+
+export interface TeamDirectoryDTO {
+  _id: string | 'unassigned';
+  name: string;
+  members: MemberDTO[];
+}
