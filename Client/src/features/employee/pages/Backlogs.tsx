@@ -106,7 +106,7 @@ export default function Backlogs() {
         try {
             const res = await getProjectsApi();
             setProjects(res.data || []);
-        } catch (err: any) {
+        } catch (err: unknown) {
             toast.error("Failed to fetch projects");
             console.error(err);
         } finally {
@@ -119,7 +119,7 @@ export default function Backlogs() {
         try {
             const res = await getUserStoriesByProjectApi(projectId);
             setStoriesConfig(prev => ({ ...prev, [projectId]: { data: res.data || [], loading: false } }));
-        } catch (err) {
+        } catch {
             toast.error("Failed to load user stories");
             setStoriesConfig(prev => ({ ...prev, [projectId]: { data: [], loading: false } }));
         }
@@ -172,7 +172,7 @@ export default function Backlogs() {
                 const pData = prev[storyToMarkReady.project_id].data.map(s => s._id === storyToMarkReady._id ? { ...s, status: "ready" } : s);
                 return { ...prev, [storyToMarkReady.project_id]: { ...prev[storyToMarkReady.project_id], data: pData } };
             });
-        } catch (err) {
+        } catch {
             toast.error("Failed to update status");
         } finally {
             setStoryToMarkReady(null);
@@ -185,7 +185,7 @@ export default function Backlogs() {
             await deleteUserStoryApi(storyToDelete._id);
             toast.success("User story deleted successfully.");
             fetchStoriesForProject(storyToDelete.project_id);
-        } catch (err) {
+        } catch {
             toast.error("Failed to delete user story");
         } finally {
             setStoryToDelete(null);
@@ -205,8 +205,9 @@ export default function Backlogs() {
             }
             setFormModalOpen(false);
             fetchStoriesForProject(selectedProjectId);
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to save user story");
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            toast.error(e.response?.data?.message || "Failed to save user story");
         } finally {
             setIsSubmitting(false);
         }
@@ -377,7 +378,7 @@ export default function Backlogs() {
                 isOpen={isFormModalOpen}
                 onClose={() => setFormModalOpen(false)}
                 onSubmit={handleFormSubmit}
-                initialData={selectedStory as any}
+                initialData={selectedStory as ModalStoryFormData}
                 isEditing={isEditing}
                 isSubmitting={isSubmitting}
             />
