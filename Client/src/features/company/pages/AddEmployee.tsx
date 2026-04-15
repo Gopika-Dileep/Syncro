@@ -60,16 +60,16 @@ export default function AddEmployee() {
                             // Deep merge to ensure newly added permission schema fields exist for older database records
                             setPermissions(() => {
                                 const merged = JSON.parse(JSON.stringify(initialPermissions));
-                                const mergeDefaults = (target: any, source: any) => {
+                                const mergeDefaults = (target: Record<string, unknown>, source: Record<string, unknown>) => {
                                     for (const key in source) {
                                         if (source[key] instanceof Object && !Array.isArray(source[key]) && target[key]) {
-                                            mergeDefaults(target[key], source[key]);
+                                            mergeDefaults(target[key] as Record<string, unknown>, source[key] as Record<string, unknown>);
                                         } else {
                                             target[key] = source[key];
                                         }
                                     }
                                 };
-                                mergeDefaults(merged, emp.permissions);
+                                mergeDefaults(merged as Record<string, unknown>, emp.permissions as Record<string, unknown>);
                                 return merged;
                             });
                         }
@@ -89,26 +89,32 @@ export default function AddEmployee() {
         fetchTeams();
     }, []);
 
-    const handlePermissionToggle = (module: keyof EmployeePermissions, field: string, subField?: string) => {
+    const handlePermissionToggle = <ModuleKey extends keyof EmployeePermissions, FieldKey extends keyof EmployeePermissions[ModuleKey]>(
+        module: ModuleKey,
+        field: FieldKey,
+        subField?: string
+    ) => {
         setPermissions((prev) => {
-            const updatedModule = { ...prev[module] } as Record<string, any>;
-            if (subField) {
-                const currentField = updatedModule[field] as Record<string, boolean>;
-                const newValue = !currentField[subField];
-                updatedModule[field] = { ...currentField, [subField]: newValue };
+            const moduleCopy = { ...prev[module] } as EmployeePermissions[ModuleKey];
+            const fieldValue = moduleCopy[field];
 
-                // Mutual exclusivity for scopes if needed
-                if (newValue) {
-                    if (subField === 'all' && 'team' in currentField) updatedModule[field].team = false;
-                    if (subField === 'team' && 'all' in currentField) updatedModule[field].all = false;
+            if (subField && typeof fieldValue === "object" && fieldValue !== null) {
+                const currentScope = { ...fieldValue } as Record<string, boolean>;
+                const updatedScope = { ...currentScope, [subField]: !currentScope[subField] };
 
-                    if (subField === 'all' && 'own' in currentField) updatedModule[field].own = false;
-                    if (subField === 'own' && 'all' in currentField) updatedModule[field].all = false;
+                if (updatedScope[subField]) {
+                    if (subField === 'all' && 'team' in currentScope) updatedScope.team = false;
+                    if (subField === 'team' && 'all' in currentScope) updatedScope.all = false;
+                    if (subField === 'all' && 'own' in currentScope) updatedScope.own = false;
+                    if (subField === 'own' && 'all' in currentScope) updatedScope.all = false;
                 }
-            } else {
-                updatedModule[field] = !updatedModule[field];
+
+                moduleCopy[field] = updatedScope as EmployeePermissions[ModuleKey][FieldKey];
+            } else if (typeof fieldValue === "boolean") {
+                moduleCopy[field] = (!fieldValue) as EmployeePermissions[ModuleKey][FieldKey];
             }
-            return { ...prev, [module]: updatedModule as EmployeePermissions[typeof module] };
+
+            return { ...prev, [module]: moduleCopy } as EmployeePermissions;
         });
     };
 

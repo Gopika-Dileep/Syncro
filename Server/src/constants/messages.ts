@@ -6,7 +6,15 @@ export const AUTH_MESSAGES = {
   OTP_RESEND_FAILED: 'Failed to resend OTP',
   LOGIN_SUCCESS: 'Login successful',
   LOGIN_FAILED: 'Login failed',
-  UNAUTHORIZED: 'Unauthorized',
+  USER_NOT_FOUND: 'User not found',
+  USER_NOT_VERIFIED: 'User is not verified',
+  ACCOUNT_BLOCKED: 'Your account has been blocked. Please contact support.',
+  INVALID_PASSWORD: 'Password is wrong',
+  INVALID_REFRESH_TOKEN: 'Invalid refresh token',
+  EMAIL_ALREADY_EXISTS: 'Email already exists',
+  INVALID_OR_EXPIRED_OTP: 'Invalid or expired OTP',
+  USER_ALREADY_VERIFIED: 'User is already verified',
+  INVALID_RESET_TOKEN: 'Invalid or expired reset token',
   REFRESH_FAILED: 'Token refresh failed',
   LOGGED_OUT: 'Logged out',
   FORGOT_PASSWORD_SUCCESS: 'A reset link has been sent to this mail',
@@ -15,7 +23,6 @@ export const AUTH_MESSAGES = {
   PASSWORD_UPDATED: 'Password updated successfully',
   INVALID_TOKEN: 'Invalid or expired token',
   NO_TOKEN: 'No token provided',
-  ACCOUNT_BLOCKED: 'Account is blocked. Access denied.',
   PASSWORD_CHANGE_SUCCESS: 'Password changed successfully',
   PASSWORD_CHANGE_FAILED: 'Failed to change password',
 };
@@ -29,6 +36,8 @@ export const EMPLOYEE_MESSAGES = {
   UPDATE_FAILED: 'Failed to update employee details',
   TOGGLE_BLOCK_SUCCESS: (isBlocked: boolean) => (isBlocked ? 'Employee blocked' : 'Employee unblocked'),
   NOT_FOUND: 'Employee not found',
+  COMPANY_NOT_FOUND: 'Company not found',
+  EMPLOYEE_ALREADY_EXISTS: 'Employee with this email already exists',
   USER_ID_REQUIRED: 'userId is required',
   FETCH_DATA_FAILED: 'Failed to get data',
 };
@@ -42,6 +51,9 @@ export const TEAM_MESSAGES = {
   UPDATE_FAILED: 'Failed to update team',
   DELETE_SUCCESS: 'Team deleted successfully',
   DELETE_FAILED: 'Failed to delete team',
+  COMPANY_NOT_FOUND: 'Company not found',
+  TEAM_NOT_FOUND: 'Team not found',
+  TEAM_ALREADY_EXISTS: 'This team already exists',
 };
 
 export const USER_MESSAGES = {
@@ -51,6 +63,8 @@ export const USER_MESSAGES = {
   PROFILE_UPDATE_FAILED: 'Failed to update profile',
   PASSWORD_CHANGE_SUCCESS: 'Password changed successfully',
   PASSWORD_CHANGE_FAILED: 'Failed to change password',
+  USER_NOT_FOUND: 'User not found',
+  CURRENT_PASSWORD_MISMATCH: "Current password doesn't match",
   ALL_FIELDS_REQUIRED: 'All fields are required',
 };
 
@@ -64,6 +78,7 @@ export const PROJECT_MESSAGES = {
   DELETE_SUCCESS: 'Project deleted successfully',
   DELETE_FAILED: 'Failed to delete project',
   NOT_FOUND: 'Project not found',
+  COMPANY_CONTEXT_NOT_FOUND: 'Company context not found',
 };
 
 export const USER_STORY_MESSAGES = {

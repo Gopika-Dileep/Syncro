@@ -71,7 +71,6 @@ export class PermissionMapper {
       if (p[moduleName] && action) {
         const module = p[moduleName] as unknown as NestedPermission;
         if (!scope) {
-          // It's a key like 'project:create' or 'project:update' (any)
           const field = module[action];
           if (typeof field === 'boolean') {
             module[action] = true;
@@ -79,7 +78,6 @@ export class PermissionMapper {
             (field as NestedPermission)['own'] = true;
           }
         } else {
-          // It's a key like 'project:view:all' or 'project:update:all'
           const field = module[action];
           if (typeof field === 'object' && field !== null) {
             (field as NestedPermission)[scope] = true;

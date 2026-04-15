@@ -8,48 +8,21 @@ import { validateRequest } from '../middleware/validation.middleware';
 import { CreateProjectRequestSchema, UpdateProjectRequestSchema, GetProjectsRequestSchema } from '../dto/project.dto';
 import { ENDPOINTS } from '../constants/endpoints';
 
-const router = Router();
 const projectController = container.get<ProjectController>(TYPES.ProjectController);
 
-router.use(authMiddleware);
+export class ProjectRouter {
+  public router: Router;
 
-// Define permissions more explicitly
-const CAN_CREATE = checkPermission('project:create');
-const CAN_UPDATE = checkPermission('project:update');
-const CAN_DELETE = checkPermission('project:delete');
-const CAN_VIEW = checkPermission('project:view:all');
+  constructor() {
+    this.router = Router();
+    this._initializeRoutes();
+  }
 
-router.post(
-  '/', 
-  CAN_CREATE, 
-  validateRequest(CreateProjectRequestSchema), 
-  projectController.createProject
-);
-
-router.get(
-  '/', 
-  CAN_VIEW, 
-  validateRequest(GetProjectsRequestSchema),
-  projectController.getProjects
-);
-
-router.get(
-  ENDPOINTS.PROJECTS.BY_PROJECT_ID, 
-  CAN_VIEW, 
-  projectController.getProjectById
-);
-
-router.put(
-  ENDPOINTS.PROJECTS.BY_PROJECT_ID, 
-  CAN_UPDATE, 
-  validateRequest(UpdateProjectRequestSchema), 
-  projectController.updateProject
-);
-
-router.delete(
-  ENDPOINTS.PROJECTS.BY_PROJECT_ID, 
-  CAN_DELETE, 
-  projectController.deleteProject
-);
-
-export default router;
+  private _initializeRoutes(): void {
+    this.router.post(ENDPOINTS.PROJECTS.ROOT, authMiddleware, checkPermission('project:create'), validateRequest(CreateProjectRequestSchema), projectController.createProject);
+    this.router.get(ENDPOINTS.PROJECTS.ROOT, authMiddleware, checkPermission('project:view:all'), validateRequest(GetProjectsRequestSchema), projectController.getProjects);
+    this.router.get(ENDPOINTS.PROJECTS.BY_PROJECT_ID, authMiddleware, checkPermission('project:view:all'), projectController.getProjectById);
+    this.router.put(ENDPOINTS.PROJECTS.BY_PROJECT_ID, authMiddleware, checkPermission('project:update'), validateRequest(UpdateProjectRequestSchema), projectController.updateProject);
+    this.router.delete(ENDPOINTS.PROJECTS.BY_PROJECT_ID, authMiddleware, checkPermission('project:delete'), projectController.deleteProject);
+  }
+}

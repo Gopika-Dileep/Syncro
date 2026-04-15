@@ -56,6 +56,7 @@ export default function Projects() {
 
     useEffect(() => {
         fetchProjects();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, searchTerm]);
 
     const fetchProjects = async () => {
@@ -64,7 +65,7 @@ export default function Projects() {
             const response = await getProjectsApi(page, limit, searchTerm);
             setProjects(response.data || []);
             setTotal(response.total || 0);
-        } catch (err: unknown) {
+        } catch {
             toast.error("Failed to load projects");
         } finally {
             setLoading(false);
@@ -123,7 +124,7 @@ export default function Projects() {
             const res = await deleteProjectApi(id);
             toast.success(res.message || "Project deleted");
             fetchProjects();
-        } catch (err: unknown) {
+        } catch {
             toast.error("Failed to delete project");
         }
     };

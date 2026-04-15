@@ -30,14 +30,14 @@ export class ProjectMapper {
       priority: data.priority,
       start_date: new Date(data.start_date),
       target_date: new Date(data.target_date),
-      company_id: new Types.ObjectId(companyId) as any,
+      company_id: new Types.ObjectId(companyId),
     };
   }
 
   static toUpdate(data: UpdateProjectRequestDTO): Partial<IProject> {
-    const update: any = { ...data };
+    const update: Record<string, unknown> = { ...data };
     if (data.start_date) update.start_date = new Date(data.start_date);
     if (data.target_date) update.target_date = new Date(data.target_date);
-    return update;
+    return update as Partial<IProject>;
   }
 }
