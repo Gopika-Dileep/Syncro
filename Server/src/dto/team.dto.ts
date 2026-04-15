@@ -8,6 +8,16 @@ export const CreateTeamRequestSchema = z.object({
 
 export type CreateTeamRequestDTO = z.infer<typeof CreateTeamRequestSchema>['body'];
 
+export const GetTeamsRequestSchema = z.object({
+  query: z.object({
+    page: z.preprocess((val) => Number(val) || 1, z.number().min(1)),
+    limit: z.preprocess((val) => Number(val) || 10, z.number().min(1)),
+    search: z.string().optional().default(''),
+  }),
+});
+
+export type GetTeamsRequestDTO = z.infer<typeof GetTeamsRequestSchema>['query'];
+
 export const UpdateTeamRequestSchema = z.object({
   params: z.object({
     teamId: z.string().min(1, 'Team ID is required'),
@@ -31,6 +41,19 @@ export interface MemberDTO {
   name: string;
   email: string;
   designation?: string;
+}
+
+export const GetTeamDirectoryRequestSchema = z.object({
+  query: z.object({
+    search: z.string().optional().default(''),
+  }),
+});
+
+export type GetTeamDirectoryRequestDTO = z.infer<typeof GetTeamDirectoryRequestSchema>['query'];
+
+export interface PaginatedTeamResponseDTO {
+  teams: TeamResponseDTO[];
+  total: number;
 }
 
 export interface TeamDirectoryDTO {

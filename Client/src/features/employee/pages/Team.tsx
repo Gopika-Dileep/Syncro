@@ -12,12 +12,12 @@ export default function Team() {
 
     useEffect(() => {
         fetchDirectory();
-    }, []);
+    }, [debouncedSearch]);
 
     const fetchDirectory = async () => {
         setFetching(true);
         try {
-            const res = await getTeamDirectoryApi();
+            const res = await getTeamDirectoryApi(debouncedSearch);
             setDirectory(res.data || []);
         } catch (err) {
             setError("Failed to load team data");
@@ -27,14 +27,6 @@ export default function Team() {
         }
     };
 
-    const filteredDirectory = directory.map(team => ({
-        ...team,
-        members: team.members.filter(m =>
-            m.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            m.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            (m.designation && m.designation.toLowerCase().includes(debouncedSearch.toLowerCase()))
-        )
-    })).filter(team => team.members.length > 0);
 
     if (fetching) {
         return (
@@ -75,7 +67,7 @@ export default function Team() {
 
             {/* Directory Lists */}
             <div className="flex flex-col gap-8">
-                {filteredDirectory.length === 0 ? (
+                {directory.length === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center text-center bg-white border border-[#ebebeb] rounded-3xl border-dashed">
                         <div className="w-16 h-16 bg-[#f7f7f7] rounded-full flex items-center justify-center text-[#ddd] mb-4">
                             <Users size={24} />
@@ -84,7 +76,7 @@ export default function Team() {
                         <p className="text-[13px] text-[#888] mt-1">Try adjusting your search criteria.</p>
                     </div>
                 ) : (
-                    filteredDirectory.map((team) => (
+                    directory.map((team) => (
                         <div key={team._id} className="flex flex-col gap-4">
                             <div className="flex items-center gap-3 px-2">
                                 <span className="w-1.5 h-6 bg-[#fa8029] rounded-full" />

@@ -111,8 +111,8 @@ export const createTeamApi = async (name: string): Promise<{ success: boolean; d
     return response.data
 };
 
-export const getTeamsApi = async (): Promise<{ success: boolean; data: Team[] }> => {
-    const response = await axiosInstance.get(ENDPOINTS.COMPANY.TEAMS);
+export const getTeamsApi = async (page: number = 1, limit: number = 10, search: string = ""): Promise<{ success: boolean; data: Team[]; total: number }> => {
+    const response = await axiosInstance.get(`${ENDPOINTS.COMPANY.TEAMS}?page=${page}&limit=${limit}&search=${search}`);
     return response.data;
 }
 

@@ -1,5 +1,5 @@
-import { TeamResponseDTO } from '../../../dto/team.dto';
+import { GetTeamsRequestDTO, PaginatedTeamResponseDTO } from '../../../dto/team.dto';
 
 export interface IGetTeamsService {
-  execute(userId: string): Promise<TeamResponseDTO[]>;
+  execute(userId: string, query: GetTeamsRequestDTO): Promise<PaginatedTeamResponseDTO>;
 }

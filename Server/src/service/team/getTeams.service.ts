@@ -2,7 +2,7 @@ import { injectable, inject } from 'inversify';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { ITeamRepository } from '../../interfaces/repositories/ITeamRepository';
 import { IGetTeamsService } from '../../interfaces/services/team/IGetTeamsService';
-import { TeamResponseDTO } from '../../dto/team.dto';
+import { GetTeamsRequestDTO, PaginatedTeamResponseDTO } from '../../dto/team.dto';
 import { TeamMapper } from '../../mappers/team.mapper';
 import { TYPES } from '../../di/types';
 import { NotFoundError } from '../../errors/AppError';
@@ -15,11 +15,14 @@ export class GetTeamsService implements IGetTeamsService {
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
   ) {}
 
-  async execute(userId: string): Promise<TeamResponseDTO[]> {
+  async execute(userId: string, query: GetTeamsRequestDTO): Promise<PaginatedTeamResponseDTO> {
     const company = await this._companyRepo.findOne({ user_id: userId });
     if (!company) throw new NotFoundError(TEAM_MESSAGES.COMPANY_NOT_FOUND);
 
-    const teams = await this._teamRepo.find({ company_id: company._id.toString() });
-    return TeamMapper.toResponseList(teams);
+    const { teams, total } = await this._teamRepo.getTeamsWithPagination(company._id.toString(), query.page, query.limit, query.search);
+    return {
+      teams: TeamMapper.toResponseList(teams),
+      total,
+    };
   }
 }

@@ -14,7 +14,7 @@ export interface TeamDirectory {
     members: TeamMember[];
 }
 
-export const getTeamDirectoryApi = async (): Promise<{ success: boolean; data: TeamDirectory[] }> => {
-    const response = await axiosInstance.get(ENDPOINTS.TEAMS.DIRECTORY);
+export const getTeamDirectoryApi = async (search: string = ""): Promise<{ success: boolean; data: TeamDirectory[] }> => {
+    const response = await axiosInstance.get(`${ENDPOINTS.TEAMS.DIRECTORY}?search=${search}`);
     return response.data;
 };

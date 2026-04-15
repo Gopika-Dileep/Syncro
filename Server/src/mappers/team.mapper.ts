@@ -15,7 +15,7 @@ export class TeamMapper {
   static toResponseList(teams: ITeam[]): TeamResponseDTO[] {
     return teams.map((team) => this.toResponseDTO(team));
   }
-  
+
   static toMemberDTO(emp: IPopulatedEmployee): MemberDTO {
     return {
       _id: emp._id.toString(),
@@ -29,7 +29,7 @@ export class TeamMapper {
     return {
       _id: teamId,
       name: teamName,
-      members: members.map(emp => this.toMemberDTO(emp)),
+      members: members.map((emp) => this.toMemberDTO(emp)),
     };
   }
 }
