@@ -7,17 +7,16 @@ import { env } from '../../config/env';
 import { AUTH_MESSAGES } from '../../constants/messages';
 import redis from '../../config/redis';
 import { IResetPasswordService } from '../../interfaces/services/auth/IResetPasswordService';
+import { BadRequestError } from '../../errors/AppError';
 
 @injectable()
 export class ResetPasswordService implements IResetPasswordService {
-  constructor(
-    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
-  ) {}
+  constructor(@inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository) {}
 
   async execute(data: ResetPasswordRequestDTO): Promise<{ message: string }> {
     const { token, newPassword } = data;
     const userId = await redis.get(`password_reset:${token}`);
-    if (!userId) throw new Error('Invalid or expired reset token');
+    if (!userId) throw new BadRequestError(AUTH_MESSAGES.INVALID_RESET_TOKEN);
 
     const hashed = await bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS);
     await this._authRepo.updateById(userId, { password: hashed });

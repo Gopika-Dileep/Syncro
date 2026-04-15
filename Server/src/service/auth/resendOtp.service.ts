@@ -8,18 +8,17 @@ import { AUTH_MESSAGES } from '../../constants/messages';
 import redis from '../../config/redis';
 import { sendOtpEmail } from '../../utils/email.utils';
 import { IResendOtpService } from '../../interfaces/services/auth/IResendOtpService';
+import { BadRequestError, NotFoundError } from '../../errors/AppError';
 
 @injectable()
 export class ResendOtpService implements IResendOtpService {
-  constructor(
-    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
-  ) {}
+  constructor(@inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository) {}
 
   async execute(data: ResendOtpRequestDTO): Promise<{ message: string }> {
     const { email } = data;
     const user = await this._authRepo.findOne({ email });
-    if (!user) throw new Error('User not found');
-    if (user.is_verified) throw new Error('user is already verified');
+    if (!user) throw new NotFoundError(AUTH_MESSAGES.USER_NOT_FOUND);
+    if (user.is_verified) throw new BadRequestError(AUTH_MESSAGES.USER_ALREADY_VERIFIED);
 
     const otp = crypto.randomInt(100000, 999999).toString();
     console.log('otp', otp);

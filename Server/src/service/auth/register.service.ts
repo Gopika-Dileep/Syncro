@@ -10,6 +10,7 @@ import { AUTH_MESSAGES } from '../../constants/messages';
 import redis from '../../config/redis';
 import { sendOtpEmail } from '../../utils/email.utils';
 import { IRegisterService } from '../../interfaces/services/auth/IRegisterService';
+import { ConflictError } from '../../errors/AppError';
 
 @injectable()
 export class RegisterService implements IRegisterService {
@@ -21,7 +22,7 @@ export class RegisterService implements IRegisterService {
   async execute(data: RegisterRequestDTO): Promise<{ message: string }> {
     const { name, email, password, companyName } = data;
     const existing = await this._authRepo.findOne({ email });
-    if (existing) throw new Error('email already exist');
+    if (existing) throw new ConflictError(AUTH_MESSAGES.EMAIL_ALREADY_EXISTS);
 
     const hashed = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
     const user = await this._authRepo.create({ name, email, password: hashed, role: 'company' });

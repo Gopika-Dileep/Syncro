@@ -9,6 +9,8 @@ import redis from '../../config/redis';
 import { AuthMapper } from '../../mappers/auth.mapper';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.utils';
 import { IVerifyOtpService } from '../../interfaces/services/auth/IVerifyOtpService';
+import { BadRequestError, ForbiddenError, NotFoundError } from '../../errors/AppError';
+import { AUTH_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class VerifyOtpService implements IVerifyOtpService {
@@ -23,13 +25,13 @@ export class VerifyOtpService implements IVerifyOtpService {
     const { email, otp } = data;
     const storedOtp = await redis.get(`otp:${email}`);
 
-    if (!storedOtp || storedOtp !== otp) throw new Error('Invalid or expired OTP');
+    if (!storedOtp || storedOtp !== otp) throw new BadRequestError(AUTH_MESSAGES.INVALID_OR_EXPIRED_OTP);
 
     const user = await this._authRepo.findOne({ email });
-    if (!user) throw new Error('User not found');
+    if (!user) throw new NotFoundError(AUTH_MESSAGES.USER_NOT_FOUND);
 
     await this._authRepo.updateById(user._id.toString(), { is_verified: true });
-    if (user.is_blocked) throw new Error('Your account has been blocked. Please contact support.');
+    if (user.is_blocked) throw new ForbiddenError(AUTH_MESSAGES.ACCOUNT_BLOCKED);
 
     let permissions: string[] = [];
     let designation: string | null = null;

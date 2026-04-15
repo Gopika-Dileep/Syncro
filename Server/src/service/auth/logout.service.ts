@@ -6,9 +6,7 @@ import { ILogoutService } from '../../interfaces/services/auth/ILogoutService';
 
 @injectable()
 export class LogoutService implements ILogoutService {
-  constructor(
-    @inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository,
-  ) {}
+  constructor(@inject(TYPES.IAuthRepository) private _authRepo: IAuthRepository) {}
 
   async execute(refreshToken: string): Promise<void> {
     const decoded = verifyRefreshToken(refreshToken);

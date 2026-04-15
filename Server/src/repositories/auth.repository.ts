@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { IAuthRepository } from '../interfaces/repositories/IAuthRepository';
 import { IUser, userModel } from '../models/user.model';
 import { BaseRepository } from './base.repository';
+import { NotFoundError } from '../errors/AppError';
 
 @injectable()
 export class AuthRepository extends BaseRepository<IUser> implements IAuthRepository {
@@ -11,7 +12,7 @@ export class AuthRepository extends BaseRepository<IUser> implements IAuthReposi
 
   async toggleBlockUser(userId: string): Promise<boolean> {
     const user = await this.findById(userId);
-    if (!user) throw new Error('user not found');
+    if (!user) throw new NotFoundError('User not found');
 
     const newStatus = !user.is_blocked;
     await this.updateById(userId, { is_blocked: newStatus });

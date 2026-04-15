@@ -8,6 +8,8 @@ import { TYPES } from '../../di/types';
 import { AuthMapper } from '../../mappers/auth.mapper';
 import { generateAccessToken, verifyRefreshToken } from '../../utils/token.utils';
 import { IRefreshService } from '../../interfaces/services/auth/IRefreshService';
+import { ForbiddenError, UnauthorizedError } from '../../errors/AppError';
+import { AUTH_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class RefreshService implements IRefreshService {
@@ -22,8 +24,8 @@ export class RefreshService implements IRefreshService {
     const decoded = verifyRefreshToken(refreshToken);
 
     const user = await this._authRepo.findById(decoded.id);
-    if (!user || user.refreshToken !== refreshToken) throw new Error('invalid refresh token');
-    if (user.is_blocked) throw new Error('Your account has been blocked. Please contact support.');
+    if (!user || user.refreshToken !== refreshToken) throw new UnauthorizedError(AUTH_MESSAGES.INVALID_REFRESH_TOKEN);
+    if (user.is_blocked) throw new ForbiddenError(AUTH_MESSAGES.ACCOUNT_BLOCKED);
 
     let permissions: string[] = [];
     let designation: string | null = null;

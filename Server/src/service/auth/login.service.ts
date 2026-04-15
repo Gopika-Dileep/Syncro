@@ -9,6 +9,8 @@ import { TYPES } from '../../di/types';
 import { AuthMapper } from '../../mappers/auth.mapper';
 import { generateAccessToken, generateRefreshToken } from '../../utils/token.utils';
 import { ILoginService } from '../../interfaces/services/auth/ILoginService';
+import { ForbiddenError, NotFoundError, UnauthorizedError } from '../../errors/AppError';
+import { AUTH_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class LoginService implements ILoginService {
@@ -22,12 +24,12 @@ export class LoginService implements ILoginService {
   async execute(data: LoginRequestDTO): Promise<AuthResponseDTO> {
     const { email, password } = data;
     const user = await this._authRepo.findOne({ email });
-    if (!user) throw new Error('user not found');
-    if (!user.is_verified) throw new Error('User is not verified');
-    if (user.is_blocked) throw new Error('Your account has been blocked. Please contact support.');
+    if (!user) throw new NotFoundError(AUTH_MESSAGES.USER_NOT_FOUND);
+    if (!user.is_verified) throw new ForbiddenError(AUTH_MESSAGES.USER_NOT_VERIFIED);
+    if (user.is_blocked) throw new ForbiddenError(AUTH_MESSAGES.ACCOUNT_BLOCKED);
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error('Password is wrong');
+    if (!isMatch) throw new UnauthorizedError(AUTH_MESSAGES.INVALID_PASSWORD);
 
     let permissions: string[] = [];
     let designation: string | null = null;

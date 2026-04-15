@@ -25,7 +25,7 @@ export class AuthController {
     @inject(TYPES.IRefreshService) private _refreshService: IRefreshService,
     @inject(TYPES.ILogoutService) private _logoutService: ILogoutService,
     @inject(TYPES.IForgotPasswordService) private _forgotPasswordService: IForgotPasswordService,
-    @inject(TYPES.IResetPasswordService) private _resetPasswordService: IResetPasswordService
+    @inject(TYPES.IResetPasswordService) private _resetPasswordService: IResetPasswordService,
   ) {}
 
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
