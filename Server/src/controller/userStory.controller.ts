@@ -18,7 +18,7 @@ export class UserStoryController {
     @inject(TYPES.IGetUserStoryByIdService) private _getUserStoryByIdService: IGetUserStoryByIdService,
     @inject(TYPES.IUpdateUserStoryService) private _updateUserStoryService: IUpdateUserStoryService,
     @inject(TYPES.IDeleteUserStoryService) private _deleteUserStoryService: IDeleteUserStoryService,
-  ) { }
+  ) {}
 
   createUserStory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

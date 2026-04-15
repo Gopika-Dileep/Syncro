@@ -8,6 +8,8 @@ import { UserMapper } from '../../mappers/user.mapper';
 import { ICompany } from '../../models/company.model';
 import { IPopulatedEmployee } from '../../models/employee.model';
 import { TYPES } from '../../di/types';
+import { NotFoundError } from '../../errors/AppError';
+import { USER_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class GetProfileService implements IGetProfileService {
@@ -19,7 +21,7 @@ export class GetProfileService implements IGetProfileService {
 
   async execute(userId: string): Promise<UserProfileResponseDTO> {
     const user = await this._authRepo.findById(userId);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new NotFoundError(USER_MESSAGES.USER_NOT_FOUND);
 
     let company: ICompany | null = null;
     let employee: IPopulatedEmployee | null = null;

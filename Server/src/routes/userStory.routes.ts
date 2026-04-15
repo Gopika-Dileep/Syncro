@@ -6,67 +6,23 @@ import { authMiddleware } from '../middleware/auth.middleware';
 import { checkPermission } from '../middleware/permission.middleware';
 import { validateRequest } from '../middleware/validation.middleware';
 import { CreateUserStoryRequestSchema, UpdateUserStoryRequestSchema } from '../dto/userStory.dto';
+import { ENDPOINTS } from '../constants/endpoints';
 
-const router = Router();
 const userStoryController = container.get<UserStoryController>(TYPES.UserStoryController);
 
-router.use(authMiddleware);
+export class UserStoryRouter {
+  public router: Router;
 
-// Get User Stories for a Project
-router.get(
-  '/project/:projectId',
-  (req, res, next) => {
-    if (req.userRole === 'company' || req.permissions?.includes('project:view:all') || req.permissions?.includes('project:create') || req.permissions?.includes('userStory:create') || req.permissions?.includes('userStory:view:all')) {
-      return next();
-    }
-    return checkPermission('project:view:all')(req, res, next);
-  },
-  userStoryController.getUserStoriesByProject,
-);
+  constructor() {
+    this.router = Router();
+    this._initializeRoutes();
+  }
 
-// Create User Story
-router.post(
-  '/',
-  checkPermission('userStory:create'),
-  validateRequest(CreateUserStoryRequestSchema),
-  userStoryController.createUserStory,
-);
-
-// Get specific User Story
-router.get(
-  '/:storyId',
-  (req, res, next) => {
-    if (req.userRole === 'company' || req.permissions?.includes('project:view:all') || req.permissions?.includes('project:create') || req.permissions?.includes('userStory:create') || req.permissions?.includes('userStory:view:all')) {
-      return next();
-    }
-    return checkPermission('project:view:all')(req, res, next);
-  },
-  userStoryController.getUserStoryById,
-);
-
-// Update User Story
-router.put(
-  '/:storyId',
-  (req, res, next) => {
-    if (req.userRole === 'company' || req.permissions?.includes('userStory:update') || req.permissions?.includes('userStory:update:all')) {
-      return next();
-    }
-    return checkPermission('userStory:update')(req, res, next);
-  },
-  validateRequest(UpdateUserStoryRequestSchema),
-  userStoryController.updateUserStory,
-);
-
-// Delete User Story
-router.delete(
-  '/:storyId',
-  (req, res, next) => {
-    if (req.userRole === 'company' || req.permissions?.includes('userStory:delete') || req.permissions?.includes('userStory:delete:all')) {
-      return next();
-    }
-    return checkPermission('userStory:delete')(req, res, next);
-  },
-  userStoryController.deleteUserStory,
-);
-
-export default router;
+  private _initializeRoutes(): void {
+    this.router.get(ENDPOINTS.USER_STORIES.BY_PROJECT, authMiddleware, checkPermission('userStory:view:all'), userStoryController.getUserStoriesByProject);
+    this.router.post(ENDPOINTS.USER_STORIES.ROOT, authMiddleware, checkPermission('userStory:create'), validateRequest(CreateUserStoryRequestSchema), userStoryController.createUserStory);
+    this.router.get(ENDPOINTS.USER_STORIES.BY_STORY_ID, authMiddleware, checkPermission('userStory:view:all'), userStoryController.getUserStoryById);
+    this.router.put(ENDPOINTS.USER_STORIES.BY_STORY_ID, authMiddleware, checkPermission('userStory:update'), validateRequest(UpdateUserStoryRequestSchema), userStoryController.updateUserStory);
+    this.router.delete(ENDPOINTS.USER_STORIES.BY_STORY_ID, authMiddleware, checkPermission('userStory:delete'), userStoryController.deleteUserStory);
+  }
+}
