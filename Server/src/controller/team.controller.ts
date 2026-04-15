@@ -8,6 +8,7 @@ import { HttpStatus } from '../enums/HttpStatus';
 import { TEAM_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
+import { UnauthorizedError } from '../errors/AppError';
 
 @injectable()
 export class TeamController {
@@ -35,7 +36,7 @@ export class TeamController {
   getTeams = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const companyId = req.userId;
-      if (!companyId) throw new Error(TEAM_MESSAGES.FETCH_FAILED);
+      if (!companyId) throw new UnauthorizedError(TEAM_MESSAGES.FETCH_FAILED);
       const teams = await this._getTeamsService.execute(companyId);
       res.status(HttpStatus.OK).json({ success: true, data: teams });
     } catch (error) {
