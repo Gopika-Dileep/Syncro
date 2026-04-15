@@ -10,6 +10,7 @@ import { errorMiddleware } from './middleware/error.middleware';
 
 import { ProjectRouter } from './routes/project.routes';
 import { UserStoryRouter } from './routes/userStory.routes';
+import { TeamRouter } from './routes/team.routes';
 export default class App {
   public app: Application;
   constructor() {
@@ -24,6 +25,7 @@ export default class App {
     this.app.use('/api/user', new UserRouter().router);
     this.app.use('/api/projects', new ProjectRouter().router);
     this.app.use('/api/user-stories', new UserStoryRouter().router);
+    this.app.use('/api/teams', new TeamRouter().router);
   }
   private _configureMiddleware(): void {
     this.app.use(morganMiddleware);

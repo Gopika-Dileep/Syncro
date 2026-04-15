@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { getTeamsApi, createTeamApi, updateTeamApi, deleteTeamApi, type Team } from "@/features/company/api/companyApi";
 import DataTable, { type Column } from "@/components/DataTable";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const AVATAR_COLORS = ["#fa8029", "#60a5fa", "#34d399", "#a78bfa", "#f472b6", "#fbbf24"];
 const avatarColor = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -59,20 +60,23 @@ export default function Teams() {
 
     const [formError, setFormError] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
     const [openId, setOpenId] = useState<string | null>(null);
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
     const limit = 8;
 
-    useEffect(() => { fetchTeams(); }, []);
+    useEffect(() => { fetchTeams(); }, [page, debouncedSearchTerm]);
 
     const fetchTeams = async () => {
         setFetching(true);
         try {
-            const response = await getTeamsApi();
+            const response = await getTeamsApi(page, limit, debouncedSearchTerm);
             setTeams(response.data);
+            setTotal(response.total);
         } catch (err: unknown) {
             setError("Failed to load teams");
             console.error(err);
@@ -138,8 +142,6 @@ export default function Teams() {
         setOpenId(teamId);
     };
 
-    const filtered = teams.filter((t) => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    const paginated = filtered.slice((page - 1) * limit, page * limit);
 
     const columns: Column<Team>[] = [
         {
@@ -202,7 +204,7 @@ export default function Teams() {
     return (
         <>
             <DataTable<Team>
-                rows={paginated}
+                rows={teams}
                 columns={columns}
                 keyExtractor={(t) => t._id}
                 title="Teams"
@@ -215,7 +217,7 @@ export default function Teams() {
                 loading={fetching}
                 error={error}
                 page={page}
-                totalRows={filtered.length}
+                totalRows={total}
                 limit={limit}
                 onPageChange={setPage}
                 emptyIcon={<Users size={18} className="text-[#ddd]" />}

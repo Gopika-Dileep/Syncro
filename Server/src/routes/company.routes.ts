@@ -7,7 +7,7 @@ import { authMiddleware } from '../middleware/auth.middleware';
 import { ENDPOINTS } from '../constants/endpoints';
 import { validateRequest } from '../middleware/validation.middleware';
 import { AddEmployeeRequestSchema, UpdateEmployeeRequestSchema, GetEmployeesRequestSchema } from '../dto/employee.dto';
-import { CreateTeamRequestSchema, UpdateTeamRequestSchema } from '../dto/team.dto';
+import { CreateTeamRequestSchema, UpdateTeamRequestSchema, GetTeamsRequestSchema } from '../dto/team.dto';
 
 const employeeController = container.get<EmployeeController>(TYPES.EmployeeController);
 const teamController = container.get<TeamController>(TYPES.TeamController);
@@ -27,7 +27,7 @@ export class CompanyRouter {
     this.router.get(ENDPOINTS.COMPANY.GET_EMPLOYEE_DETAILS, authMiddleware, employeeController.getEmployeeDetails);
     this.router.put(ENDPOINTS.COMPANY.UPDATE_EMPLOYEE_DETAILS, authMiddleware, validateRequest(UpdateEmployeeRequestSchema), employeeController.updateEmployeeDetails);
     this.router.post(ENDPOINTS.COMPANY.TEAMS, authMiddleware, validateRequest(CreateTeamRequestSchema), teamController.createTeam);
-    this.router.get(ENDPOINTS.COMPANY.TEAMS, authMiddleware, teamController.getTeams);
+    this.router.get(ENDPOINTS.COMPANY.TEAMS, authMiddleware, validateRequest(GetTeamsRequestSchema), teamController.getTeams);
     this.router.put(ENDPOINTS.COMPANY.UPDATE_TEAM, authMiddleware, validateRequest(UpdateTeamRequestSchema), teamController.updateTeam);
     this.router.delete(ENDPOINTS.COMPANY.DELETE_TEAM, authMiddleware, teamController.deleteTeam);
   }

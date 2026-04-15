@@ -22,8 +22,8 @@ export interface ProjectFormData {
     target_date: string;
 }
 
-export const getProjectsApi = async (): Promise<{ success: boolean; data: Project[] }> => {
-    const response = await axiosInstance.get(ENDPOINTS.PROJECTS.BASE);
+export const getProjectsApi = async (page: number = 1, limit: number = 10, search: string = ""): Promise<{ success: boolean; data: Project[]; total: number }> => {
+    const response = await axiosInstance.get(`${ENDPOINTS.PROJECTS.BASE}?page=${page}&limit=${limit}&search=${search}`);
     return response.data;
 };
 

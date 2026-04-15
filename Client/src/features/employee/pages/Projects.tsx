@@ -7,6 +7,7 @@ import axios from "axios";
 import { getProjectsApi, deleteProjectApi, type Project } from "@/features/employee/api/projectApi";
 import DataTable, { type Column } from "@/components/DataTable";
 import { usePermission } from "@/features/employee/hooks/usePermission";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // ─── Portal dropdown ─────────────────────────────────────────────────────────
 interface DropdownPos { top: number; right: number }
@@ -54,21 +55,24 @@ export default function Projects() {
     const [error, setError] = useState("");
 
     const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [page, setPage] = useState(1);
+    const [total, setTotal] = useState(0);
     const [openId, setOpenId] = useState<string | null>(null);
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
     const limit = 8;
 
-    useEffect(() => { fetchProjects(); }, []);
+    useEffect(() => { fetchProjects(); }, [page, debouncedSearchTerm]);
 
     const fetchProjects = async () => {
         setFetching(true);
         setError(""); 
         try {
-            const response = await getProjectsApi();
+            const response = await getProjectsApi(page, limit, debouncedSearchTerm);
             setProjects(response.data || []);
+            setTotal(response.total || 0);
             setError(""); // Ensure error is cleared on success
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -131,8 +135,6 @@ export default function Projects() {
         }
     };
 
-    const filtered = projects.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    const paginated = filtered.slice((page - 1) * limit, page * limit);
 
     const columns: Column<Project>[] = [
         {
@@ -213,7 +215,7 @@ export default function Projects() {
     return (
         <>
             <DataTable<Project>
-                rows={paginated}
+                rows={projects}
                 columns={columns}
                 keyExtractor={(p) => p._id}
                 title="Projects"
@@ -226,7 +228,7 @@ export default function Projects() {
                 loading={fetching}
                 error={error}
                 page={page}
-                totalRows={filtered.length}
+                totalRows={total}
                 limit={limit}
                 onPageChange={setPage}
                 emptyIcon={<FolderKanban size={18} className="text-[#ddd]" />}

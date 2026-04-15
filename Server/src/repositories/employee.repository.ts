@@ -65,4 +65,50 @@ export class EmployeeRepository extends BaseRepository<IEmployee> implements IEm
   async findByUserId(userId: string): Promise<IPopulatedEmployee | null> {
     return employeeModel.findOne({ user_id: userId }).populate('user_id', 'name email role created_at').populate('company_id', 'name').populate('team_id', 'name').lean() as unknown as IPopulatedEmployee;
   }
+
+  async getTeamDirectoryMembers(companyId: string, teamId: string | null, search: string): Promise<IPopulatedEmployee[]> {
+    const pipeline: PipelineStage[] = [{ $match: { company_id: new Types.ObjectId(companyId) } }];
+
+    if (teamId) {
+      pipeline.push({ $match: { team_id: new Types.ObjectId(teamId) } });
+    }
+
+    pipeline.push(
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+        },
+      },
+      { $unwind: '$user_id' },
+    );
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [{ 'user_id.name': { $regex: search, $options: 'i' } }, { 'user_id.email': { $regex: search, $options: 'i' } }, { designation: { $regex: search, $options: 'i' } }],
+        },
+      });
+    }
+
+    pipeline.push({
+      $lookup: {
+        from: 'teams',
+        localField: 'team_id',
+        foreignField: '_id',
+        as: 'team_id',
+      },
+    });
+
+    pipeline.push({
+      $unwind: {
+        path: '$team_id',
+        preserveNullAndEmptyArrays: true,
+      },
+    });
+
+    return (await employeeModel.aggregate(pipeline)) as IPopulatedEmployee[];
+  }
 }

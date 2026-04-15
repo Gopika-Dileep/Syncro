@@ -39,4 +39,8 @@ export const ENDPOINTS = {
     BY_PROJECT: '/project/:projectId',
     BY_STORY_ID: '/:storyId',
   },
+  TEAMS: {
+    BASE: '/teams',
+    DIRECTORY: '/directory',
+  },
 };

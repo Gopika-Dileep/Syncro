@@ -14,6 +14,7 @@ export const TYPES = {
   IGetTeamsService: Symbol.for('IGetTeamsService'),
   IUpdateTeamService: Symbol.for('IUpdateTeamService'),
   IDeleteTeamService: Symbol.for('IDeleteTeamService'),
+  IGetTeamDirectoryService: Symbol.for('IGetTeamDirectoryService'),
   IGetProfileService: Symbol.for('IGetProfileService'),
   IChangePasswordService: Symbol.for('IChangePasswordService'),
   IUpdateUserProfileService: Symbol.for('IUpdateUserProfileService'),

@@ -39,7 +39,7 @@ export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
             visible: hasModuleAccess('task')
         },
         {
-            label: "My Team",
+            label: "Team",
             path: "/employee/teams",
             icon: Users,
             visible: hasModuleAccess('team')

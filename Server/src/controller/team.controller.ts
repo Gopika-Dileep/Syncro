@@ -4,8 +4,10 @@ import { ICreateTeamService } from '../interfaces/services/team/ICreateTeamServi
 import { IGetTeamsService } from '../interfaces/services/team/IGetTeamsService';
 import { IUpdateTeamService } from '../interfaces/services/team/IUpdateTeamService';
 import { IDeleteTeamService } from '../interfaces/services/team/IDeleteTeamService';
+import { IGetTeamDirectoryService } from '../interfaces/services/team/IGetTeamDirectoryService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { TEAM_MESSAGES } from '../constants/messages';
+import { GetTeamsRequestDTO, GetTeamDirectoryRequestDTO } from '../dto/team.dto';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
 import { UnauthorizedError } from '../errors/AppError';
@@ -17,6 +19,7 @@ export class TeamController {
     @inject(TYPES.IGetTeamsService) private _getTeamsService: IGetTeamsService,
     @inject(TYPES.IUpdateTeamService) private _updateTeamService: IUpdateTeamService,
     @inject(TYPES.IDeleteTeamService) private _deleteTeamService: IDeleteTeamService,
+    @inject(TYPES.IGetTeamDirectoryService) private _getTeamDirectoryService: IGetTeamDirectoryService,
   ) {}
 
   createTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -35,10 +38,11 @@ export class TeamController {
 
   getTeams = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const companyId = req.userId;
-      if (!companyId) throw new UnauthorizedError(TEAM_MESSAGES.FETCH_FAILED);
-      const teams = await this._getTeamsService.execute(companyId);
-      res.status(HttpStatus.OK).json({ success: true, data: teams });
+      const userId = req.userId;
+      if (!userId) throw new UnauthorizedError(TEAM_MESSAGES.FETCH_FAILED);
+      const query = req.query as unknown as GetTeamsRequestDTO;
+      const { teams, total } = await this._getTeamsService.execute(userId, query);
+      res.status(HttpStatus.OK).json({ success: true, data: teams, total, page: query.page, limit: query.limit });
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -60,6 +64,20 @@ export class TeamController {
       const { teamId } = req.params;
       await this._deleteTeamService.execute(teamId as string);
       res.status(HttpStatus.OK).json({ success: true, message: TEAM_MESSAGES.DELETE_SUCCESS });
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  getTeamDirectory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const query = req.query as unknown as GetTeamDirectoryRequestDTO;
+      const directory = await this._getTeamDirectoryService.execute(req.userId!, req.permissions || [], query);
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data: directory,
+        message: TEAM_MESSAGES.FETCH_SUCCESS,
+      });
     } catch (error) {
       handleAsyncError(error, next);
     }
