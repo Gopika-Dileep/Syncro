@@ -24,11 +24,7 @@ export class TeamController {
 
   createTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.userId;
-      if (!userId) {
-        res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: TEAM_MESSAGES.CREATE_FAILED });
-        return;
-      }
+      const userId = req.userId!;
       const team = await this._createTeamService.execute(req.body.name, userId);
       res.status(HttpStatus.CREATED).json({ success: true, data: team, message: TEAM_MESSAGES.CREATE_SUCCESS });
     } catch (error) {
@@ -38,8 +34,7 @@ export class TeamController {
 
   getTeams = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.userId;
-      if (!userId) throw new UnauthorizedError(TEAM_MESSAGES.FETCH_FAILED);
+      const userId = req.userId!;
       const query = req.query as unknown as GetTeamsRequestDTO;
       const { teams, total } = await this._getTeamsService.execute(userId, query);
       res.status(HttpStatus.OK).json({ success: true, data: teams, total, page: query.page, limit: query.limit });

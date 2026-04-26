@@ -97,3 +97,30 @@ export const COMMON_MESSAGES = {
   INTERNAL_SERVER_ERROR: 'Internal server error',
   ACCESS_DENIED: (permission: string) => `Access denied. You don't have the permission: ${permission}`,
 };
+
+export const SPRINT_MESSAGES = {
+  CREATE_SUCCESS: 'Sprint created successfully',
+  CREATE_FAILED: 'Failed to create sprint',
+  FETCH_SUCCESS: 'sprint fetched successfully',
+  FETCH_FAILED: 'Failed to fetch sprint',
+  UPDATE_SUCCESS: 'sprint updated successfully',
+  UPDATE_FAILED: 'Failed to update sprint',
+  DELETE_SUCCESS: 'sprint deleted successfully',
+  DELETE_FAILED: 'Failed to delete sprint',
+  NOT_FOUND: 'Sprint not found',
+  COMPANY_CONTEXT_NOT_FOUND: 'Company context not found',
+};
+
+export const TASK_MESSAGES = {
+  CREATE_SUCCESS: 'Task created successfully',
+  CREATE_FAILED: 'Failed to create task',
+  FETCH_SUCCESS: 'Tasks fetched successfully',
+  FETCH_FAILED: 'Failed to fetch tasks',
+  UPDATE_SUCCESS: 'Task updated successfully',
+  UPDATE_FAILED: 'Failed to update task',
+  DELETE_SUCCESS: 'Task deleted successfully',
+  DELETE_FAILED: 'Failed to delete task',
+  ASSIGN_SUCCESS: 'Task assigned successfully',
+  NOT_FOUND: 'Task not found',
+};
+

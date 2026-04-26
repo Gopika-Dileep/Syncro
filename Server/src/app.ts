@@ -11,6 +11,8 @@ import { errorMiddleware } from './middleware/error.middleware';
 import { ProjectRouter } from './routes/project.routes';
 import { UserStoryRouter } from './routes/userStory.routes';
 import { TeamRouter } from './routes/team.routes';
+import { SprintRouter } from './routes/sprint.routes';
+import { TaskRouter } from './routes/task.routes';
 export default class App {
   public app: Application;
   constructor() {
@@ -26,6 +28,8 @@ export default class App {
     this.app.use('/api/projects', new ProjectRouter().router);
     this.app.use('/api/user-stories', new UserStoryRouter().router);
     this.app.use('/api/teams', new TeamRouter().router);
+    this.app.use('/api/sprints',new SprintRouter().router);
+    this.app.use('/api/tasks', new TaskRouter().router);
   }
   private _configureMiddleware(): void {
     this.app.use(morganMiddleware);

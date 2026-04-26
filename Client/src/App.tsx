@@ -24,8 +24,10 @@ import Teams from '@/features/company/pages/Teams'
 import GetEmployee from '@/features/company/pages/GetEmployee'
 import EmployeeProjects from '@/features/employee/pages/Projects'
 import AddProject from '@/features/employee/pages/AddProject'
-import Tasks from './features/employee/pages/Task'
+import Tasks from '@/features/employee/pages/Task'
 import Team from './features/employee/pages/Team'
+import SprintPlanning from '@/features/employee/pages/SprintPlanning'
+import SprintDetails from '@/features/employee/pages/SprintDetails'
 
 function App() {
   return (
@@ -55,7 +57,7 @@ function App() {
               <Route path='employees/edit/:userId' element={<AddEmployee />} />
               <Route path='projects' element={<Projects />} />
               <Route path='teams' element={<Teams />} />
-              <Route path='notifications' element={<Notifications />} />
+              <Route path='notification' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
             </Route>
             <Route
@@ -72,9 +74,11 @@ function App() {
               <Route path='projects/edit/:projectId' element={<AddProject />} />
               <Route path='backlogs' element={<Backlogs />} />
               <Route path='sprints' element={<Sprints />} />
+              <Route path='sprints/plan/:sprintId' element={<SprintPlanning />} />
+              <Route path='sprints/:sprintId' element={<SprintDetails />} />
               <Route path='tasks' element={<Tasks/>}/>
               <Route path='teams'  element={<Team/>}/>
-              <Route path='notifications' element={<Notifications />} />
+              <Route path='notification' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
             </Route>
           </Routes>

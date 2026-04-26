@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle } from "lucide-react";
+import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import { getProjectsApi, type Project } from "@/features/employee/api/projectApi";
@@ -13,6 +13,14 @@ import {
 } from "@/features/employee/api/userStoryApi";
 import UserStoryModal, { type StoryFormData as ModalStoryFormData } from "../components/UserStoryModal";
 import UserStoryDetailsModal from "../components/UserStoryDetailsModal";
+
+const TypeIcon = ({ type, size = 12 }: { type: string; size?: number }) => {
+    switch (type?.toLowerCase()) {
+        case 'bug': return <Bug size={size} className="text-rose-500" />;
+        case 'story': return <BookOpen size={size} className="text-emerald-500" />;
+        default: return <CheckSquare size={size} className="text-blue-500" />;
+    }
+};
 
 interface DropdownPos { top: number; right: number }
 
@@ -166,10 +174,10 @@ export default function Backlogs() {
     const confirmMarkReady = async () => {
         if (!storyToMarkReady) return;
         try {
-            await updateUserStoryApi(storyToMarkReady._id, { status: "ready" });
+            await updateUserStoryApi(storyToMarkReady._id, { status: "Ready" });
             toast.success("Story marked as ready!");
             setStoriesConfig(prev => {
-                const pData = prev[storyToMarkReady.project_id].data.map(s => s._id === storyToMarkReady._id ? { ...s, status: "ready" } : s);
+                const pData = prev[storyToMarkReady.project_id].data.map(s => s._id === storyToMarkReady._id ? { ...s, status: "Ready" } : s);
                 return { ...prev, [storyToMarkReady.project_id]: { ...prev[storyToMarkReady.project_id], data: pData } };
             });
         } catch {
@@ -217,7 +225,7 @@ export default function Backlogs() {
         switch (status.toLowerCase()) {
             case 'new': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'ready': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'in sprint': return 'bg-purple-50 text-purple-600 border-purple-100';
+            case 'to do': return 'bg-purple-50 text-purple-600 border-purple-100';
             default: return 'bg-slate-50 text-slate-600 border-slate-100';
         }
     };
@@ -252,15 +260,20 @@ export default function Backlogs() {
                         <div key={story._id} className="flex items-center justify-between p-3 bg-white border border-[#eaeaea] rounded-xl hover:shadow-sm transition-all group">
                             <div className="flex items-center gap-3">
                                 <GripVertical size={16} className="text-[#ddd] cursor-move" />
+                                <div className="p-1.5 bg-gray-50 rounded border border-gray-100">
+                                    <TypeIcon type={story.type} size={14} />
+                                </div>
                                 <div>
                                     <h4 className="text-[13px] font-bold text-[#1f2124]">{story.title}</h4>
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className={`px-2 py-[1px] rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusStyle(story.status)}`}>
                                             {story.status}
                                         </span>
-                                        <span className="text-[10px] uppercase font-bold text-[#888] bg-[#f5f5f5] px-1.5 py-0.5 rounded">
-                                            {story.story_points} points
-                                        </span>
+                                        {story.type === 'story' && (
+                                            <span className="text-[10px] uppercase font-bold text-[#888] bg-[#f5f5f5] px-1.5 py-0.5 rounded">
+                                                {story.story_points} points
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
