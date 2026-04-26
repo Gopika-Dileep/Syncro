@@ -30,10 +30,25 @@ export const ENDPOINTS = {
     USER_STORIES: {
         BASE: "/user-stories",
         BY_PROJECT: (projectId: string) => `/user-stories/project/${projectId}`,
+        BY_SPRINT: (sprintId: string) => `/user-stories/sprint/${sprintId}`,
         BY_ID: (id: string) => `/user-stories/${id}`,
+        ASSIGN: (id: string) => `/user-stories/${id}/assign`,
     },
     TEAMS: {
         BASE: "/teams",
         DIRECTORY: "/teams/directory",
-    }
+    },
+    SPRINTS: {
+        BASE: "/sprints",
+        BY_ID: (id: string) => `/sprints/${id}`,
+    },
+    TASKS: {
+        BASE: "/tasks",
+        BY_STORY: (storyId: string) => `/tasks/story/${storyId}`,
+        BY_ID: (id: string) => `/tasks/${id}`,
+        ASSIGN: (id: string) => `/tasks/${id}/assign`,
+        ASSIGNED: "/tasks/assigned",
+        TEAM: "/tasks/team",
+        ALL: "/tasks/all",
+    },
 };
