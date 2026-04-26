@@ -57,11 +57,17 @@ export default function Sprints() {
         return s.status.toLowerCase() === activeTab.toLowerCase();
     });
 
+    const completedSprints = sprints.filter(s => s.status.toLowerCase() === 'completed');
+    const totalCompletedPoints = completedSprints.reduce((acc, s) => acc + (s.completed_points || 0), 0);
+    const avgVelocity = completedSprints.length > 0 
+        ? Math.round(totalCompletedPoints / completedSprints.length) 
+        : 0;
+
     const stats = {
         active: sprints.filter(s => s.status.toLowerCase() === 'active').length,
         planned: sprints.filter(s => s.status.toLowerCase() === 'planned').length,
-        completed: sprints.filter(s => s.status.toLowerCase() === 'completed').length,
-        velocity: 38 // Placeholder for now
+        completed: completedSprints.length,
+        velocity: avgVelocity
     };
 
     const activeSprint = sprints.find(s => s.status.toLowerCase() === 'active');
@@ -69,50 +75,50 @@ export default function Sprints() {
     return (
         <div className="h-full flex flex-col bg-[#fdfdfd]">
             {/* Page Header */}
-            <div className="px-6 py-6 md:px-8 border-b border-[#f0f0f0] bg-white">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-7xl mx-auto">
+            <div className="px-5 py-4 md:px-6 border-b border-[#f0f0f0] bg-white">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-7xl mx-auto">
                     <div>
-                        <h1 className="text-[22px] font-black text-[#1f2124] tracking-tight">Sprint Management</h1>
-                        <p className="text-[12px] text-[#888] font-medium">Create sprints and plan story assignments</p>
+                        <h1 className="text-[20px] font-black text-[#1f2124] tracking-tight">Sprint Management</h1>
+                        <p className="text-[11px] text-[#888] font-medium">Create sprints and plan story assignments</p>
                     </div>
                     {can('sprint:create') && (
                         <button
                             onClick={() => { setEditingSprint(null); setModalOpen(true); }}
-                            className="flex items-center gap-2 px-6 py-3 bg-[#1f2124] text-white rounded-xl font-bold text-[13px] hover:bg-black transition-all shadow-md active:scale-95"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl font-bold text-[12px] hover:bg-black transition-all shadow-md active:scale-95"
                         >
-                            <Plus size={16} strokeWidth={3} /> New Sprint
+                            <Plus size={14} strokeWidth={3} /> New Sprint
                         </button>
                     )}
                 </div>
 
                 {/* Stat Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8 max-w-7xl mx-auto">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 max-w-7xl mx-auto">
                     {[
                         { label: "Active Sprint", val: activeSprint ? activeSprint.name : "None", icon: Rocket, color: "text-[#fa8029]", bg: "bg-[#fff5ef]" },
                         { label: "Planned Sprints", val: stats.planned, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
                         { label: "Completed Sprints", val: stats.completed, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
                         { label: "Avg Velocity", val: `${stats.velocity}`, icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50" }
                     ].map((card, i) => (
-                        <div key={i} className="bg-white border border-[#f0f0f0] p-4 rounded-2xl flex items-center gap-4 shadow-sm">
-                            <div className={`w-12 h-12 rounded-xl ${card.bg} ${card.color} flex items-center justify-center`}>
-                                <card.icon size={24} />
+                        <div key={i} className="bg-white border border-[#f0f0f0] p-3.5 rounded-2xl flex items-center gap-3.5 shadow-sm">
+                            <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.color} flex items-center justify-center`}>
+                                <card.icon size={20} />
                             </div>
                             <div>
-                                <p className="text-[11px] font-bold text-[#888] uppercase tracking-wide">{card.label}</p>
-                                <p className="text-[18px] font-black text-[#1f2124] leading-tight mt-0.5">{card.val}</p>
+                                <p className="text-[10px] font-bold text-[#888] uppercase tracking-wide">{card.label}</p>
+                                <p className="text-[16px] font-black text-[#1f2124] leading-tight mt-0.5">{card.val}</p>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar">
+            <div className="p-5 md:p-6 flex-1 overflow-y-auto custom-scrollbar">
                 <div className="max-w-7xl mx-auto space-y-8">
                     
                     {/* Highlight: Active Sprint */}
                     {activeSprint && (
-                        <div className="bg-white border-2 border-[#fa8029]/10 rounded-3xl p-6 shadow-xl shadow-[#fa8029]/5 relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-2 h-full bg-[#fa8029]" />
+                        <div className="bg-white border-2 border-[#fa8029]/10 rounded-3xl p-5 shadow-xl shadow-[#fa8029]/5 relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#fa8029]" />
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div className="flex items-start gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-[#fff5ef] flex items-center justify-center text-[#fa8029]">
@@ -120,37 +126,37 @@ export default function Sprints() {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-3">
-                                            <span className="bg-[#fff5ef] text-[#fa8029] px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-[#fa8029]/10 flex items-center gap-1">
+                                            <span className="bg-[#fff5ef] text-[#fa8029] px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border border-[#fa8029]/10 flex items-center gap-1">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-[#fa8029] animate-pulse" /> Active
                                             </span>
-                                            <h2 className="text-[20px] font-black text-[#1f2124]">{activeSprint.name}</h2>
+                                            <h2 className="text-[18px] font-black text-[#1f2124]">{activeSprint.name}</h2>
                                         </div>
-                                        <p className="text-[13px] text-[#888] mt-1 font-medium">{activeSprint.goal}</p>
-                                        <div className="flex items-center gap-6 mt-4">
-                                            <div className="text-[11px] font-bold text-[#666] flex items-center gap-2">
-                                                <Calendar size={14} className="text-[#aaa]" />
+                                        <p className="text-[12px] text-[#888] mt-1 font-medium">{activeSprint.goal}</p>
+                                        <div className="flex items-center gap-5 mt-3">
+                                            <div className="text-[10px] font-bold text-[#666] flex items-center gap-1.5">
+                                                <Calendar size={13} className="text-[#aaa]" />
                                                 {new Date(activeSprint.start_date).toLocaleDateString()} → {new Date(activeSprint.end_date).toLocaleDateString()}
                                             </div>
-                                            <div className="text-[11px] font-bold text-[#666] flex items-center gap-2">
-                                                <TrendingUp size={14} className="text-[#aaa]" />
+                                            <div className="text-[10px] font-bold text-[#666] flex items-center gap-1.5">
+                                                <TrendingUp size={13} className="text-[#aaa]" />
                                                 {activeSprint.committed_points ?? 0} / {activeSprint.total_points || 40} pts committed
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                     <button 
                                         onClick={() => navigate(`/employee/sprints/${activeSprint._id}`)}
-                                        className="flex items-center gap-2 px-6 py-3 bg-[#fdfdfd] border border-[#eee] text-[#555] rounded-xl font-bold text-[13px] hover:bg-white hover:shadow-sm transition-all shadow-sm"
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-[#fdfdfd] border border-[#eee] text-[#555] rounded-xl font-bold text-[12px] hover:bg-white hover:shadow-sm transition-all shadow-sm"
                                     >
-                                        <Eye size={16} /> View Details
+                                        <Eye size={15} /> View Details
                                     </button>
                                     {can('sprint:update') && (
                                         <button 
                                             onClick={() => handleStatusUpdate(activeSprint._id, 'Completed')}
-                                            className="flex items-center gap-2 px-6 py-3 bg-[#1f2124] text-white rounded-xl font-bold text-[13px] hover:bg-black transition-all shadow-lg active:scale-95"
+                                            className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl font-bold text-[12px] hover:bg-black transition-all shadow-lg active:scale-95"
                                         >
-                                            <CheckCircle2 size={16} /> Complete Sprint
+                                            <CheckCircle2 size={15} /> Complete Sprint
                                         </button>
                                     )}
                                 </div>
@@ -161,13 +167,13 @@ export default function Sprints() {
                     {/* All Sprints Section */}
                     <div>
                         {/* Tabs & Search */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                            <div className="flex items-center gap-2 bg-[#f0f0f0]/50 p-1 rounded-xl w-fit border border-[#eee]">
-                                {["All", "Planned", "Completed"].map((tab) => (
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+                            <div className="flex items-center gap-1.5 bg-[#f0f0f0]/50 p-1 rounded-xl w-fit border border-[#eee]">
+                                {["All", "Active", "Completed"].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab as "All" | "Planned" | "Active" | "Completed")}
-                                        className={`px-4 py-2 text-[12px] font-bold rounded-lg transition-all ${
+                                        className={`px-3.5 py-1.5 text-[11px] font-bold rounded-lg transition-all ${
                                             activeTab === tab ? "bg-white text-[#1f2124] shadow-sm" : "text-[#888] hover:text-[#555]"
                                         }`}
                                     >
@@ -196,9 +202,9 @@ export default function Sprints() {
                                 <p className="text-[12px] text-[#888] mt-1 italic">Try changing the filter or create a new one.</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2.5">
                                 {filteredSprints.map((sprint) => (
-                                    <div key={sprint._id} className="bg-white border border-[#f0f0f0] rounded-2xl p-5 hover:border-[#fa8029]/20 transition-all group shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                    <div key={sprint._id} className="bg-white border border-[#f0f0f0] rounded-2xl p-4 hover:border-[#fa8029]/20 transition-all group shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 
                                                 ${sprint.status.toLowerCase() === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>

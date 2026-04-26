@@ -16,6 +16,7 @@ function extractRef(ref: unknown): TaskPersonRef | null {
       name: (userObj.name as string) ?? '',
       avatar: userObj.avatar as string | undefined,
       designation: obj.designation as string | undefined,
+      team_name: (obj.team_id as any)?.name ?? undefined,
     };
   }
   // Populated Team ref: { _id, name }
@@ -70,8 +71,12 @@ export class TaskMapper {
       priority: issue.priority as unknown as TaskPriority,
       task_type: issue.type,
       assign_to: extractRef(i.assignee_id),
-      estimated_hours: issue.story_points, // Story points as estimate for board
+      estimated_hours: issue.story_points || 0, // Story points as estimate for board
       actual_hours: 0,
+      rework_reason: issue.rework_reason,
+      branch_name: issue.branch_name,
+      submission_link: issue.submission_link,
+      submission_description: issue.submission_description,
       created_at: issue.created_at.toISOString(),
       updated_at: issue.updated_at.toISOString(),
     };

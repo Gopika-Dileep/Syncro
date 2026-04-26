@@ -73,7 +73,7 @@ export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
                             onClick={onClose}
                             className={({ isActive }) =>
                                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${isActive
-                                    ? "bg-white/10 text-white"
+                                    ? "bg-[#fa8029] text-white shadow-lg shadow-orange-900/20"
                                     : "text-white/50 hover:bg-white/5 hover:text-white/80"
                                 }`
                             }

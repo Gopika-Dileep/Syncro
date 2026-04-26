@@ -13,13 +13,13 @@ interface ConfirmModalProps {
     type?: "danger" | "warning" | "info";
 }
 
-export default function ConfirmModal({ 
-    isOpen, 
-    onClose, 
-    onConfirm, 
-    title, 
-    message, 
-    confirmText = "Delete", 
+export default function ConfirmModal({
+    isOpen,
+    onClose,
+    onConfirm,
+    title,
+    message,
+    confirmText = "Delete",
     cancelText = "Cancel",
     type = "danger"
 }: ConfirmModalProps) {

@@ -10,6 +10,7 @@ export const TYPES = {
   IGetProjectByIdService: Symbol.for('IGetProjectByIdService'),
   IUpdateProjectService: Symbol.for('IUpdateProjectService'),
   IDeleteProjectService: Symbol.for('IDeleteProjectService'),
+  IGetProjectInsightsService: Symbol.for('IGetProjectInsightsService'),
   ICreateTeamService: Symbol.for('ICreateTeamService'),
   IGetTeamsService: Symbol.for('IGetTeamsService'),
   IUpdateTeamService: Symbol.for('IUpdateTeamService'),

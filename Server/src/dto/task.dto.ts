@@ -6,11 +6,11 @@ export const TaskBaseSchema = z.object({
   sprint_id: z.string().min(1, 'Sprint ID is required'),
   title: z.string().min(2, 'Title must be at least 2 characters'),
   description: z.string().optional(),
-  status: z.nativeEnum(TaskStatus).optional().default(TaskStatus.TODO),
-  priority: z.nativeEnum(TaskPriority).optional().default(TaskPriority.MEDIUM),
+  status: z.nativeEnum(TaskStatus).optional(),
+  priority: z.nativeEnum(TaskPriority).optional(),
   assign_to: z.string().nullable().optional(),
-  estimated_hours: z.number().min(0, 'Estimated hours must be non-negative').optional().default(0),
-  actual_hours: z.number().min(0, 'Actual hours must be non-negative').optional().default(0),
+  estimated_hours: z.number().min(0, 'Estimated hours must be non-negative').optional(),
+  actual_hours: z.number().min(0, 'Actual hours must be non-negative').optional(),
   rework_reason: z.string().optional(),
   branch_name: z.string().optional(),
   submission_link: z.string().url('Invalid submission link').optional().or(z.literal('')),
@@ -18,7 +18,12 @@ export const TaskBaseSchema = z.object({
 });
 
 export const CreateTaskRequestSchema = z.object({
-  body: TaskBaseSchema,
+  body: TaskBaseSchema.extend({
+    status: z.nativeEnum(TaskStatus).optional().default(TaskStatus.TODO),
+    priority: z.nativeEnum(TaskPriority).optional().default(TaskPriority.MEDIUM),
+    estimated_hours: z.number().optional().default(0),
+    actual_hours: z.number().optional().default(0),
+  }),
 });
 
 export const UpdateTaskRequestSchema = z.object({
@@ -46,6 +51,7 @@ export interface TaskPersonRef {
   name: string;
   avatar?: string;
   designation?: string;
+  team_name?: string;
 }
 
 export interface TaskResponseDTO {

@@ -46,11 +46,13 @@ import { IGetProjectsService } from '../interfaces/services/project/IGetProjects
 import { IGetProjectByIdService } from '../interfaces/services/project/IGetProjectByIdService';
 import { IUpdateProjectService } from '../interfaces/services/project/IUpdateProjectService';
 import { IDeleteProjectService } from '../interfaces/services/project/IDeleteProjectService';
+import { IGetProjectInsightsService } from '../interfaces/services/project/IGetProjectInsightsService';
 import { CreateProjectService } from '../service/project/createProject.service';
 import { GetProjectsService } from '../service/project/getProjects.service';
 import { GetProjectByIdService } from '../service/project/getProjectById.service';
 import { UpdateProjectService } from '../service/project/updateProject.service';
 import { DeleteProjectService } from '../service/project/deleteProject.service';
+import { GetProjectInsightsService } from '../service/project/getProjectInsights.service';
 import { TeamController } from '../controller/team.controller';
 import { UserController } from '../controller/user.controller';
 import { UserStoryRepository } from '../repositories/userStory.repository';
@@ -149,6 +151,7 @@ container.bind<IGetProjectsService>(TYPES.IGetProjectsService).to(GetProjectsSer
 container.bind<IGetProjectByIdService>(TYPES.IGetProjectByIdService).to(GetProjectByIdService);
 container.bind<IUpdateProjectService>(TYPES.IUpdateProjectService).to(UpdateProjectService);
 container.bind<IDeleteProjectService>(TYPES.IDeleteProjectService).to(DeleteProjectService);
+container.bind<IGetProjectInsightsService>(TYPES.IGetProjectInsightsService).to(GetProjectInsightsService);
 container.bind<ICreateUserStoryService>(TYPES.ICreateUserStoryService).to(CreateUserStoryService);
 container.bind<IGetUserStoriesByProjectService>(TYPES.IGetUserStoriesByProjectService).to(GetUserStoriesByProjectService);
 container.bind<IGetUserStoriesBySprintService>(TYPES.IGetUserStoriesBySprintService).to(GetUserStoriesBySprintService);

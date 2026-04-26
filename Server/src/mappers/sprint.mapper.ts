@@ -3,7 +3,7 @@ import { SprintResponseDTO, CreateSprintRequestDTO } from '../dto/sprint.dto';
 import { Types } from 'mongoose';
 
 export class SprintMapper {
-  static toResponseDTO(sprint: ISprint, committedPoints: number = 0, itemCount: number = 0): SprintResponseDTO {
+  static toResponseDTO(sprint: ISprint, committedPoints: number = 0, itemCount: number = 0, completedPoints: number = 0): SprintResponseDTO {
     return {
       _id: (sprint._id as Types.ObjectId).toString(),
       company_id: sprint.company_id.toString(),
@@ -13,6 +13,7 @@ export class SprintMapper {
       goal: sprint.goal,
       total_points: sprint.total_points,
       committed_points: committedPoints,
+      completed_points: completedPoints,
       item_count: itemCount,
       status: sprint.status,
       start_date: sprint.start_date.toISOString(),

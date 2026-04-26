@@ -7,6 +7,7 @@ export interface IProject extends Document {
   status: ProjectStatus;
   priority: ProjectPriority;
   company_id: mongoose.Types.ObjectId;
+  created_by: mongoose.Types.ObjectId;
   start_date: Date;
   target_date: Date;
   created_at: Date;
@@ -39,6 +40,10 @@ const projectSchema = new Schema<IProject>(
       type: Schema.Types.ObjectId,
       ref: 'Company',
       required: true,
+    },
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: 'Employee',
     },
     start_date: {
       type: Date,

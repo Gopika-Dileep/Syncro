@@ -5,6 +5,7 @@ import { IGetProjectsService } from '../interfaces/services/project/IGetProjects
 import { IGetProjectByIdService } from '../interfaces/services/project/IGetProjectByIdService';
 import { IUpdateProjectService } from '../interfaces/services/project/IUpdateProjectService';
 import { IDeleteProjectService } from '../interfaces/services/project/IDeleteProjectService';
+import { IGetProjectInsightsService } from '../interfaces/services/project/IGetProjectInsightsService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
@@ -19,6 +20,7 @@ export class ProjectController {
     @inject(TYPES.IGetProjectByIdService) private _getProjectByIdService: IGetProjectByIdService,
     @inject(TYPES.IUpdateProjectService) private _updateProjectService: IUpdateProjectService,
     @inject(TYPES.IDeleteProjectService) private _deleteProjectService: IDeleteProjectService,
+    @inject(TYPES.IGetProjectInsightsService) private _getProjectInsightsService: IGetProjectInsightsService,
   ) {}
 
   createProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -85,6 +87,20 @@ export class ProjectController {
       res.status(HttpStatus.OK).json({
         success: true,
         data: project,
+        message: PROJECT_MESSAGES.FETCH_SUCCESS,
+      });
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  getProjectInsights = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { projectId } = req.params;
+      const insights = await this._getProjectInsightsService.execute(projectId as string);
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data: insights,
         message: PROJECT_MESSAGES.FETCH_SUCCESS,
       });
     } catch (error) {

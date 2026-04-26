@@ -11,7 +11,7 @@ export class UserStoryRepository extends BaseRepository<IUserStory> implements I
 
   async findAllByProjectId(projectId: string): Promise<IUserStory[]> {
     return await this._model.find({ project_id: projectId })
-      .populate({ path: 'assignee_id', populate: { path: 'user_id' } })
+      .populate({ path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] })
       .populate({ path: 'created_by', populate: { path: 'user_id' } })
       .populate({ path: 'assigned_by', populate: { path: 'user_id' } })
       .sort({ created_at: -1 }).exec();
@@ -19,7 +19,7 @@ export class UserStoryRepository extends BaseRepository<IUserStory> implements I
 
   async findAllBySprintIds(sprintIds: string[]): Promise<IUserStory[]> {
     return await this._model.find({ sprint_id: { $in: sprintIds } })
-      .populate({ path: 'assignee_id', populate: { path: 'user_id' } })
+      .populate({ path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] })
       .populate({ path: 'created_by', populate: { path: 'user_id' } })
       .populate({ path: 'assigned_by', populate: { path: 'user_id' } })
       .exec();
@@ -27,7 +27,7 @@ export class UserStoryRepository extends BaseRepository<IUserStory> implements I
 
   async findPopulated(filter: Record<string, unknown>): Promise<IUserStory[]> {
     return await this._model.find(filter)
-      .populate({ path: 'assignee_id', populate: { path: 'user_id' } })
+      .populate({ path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] })
       .populate({ path: 'created_by', populate: { path: 'user_id' } })
       .populate({ path: 'assigned_by', populate: { path: 'user_id' } })
       .exec();

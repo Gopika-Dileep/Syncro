@@ -16,6 +16,7 @@ import Projects from '@/features/company/pages/Projects'
 import Notifications from '@/features/company/pages/Notifications'
 import Settings from '@/features/company/pages/Settings'
 import AddEmployee from '@/features/company/pages/AddEmployee'
+import ProjectDetails from '@/features/company/pages/ProjectDetails'
 import EmployeeLayout from './layouts/EmployeeLayout'
 import EmployeeDashboard from '@/features/employee/pages/EmployeeDashboard'
 import Sprints from '@/features/employee/pages/Sprints'
@@ -56,6 +57,7 @@ function App() {
               <Route path='employees/add' element={<AddEmployee />} />
               <Route path='employees/edit/:userId' element={<AddEmployee />} />
               <Route path='projects' element={<Projects />} />
+              <Route path='projects/:projectId' element={<ProjectDetails />} />
               <Route path='teams' element={<Teams />} />
               <Route path='notification' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />

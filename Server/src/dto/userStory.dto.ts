@@ -16,6 +16,10 @@ export const UserStoryBaseSchema = z.object({
   priority: z.nativeEnum(UserStoryPriority),
   status: z.nativeEnum(UserStoryStatus).optional(),
   type: z.nativeEnum(IssueType).optional(),
+  rework_reason: z.string().optional(),
+  branch_name: z.string().optional(),
+  submission_link: z.string().optional(),
+  submission_description: z.string().optional(),
 });
 
 export const CreateUserStoryRequestSchema = z.object({
@@ -63,6 +67,10 @@ export interface UserStoryResponseDTO {
     name: string;
     designation: string;
   };
+  team?: {
+    _id: string;
+    name: string;
+  };
   parent_id?: string;
   title: string;
   description?: string;
@@ -73,6 +81,10 @@ export interface UserStoryResponseDTO {
   priority: UserStoryPriority;
   status: UserStoryStatus;
   type: IssueType;
+  rework_reason?: string;
+  branch_name?: string;
+  submission_link?: string;
+  submission_description?: string;
   created_at: string;
   updated_at: string;
 }

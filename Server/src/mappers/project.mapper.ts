@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 
 export class ProjectMapper {
   static toResponseDTO(project: IProject): ProjectResponseDTO {
+    const creator = project.created_by as any;
     return {
       _id: (project._id as Types.ObjectId).toString(),
       name: project.name,
@@ -15,6 +16,11 @@ export class ProjectMapper {
       target_date: project.target_date.toISOString(),
       created_at: project.created_at.toISOString(),
       updated_at: project.updated_at.toISOString(),
+      created_by: creator && creator.user_id ? {
+        _id: creator._id.toString(),
+        name: creator.user_id.name || 'Unknown',
+        avatar: creator.user_id.avatar
+      } : undefined
     };
   }
 
@@ -22,7 +28,7 @@ export class ProjectMapper {
     return projects.map((project) => this.toResponseDTO(project));
   }
 
-  static toCreate(data: CreateProjectRequestDTO, companyId: string): Partial<IProject> {
+  static toCreate(data: CreateProjectRequestDTO, companyId: string, createdBy: string): Partial<IProject> {
     return {
       name: data.name,
       description: data.description,
@@ -31,6 +37,7 @@ export class ProjectMapper {
       start_date: new Date(data.start_date),
       target_date: new Date(data.target_date),
       company_id: new Types.ObjectId(companyId),
+      created_by: new Types.ObjectId(createdBy)
     };
   }
 

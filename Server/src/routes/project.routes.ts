@@ -28,6 +28,7 @@ export class ProjectRouter {
       projectController.getProjects,
     );
     this.router.get(ENDPOINTS.PROJECTS.BY_PROJECT_ID, authMiddleware, checkPermission('project:view:all'), projectController.getProjectById);
+    this.router.get(`${ENDPOINTS.PROJECTS.BY_PROJECT_ID}/insights`, authMiddleware, checkPermission('project:view:all'), projectController.getProjectInsights);
     this.router.put(ENDPOINTS.PROJECTS.BY_PROJECT_ID, authMiddleware, checkPermission('project:update'), validateRequest(UpdateProjectRequestSchema), projectController.updateProject);
     this.router.delete(ENDPOINTS.PROJECTS.BY_PROJECT_ID, authMiddleware, checkPermission('project:delete'), projectController.deleteProject);
   }

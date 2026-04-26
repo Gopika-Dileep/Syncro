@@ -18,6 +18,10 @@ export interface IUserStory extends Document {
   priority: UserStoryPriority;
   status: UserStoryStatus;
   type: IssueType;
+  rework_reason?: string;
+  branch_name?: string;
+  submission_link?: string;
+  submission_description?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -100,6 +104,22 @@ const userStorySchema = new Schema<IUserStory>(
       enum: Object.values(IssueType),
       required: true,
       default: IssueType.STORY,
+    },
+    rework_reason: {
+      type: String,
+      required: false,
+    },
+    branch_name: {
+      type: String,
+      required: false,
+    },
+    submission_link: {
+      type: String,
+      required: false,
+    },
+    submission_description: {
+      type: String,
+      required: false,
     },
   },
   {

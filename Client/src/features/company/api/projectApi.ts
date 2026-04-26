@@ -11,6 +11,11 @@ export interface Project {
     target_date: string;
     created_at: string;
     updated_at: string;
+    created_by?: {
+        _id: string;
+        name: string;
+        avatar?: string;
+    };
 }
 
 export interface ProjectFormData {
@@ -55,5 +60,43 @@ export const updateProjectApi = async (id: string, data: Partial<ProjectFormData
 
 export const deleteProjectApi = async (id: string): Promise<{ success: boolean; message: string }> => {
     const response = await axiosInstance.delete(ENDPOINTS.PROJECTS.BY_ID(id));
+    return response.data;
+};
+
+export interface ProjectInsights {
+    project: Project;
+    stats: {
+        total_stories: number;
+        total_tasks: number;
+        total_bugs: number;
+        completed_points: number;
+        total_points: number;
+    };
+    team: {
+        _id: string;
+        name: string;
+        role: string;
+        avatar?: string;
+    }[];
+    stories: {
+        _id: string;
+        title: string;
+        type: string;
+        status: string;
+        priority: string;
+        assign_to?: { _id: string; name: string; avatar?: string };
+        team?: { _id: string; name: string };
+    }[];
+    tasks: {
+        _id: string;
+        title: string;
+        status: string;
+        user_story_id: string;
+        assign_to?: { _id: string; name: string; avatar?: string; team_name?: string };
+    }[];
+}
+
+export const getProjectInsightsApi = async (projectId: string): Promise<{ success: boolean; data: ProjectInsights }> => {
+    const response = await axiosInstance.get(`${ENDPOINTS.PROJECTS.BASE}/${projectId}/insights`);
     return response.data;
 };

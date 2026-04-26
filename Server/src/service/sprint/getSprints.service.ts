@@ -41,19 +41,22 @@ export class GetSprintsService implements IGetSprintsService {
     const statsMap = stories.reduce((acc, story) => {
         const sid = story.sprint_id?.toString();
         if (sid) {
-            if (!acc[sid]) acc[sid] = { points: 0, count: 0 };
+            if (!acc[sid]) acc[sid] = { points: 0, count: 0, completed: 0 };
             acc[sid].points += (story.story_points || 0);
             acc[sid].count += 1;
+            if (story.status === 'Done') {
+                acc[sid].completed += (story.story_points || 0);
+            }
         }
         return acc;
-    }, {} as Record<string, { points: number, count: number }>);
+    }, {} as Record<string, { points: number, count: number, completed: number }>);
 
     return {
       message: SPRINT_MESSAGES.FETCH_SUCCESS,
       data: {
         sprints: sprints.map(s => {
-            const stats = statsMap[s._id.toString()] || { points: 0, count: 0 };
-            return SprintMapper.toResponseDTO(s, stats.points, stats.count);
+            const stats = statsMap[s._id.toString()] || { points: 0, count: 0, completed: 0 };
+            return SprintMapper.toResponseDTO(s, stats.points, stats.count, stats.completed);
         }),
         total,
       },

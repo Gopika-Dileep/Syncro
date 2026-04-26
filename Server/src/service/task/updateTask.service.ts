@@ -77,6 +77,11 @@ export class UpdateTaskService implements IUpdateTaskService {
     if (data.description) issueUpdate.description = data.description;
     if (data.assign_to) issueUpdate.assignee_id = data.assign_to;
     if (assignerId) issueUpdate.assigned_by = assignerId;
+    if (data.estimated_hours !== undefined) issueUpdate.story_points = data.estimated_hours;
+    if (data.rework_reason) issueUpdate.rework_reason = data.rework_reason;
+    if (data.branch_name) issueUpdate.branch_name = data.branch_name;
+    if (data.submission_link) issueUpdate.submission_link = data.submission_link;
+    if (data.submission_description) issueUpdate.submission_description = data.submission_description;
 
     const issue = await this._userStoryRepository.updateById(taskId, issueUpdate);
     if (issue) {

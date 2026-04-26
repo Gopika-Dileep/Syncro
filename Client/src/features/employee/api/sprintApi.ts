@@ -10,6 +10,7 @@ export interface Sprint {
     goal: string;
     total_points: number;
     committed_points?: number; 
+    completed_points?: number;
     item_count?: number;
     status: string;
     start_date: string;

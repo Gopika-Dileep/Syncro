@@ -29,6 +29,10 @@ export class UserStoryMapper {
       created_by: extractEmployee(s.created_by),
       assigned_by: extractEmployee(s.assigned_by),
       parent_id: story.parent_id?.toString(),
+      team: (s.assignee_id as any)?.team_id ? {
+          _id: (s.assignee_id as any).team_id._id?.toString(),
+          name: (s.assignee_id as any).team_id.name || ''
+      } : undefined,
       title: story.title,
       description: story.description,
       reproduction_steps: story.reproduction_steps,
