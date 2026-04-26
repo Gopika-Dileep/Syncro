@@ -1,13 +1,23 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { UserStoryStatus, UserStoryPriority } from '../enums/UserStoryEnums';
+import { UserStoryStatus, UserStoryPriority, IssueType } from '../enums/UserStoryEnums';
 
 export interface IUserStory extends Document {
   project_id: mongoose.Types.ObjectId;
+  company_id: mongoose.Types.ObjectId;
+  sprint_id?: mongoose.Types.ObjectId;
+  assignee_id?: mongoose.Types.ObjectId;
+  parent_id?: mongoose.Types.ObjectId;
+  created_by: mongoose.Types.ObjectId;
+  assigned_by?: mongoose.Types.ObjectId;
   title: string;
-  criteria: string[];
+  description?: string;
+  reproduction_steps?: string; // For Bugs
+  environment?: string;        // For Bugs
+  criteria: string[];          // For Stories
   story_points: number;
   priority: UserStoryPriority;
   status: UserStoryStatus;
+  type: IssueType;
   created_at: Date;
   updated_at: Date;
 }
@@ -19,19 +29,59 @@ const userStorySchema = new Schema<IUserStory>(
       ref: 'Project',
       required: true,
     },
+    company_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+    },
+    sprint_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Sprint',
+      required: false,
+    },
+    assignee_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'Employee',
+      required: false,
+    },
+    parent_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'UserStory',
+      required: false,
+    },
+    created_by: {
+      type: Schema.Types.ObjectId,
+      ref: 'Employee',
+      required: false,
+    },
+    assigned_by: {
+      type: Schema.Types.ObjectId,
+      ref: 'Employee',
+      required: false,
+    },
     title: {
       type: String,
       required: true,
     },
-    criteria: [
-      {
-        type: String,
-        required: true,
-      },
-    ],
+    description: {
+      type: String,
+      required: false,
+    },
+    reproduction_steps: {
+      type: String,
+      required: false,
+    },
+    environment: {
+      type: String,
+      required: false,
+    },
+    criteria: {
+      type: [String],
+      default: [],
+    },
     story_points: {
       type: Number,
-      required: true,
+      default: 0,
     },
     priority: {
       type: String,
@@ -43,7 +93,13 @@ const userStorySchema = new Schema<IUserStory>(
       type: String,
       enum: Object.values(UserStoryStatus),
       required: true,
-      default: UserStoryStatus.NEW,
+      default: UserStoryStatus.TODO,
+    },
+    type: {
+      type: String,
+      enum: Object.values(IssueType),
+      required: true,
+      default: IssueType.STORY,
     },
   },
   {

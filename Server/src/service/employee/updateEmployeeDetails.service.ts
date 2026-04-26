@@ -1,4 +1,5 @@
 import { injectable, inject } from 'inversify';
+import { Types } from 'mongoose';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { IAuthRepository } from '../../interfaces/repositories/IAuthRepository';
 import { IPermissionRepository } from '../../interfaces/repositories/IPermissionRepository';
@@ -34,7 +35,7 @@ export class UpdateEmployeeDetailsService implements IUpdateEmployeeDetailsServi
     const dateOfBirth = data.date_of_birth ? parseDate(data.date_of_birth) : undefined;
     const employeeEntity = EmployeeMapper.toUpdate(data, joiningDate, dateOfBirth);
 
-    const updatedEmployee = await this._employeeRepo.updateOne({ user_id: userId }, { $set: employeeEntity });
+    const updatedEmployee = await this._employeeRepo.updateOne({ user_id: new Types.ObjectId(userId) }, { $set: employeeEntity });
     if (!updatedEmployee) throw new NotFoundError(EMPLOYEE_MESSAGES.UPDATE_FAILED);
 
     return this._getEmployeeDetailsService.execute(userId);

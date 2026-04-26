@@ -1,7 +1,5 @@
 import { EmployeePermissionsDTO } from '../dto/employee.dto';
 
-type NestedPermission = { [key: string]: boolean | NestedPermission };
-
 export class PermissionMapper {
   static toFlatKeys(p: Partial<EmployeePermissionsDTO>): string[] {
     const keys: string[] = [];
@@ -9,28 +7,30 @@ export class PermissionMapper {
     if (p.project) {
       if (p.project.create) keys.push('project:create');
       if (p.project.view.all) keys.push('project:view:all');
-      if (p.project.update.own) keys.push('project:update');
-      if (p.project.update.all) keys.push('project:update:all');
-      if (p.project.delete.own) keys.push('project:delete');
-      if (p.project.delete.all) keys.push('project:delete:all');
+      if (p.project.view.assigned) keys.push('project:view:assigned');
+      if (p.project.update) keys.push('project:update');
+      if (p.project.delete) keys.push('project:delete');
     }
 
     if (p.task) {
       if (p.task.create) keys.push('task:create');
+      if (p.task.view.assigned) keys.push('task:view:assigned');
       if (p.task.view.team) keys.push('task:view:team');
       if (p.task.view.all) keys.push('task:view:all');
       if (p.task.assign) keys.push('task:assign');
-      if (p.task.update.own) keys.push('task:update');
-      if (p.task.update.all) keys.push('task:update:all');
+      if (p.task.update) keys.push('task:update');
+      if (p.task.delete) keys.push('task:delete');
+      if (p.task.start) keys.push('task:start');
+      if (p.task.submit) keys.push('task:submit');
+      if (p.task.review) keys.push('task:review');
     }
 
     if (p.sprint) {
       if (p.sprint.create) keys.push('sprint:create');
       if (p.sprint.view.all) keys.push('sprint:view:all');
-      if (p.sprint.update.own) keys.push('sprint:update');
-      if (p.sprint.update.all) keys.push('sprint:update:all');
-      if (p.sprint.delete?.own) keys.push('sprint:delete');
-      if (p.sprint.delete?.all) keys.push('sprint:delete:all');
+      if (p.sprint.update) keys.push('sprint:update');
+      if (p.sprint.delete) keys.push('sprint:delete');
+      if (p.sprint.addStory) keys.push('sprint:addStory');
       if (p.sprint.start) keys.push('sprint:start');
       if (p.sprint.complete) keys.push('sprint:complete');
     }
@@ -38,11 +38,11 @@ export class PermissionMapper {
     if (p.userStory) {
       if (p.userStory.create) keys.push('userStory:create');
       if (p.userStory.view.all) keys.push('userStory:view:all');
-      if (p.userStory.update.own) keys.push('userStory:update');
-      if (p.userStory.update.all) keys.push('userStory:update:all');
-      if (p.userStory.delete?.own) keys.push('userStory:delete');
-      if (p.userStory.delete?.all) keys.push('userStory:delete:all');
+      if (p.userStory.update) keys.push('userStory:update');
+      if (p.userStory.delete) keys.push('userStory:delete');
       if (p.userStory.assign) keys.push('userStory:assign');
+      if (p.userStory.assignEmployee) keys.push('userStory:assignEmployee');
+      if (p.userStory.comment) keys.push('userStory:comment');
     }
 
     if (p.team) {
@@ -55,10 +55,10 @@ export class PermissionMapper {
 
   static toStructured(keys: string[]): EmployeePermissionsDTO {
     const p: EmployeePermissionsDTO = {
-      project: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false } },
-      task: { create: false, view: { team: false, all: false }, assign: false, update: { own: false, all: false } },
-      sprint: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, start: false, complete: false },
-      userStory: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, assign: false },
+      project: { create: false, view: { all: false, assigned: false }, update: false, delete: false },
+      task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, start: false, submit: false, review: false },
+      sprint: { create: false, view: { all: false }, update: false, delete: false, addStory: false, start: false, complete: false },
+      userStory: { create: false, view: { all: false }, update: false, delete: false, assign: false, assignEmployee: false, comment: false },
       team: { view: { team: false, all: false } },
     };
 
@@ -69,18 +69,12 @@ export class PermissionMapper {
       const scope = parts[2];
 
       if (p[moduleName] && action) {
-        const module = p[moduleName] as unknown as NestedPermission;
+        const module = p[moduleName] as Record<string, unknown>;
         if (!scope) {
-          const field = module[action];
-          if (typeof field === 'boolean') {
-            module[action] = true;
-          } else if (typeof field === 'object' && field !== null) {
-            (field as NestedPermission)['own'] = true;
-          }
+          module[action] = true;
         } else {
-          const field = module[action];
-          if (typeof field === 'object' && field !== null) {
-            (field as NestedPermission)[scope] = true;
+          if (module[action] && typeof module[action] === 'object') {
+            (module[action] as Record<string, unknown>)[scope] = true;
           }
         }
       }
@@ -89,3 +83,4 @@ export class PermissionMapper {
     return p;
   }
 }
+

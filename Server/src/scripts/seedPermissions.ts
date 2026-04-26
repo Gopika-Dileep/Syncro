@@ -7,27 +7,27 @@ const permissions = [
   // MODULE: project
   { module: 'project', action: 'create', scope: 'any', permission_key: 'project:create' },
   { module: 'project', action: 'view', scope: 'all', permission_key: 'project:view:all' },
+  { module: 'project', action: 'view', scope: 'assigned', permission_key: 'project:view:assigned' },
   { module: 'project', action: 'update', scope: 'any', permission_key: 'project:update' },
-  { module: 'project', action: 'update', scope: 'all', permission_key: 'project:update:all' },
   { module: 'project', action: 'delete', scope: 'any', permission_key: 'project:delete' },
-  { module: 'project', action: 'delete', scope: 'all', permission_key: 'project:delete:all' },
 
   // MODULE: userStory
   { module: 'userStory', action: 'create', scope: 'any', permission_key: 'userStory:create' },
   { module: 'userStory', action: 'view', scope: 'all', permission_key: 'userStory:view:all' },
   { module: 'userStory', action: 'update', scope: 'any', permission_key: 'userStory:update' },
-  { module: 'userStory', action: 'update', scope: 'all', permission_key: 'userStory:update:all' },
-  { module: 'userStory', action: 'assign', scope: 'any', permission_key: 'userStory:assign' },
   { module: 'userStory', action: 'delete', scope: 'any', permission_key: 'userStory:delete' },
-  { module: 'userStory', action: 'delete', scope: 'all', permission_key: 'userStory:delete:all' },
+  { module: 'userStory', action: 'assign', scope: 'any', permission_key: 'userStory:assign' },
+  { module: 'userStory', action: 'assignEmployee', scope: 'any', permission_key: 'userStory:assignEmployee' },
+  { module: 'userStory', action: 'comment', scope: 'any', permission_key: 'userStory:comment' },
 
   // MODULE: sprint
   { module: 'sprint', action: 'create', scope: 'any', permission_key: 'sprint:create' },
   { module: 'sprint', action: 'view', scope: 'all', permission_key: 'sprint:view:all' },
+  { module: 'sprint', action: 'addStory', scope: 'any', permission_key: 'sprint:addStory' },
   { module: 'sprint', action: 'update', scope: 'any', permission_key: 'sprint:update' },
-  { module: 'sprint', action: 'update', scope: 'all', permission_key: 'sprint:update:all' },
   { module: 'sprint', action: 'start', scope: 'any', permission_key: 'sprint:start' },
   { module: 'sprint', action: 'complete', scope: 'any', permission_key: 'sprint:complete' },
+  { module: 'sprint', action: 'delete', scope: 'any', permission_key: 'sprint:delete' },
 
   // MODULE: task
   { module: 'task', action: 'create', scope: 'any', permission_key: 'task:create' },
@@ -36,8 +36,10 @@ const permissions = [
   { module: 'task', action: 'view', scope: 'all', permission_key: 'task:view:all' },
   { module: 'task', action: 'assign', scope: 'any', permission_key: 'task:assign' },
   { module: 'task', action: 'update', scope: 'any', permission_key: 'task:update' },
-  { module: 'task', action: 'update', scope: 'all', permission_key: 'task:update:all' },
-  { module: 'task', action: 'updateStatus', scope: 'assigned', permission_key: 'task:status:update' },
+  { module: 'task', action: 'delete', scope: 'any', permission_key: 'task:delete' },
+  { module: 'task', action: 'start', scope: 'any', permission_key: 'task:start' },
+  { module: 'task', action: 'submit', scope: 'any', permission_key: 'task:submit' },
+  { module: 'task', action: 'review', scope: 'any', permission_key: 'task:review' },
 
   // MODULE: team
   { module: 'team', action: 'view', scope: 'team', permission_key: 'team:view:team' },
@@ -52,10 +54,15 @@ async function seed() {
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB for permission seeding...');
 
-    await permissionDefinitionModel.deleteMany({});
-    await permissionDefinitionModel.insertMany(permissions);
+    for (const p of permissions) {
+      await permissionDefinitionModel.findOneAndUpdate(
+        { permission_key: p.permission_key },
+        { $set: p },
+        { upsert: true, new: true }
+      );
+    }
 
-    console.log(`Successfully seeded ${permissions.length} granular permissions.`);
+    console.log(`Successfully synced ${permissions.length} granular permissions.`);
     process.exit(0);
   } catch (error: unknown) {
     console.error('Seeding error:', error);

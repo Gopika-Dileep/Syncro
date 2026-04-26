@@ -63,7 +63,7 @@ export class EmployeeRepository extends BaseRepository<IEmployee> implements IEm
   }
 
   async findByUserId(userId: string): Promise<IPopulatedEmployee | null> {
-    return employeeModel.findOne({ user_id: userId }).populate('user_id', 'name email role created_at').populate('company_id', 'name').populate('team_id', 'name').lean() as unknown as IPopulatedEmployee;
+    return employeeModel.findOne({ user_id: new Types.ObjectId(userId) }).populate('user_id', 'name email role created_at').populate('company_id', 'name').populate('team_id', 'name').lean() as unknown as IPopulatedEmployee;
   }
 
   async getTeamDirectoryMembers(companyId: string, teamId: string | null, search: string): Promise<IPopulatedEmployee[]> {
