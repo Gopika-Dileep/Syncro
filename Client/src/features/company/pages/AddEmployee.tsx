@@ -18,10 +18,10 @@ import {
 import { employeeSchema, getZodErrors, type EmployeeformInput } from "@/lib/schema";
 
 const initialPermissions: EmployeePermissions = {
-    project: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false } },
-    userStory: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, assign: false },
-    sprint: { create: false, view: { all: false }, update: { own: false, all: false }, delete: { own: false, all: false }, start: false, complete: false },
-    task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: { own: false, all: false }, updateStatus: false },
+    project: { create: false, view: { all: false, assigned: false }, update: false, delete: false },
+    userStory: { create: false, view: { all: false }, update: false, delete: false, assign: false, assignEmployee: false, comment: false },
+    sprint: { create: false, view: { all: false }, update: false, delete: false, addStory: false, start: false, complete: false },
+    task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, start: false, submit: false, review: false },
     team: { view: { team: false, all: false } }
 };
 
@@ -43,6 +43,7 @@ export default function AddEmployee() {
 
     useEffect(() => {
         if (isEditMode && userId) {
+            setFetching(true);
             const fetchEmployee = async () => {
                 try {
                     const response = await getEmployeeDetailsApi(userId);
@@ -62,9 +63,9 @@ export default function AddEmployee() {
                                 const merged = JSON.parse(JSON.stringify(initialPermissions));
                                 const mergeDefaults = (target: Record<string, unknown>, source: Record<string, unknown>) => {
                                     for (const key in source) {
-                                        if (source[key] instanceof Object && !Array.isArray(source[key]) && target[key]) {
+                                        if (source[key] instanceof Object && !Array.isArray(source[key]) && target[key] !== undefined) {
                                             mergeDefaults(target[key] as Record<string, unknown>, source[key] as Record<string, unknown>);
-                                        } else {
+                                        } else if (target[key] !== undefined) {
                                             target[key] = source[key];
                                         }
                                     }
@@ -73,12 +74,27 @@ export default function AddEmployee() {
                                 return merged;
                             });
                         }
+                    } else {
+                        toast.error(response.message || "Employee details not found");
+                        navigate('/company/employees');
                     }
-                } catch { toast.error("Failed to fetch profile"); } finally { setFetching(false); }
+                } catch (err) {
+                    toast.error("Failed to fetch employee details");
+                    console.error(err);
+                } finally {
+                    setFetching(false);
+                }
             };
             fetchEmployee();
+        } else {
+            // Reset form for add mode if navigating from edit
+            setFormData({
+                name: "", email: "", phone: "", designation: "", date_of_joining: "", team_id: ""
+            });
+            setPermissions(initialPermissions);
+            setFetching(false);
         }
-    }, [userId, isEditMode]);
+    }, [userId, isEditMode, navigate]);
     useEffect(() => {
         const fetchTeams = async () => {
             try {
@@ -105,8 +121,8 @@ export default function AddEmployee() {
                 if (updatedScope[subField]) {
                     if (subField === 'all' && 'team' in currentScope) updatedScope.team = false;
                     if (subField === 'team' && 'all' in currentScope) updatedScope.all = false;
-                    if (subField === 'all' && 'own' in currentScope) updatedScope.own = false;
-                    if (subField === 'own' && 'all' in currentScope) updatedScope.all = false;
+                    if (subField === 'all' && 'assigned' in currentScope) updatedScope.assigned = false;
+                    if (subField === 'assigned' && 'all' in currentScope) updatedScope.all = false;
                 }
 
                 moduleCopy[field] = updatedScope as EmployeePermissions[ModuleKey][FieldKey];
@@ -284,10 +300,9 @@ export default function AddEmployee() {
                             items={[
                                 { label: "Create", checked: permissions.project.create, onClick: () => handlePermissionToggle('project', 'create') },
                                 { label: "View All", checked: permissions.project.view.all, onClick: () => handlePermissionToggle('project', 'view', 'all') },
-                                { label: "Update Own", checked: permissions.project.update.own, onClick: () => handlePermissionToggle('project', 'update', 'own') },
-                                { label: "Update All", checked: permissions.project.update.all, onClick: () => handlePermissionToggle('project', 'update', 'all') },
-                                { label: "Delete Own", checked: permissions.project.delete.own, onClick: () => handlePermissionToggle('project', 'delete', 'own') },
-                                { label: "Delete All", checked: permissions.project.delete.all, onClick: () => handlePermissionToggle('project', 'delete', 'all') },
+                                { label: "View Assigned", checked: permissions.project.view.assigned, onClick: () => handlePermissionToggle('project', 'view', 'assigned') },
+                                { label: "Update", checked: permissions.project.update, onClick: () => handlePermissionToggle('project', 'update') },
+                                { label: "Delete", checked: permissions.project.delete, onClick: () => handlePermissionToggle('project', 'delete') },
                             ]}
                         />
                         <ModuleItem
@@ -295,11 +310,11 @@ export default function AddEmployee() {
                             items={[
                                 { label: "Create", checked: permissions.userStory.create, onClick: () => handlePermissionToggle('userStory', 'create') },
                                 { label: "View All", checked: permissions.userStory.view.all, onClick: () => handlePermissionToggle('userStory', 'view', 'all') },
-                                { label: "Update Own", checked: permissions.userStory.update.own, onClick: () => handlePermissionToggle('userStory', 'update', 'own') },
-                                { label: "Update All", checked: permissions.userStory.update.all, onClick: () => handlePermissionToggle('userStory', 'update', 'all') },
-                                { label: "Delete Own", checked: permissions.userStory.delete.own, onClick: () => handlePermissionToggle('userStory', 'delete', 'own') },
-                                { label: "Delete All", checked: permissions.userStory.delete.all, onClick: () => handlePermissionToggle('userStory', 'delete', 'all') },
+                                { label: "Update", checked: permissions.userStory.update, onClick: () => handlePermissionToggle('userStory', 'update') },
+                                { label: "Delete", checked: permissions.userStory.delete, onClick: () => handlePermissionToggle('userStory', 'delete') },
                                 { label: "Assign", checked: permissions.userStory.assign, onClick: () => handlePermissionToggle('userStory', 'assign') },
+                                { label: "Assign Employee", checked: permissions.userStory.assignEmployee, onClick: () => handlePermissionToggle('userStory', 'assignEmployee') },
+                                { label: "Comment", checked: permissions.userStory.comment, onClick: () => handlePermissionToggle('userStory', 'comment') },
                             ]}
                         />
                         <ModuleItem
@@ -307,10 +322,9 @@ export default function AddEmployee() {
                             items={[
                                 { label: "Create", checked: permissions.sprint.create, onClick: () => handlePermissionToggle('sprint', 'create') },
                                 { label: "View All", checked: permissions.sprint.view.all, onClick: () => handlePermissionToggle('sprint', 'view', 'all') },
-                                { label: "Update Own", checked: permissions.sprint.update.own, onClick: () => handlePermissionToggle('sprint', 'update', 'own') },
-                                { label: "Update All", checked: permissions.sprint.update.all, onClick: () => handlePermissionToggle('sprint', 'update', 'all') },
-                                { label: "Delete Own", checked: permissions.sprint.delete.own, onClick: () => handlePermissionToggle('sprint', 'delete', 'own') },
-                                { label: "Delete All", checked: permissions.sprint.delete.all, onClick: () => handlePermissionToggle('sprint', 'delete', 'all') },
+                                { label: "Update", checked: permissions.sprint.update, onClick: () => handlePermissionToggle('sprint', 'update') },
+                                { label: "Delete", checked: permissions.sprint.delete, onClick: () => handlePermissionToggle('sprint', 'delete') },
+                                { label: "Add Story", checked: permissions.sprint.addStory, onClick: () => handlePermissionToggle('sprint', 'addStory') },
                                 { label: "Start", checked: permissions.sprint.start, onClick: () => handlePermissionToggle('sprint', 'start') },
                                 { label: "Complete", checked: permissions.sprint.complete, onClick: () => handlePermissionToggle('sprint', 'complete') },
                             ]}
@@ -323,9 +337,11 @@ export default function AddEmployee() {
                                 { label: "View Team", checked: permissions.task.view.team, onClick: () => handlePermissionToggle('task', 'view', 'team') },
                                 { label: "View All", checked: permissions.task.view.all, onClick: () => handlePermissionToggle('task', 'view', 'all') },
                                 { label: "Assign", checked: permissions.task.assign, onClick: () => handlePermissionToggle('task', 'assign') },
-                                { label: "Update Own", checked: permissions.task.update.own, onClick: () => handlePermissionToggle('task', 'update', 'own') },
-                                { label: "Update Status", checked: permissions.task.updateStatus, onClick: () => handlePermissionToggle('task', 'updateStatus') },
-                                { label: "Update All", checked: permissions.task.update.all, onClick: () => handlePermissionToggle('task', 'update', 'all') },
+                                { label: "Update", checked: permissions.task.update, onClick: () => handlePermissionToggle('task', 'update') },
+                                { label: "Delete", checked: permissions.task.delete, onClick: () => handlePermissionToggle('task', 'delete') },
+                                { label: "Start", checked: permissions.task.start, onClick: () => handlePermissionToggle('task', 'start') },
+                                { label: "Submit", checked: permissions.task.submit, onClick: () => handlePermissionToggle('task', 'submit') },
+                                { label: "Review", checked: permissions.task.review, onClick: () => handlePermissionToggle('task', 'review') },
                             ]}
                         />
                         <ModuleItem

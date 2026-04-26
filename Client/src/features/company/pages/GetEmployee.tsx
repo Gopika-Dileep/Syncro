@@ -228,10 +228,9 @@ function getProjectPermissions(p: EmployeePermissions['project'] | undefined) {
     const res = [];
     if (p.create) res.push("Create");
     if (p.view?.all) res.push("View (All)");
-    if (p.update?.own) res.push("Update (Own)");
-    if (p.update?.all) res.push("Update (All)");
-    if (p.delete?.own) res.push("Delete (Own)");
-    if (p.delete?.all) res.push("Delete (All)");
+    if (p.view?.assigned) res.push("View (Assigned)");
+    if (p.update) res.push("Update");
+    if (p.delete) res.push("Delete");
     return res;
 }
 function getUserStoryPermissions(p: EmployeePermissions['userStory'] | undefined) {
@@ -239,11 +238,10 @@ function getUserStoryPermissions(p: EmployeePermissions['userStory'] | undefined
     const res = [];
     if (p.create) res.push("Create");
     if (p.view?.all) res.push("View (All)");
-    if (p.update?.own) res.push("Update (Own)");
-    if (p.update?.all) res.push("Update (All)");
-    if (p.delete?.own) res.push("Delete (Own)");
-    if (p.delete?.all) res.push("Delete (All)");
+    if (p.update) res.push("Update");
+    if (p.delete) res.push("Delete");
     if (p.assign) res.push("Assign");
+    if (p.comment) res.push("Comment");
     return res;
 }
 function getSprintPermissions(p: EmployeePermissions['sprint'] | undefined) {
@@ -251,10 +249,9 @@ function getSprintPermissions(p: EmployeePermissions['sprint'] | undefined) {
     const res = [];
     if (p.create) res.push("Create");
     if (p.view?.all) res.push("View (All)");
-    if (p.update?.own) res.push("Update (Own)");
-    if (p.update?.all) res.push("Update (All)");
-    if (p.delete?.own) res.push("Delete (Own)");
-    if (p.delete?.all) res.push("Delete (All)");
+    if (p.update) res.push("Update");
+    if (p.delete) res.push("Delete");
+    if (p.addStory) res.push("Add Story");
     if (p.start) res.push("Start");
     if (p.complete) res.push("Complete");
     return res;
@@ -266,10 +263,12 @@ function getTaskPermissions(p: EmployeePermissions['task'] | undefined) {
     if (p.view?.assigned) res.push("View (Assigned)");
     if (p.view?.team) res.push("View (Team)");
     if (p.view?.all) res.push("View (All)");
-    if (p.update?.own) res.push("Update (Own)");
-    if (p.update?.all) res.push("Update (All)");
-    if (p.updateStatus) res.push("Update Status");
     if (p.assign) res.push("Assign");
+    if (p.update) res.push("Update");
+    if (p.delete) res.push("Delete");
+    if (p.start) res.push("Start");
+    if (p.submit) res.push("Submit");
+    if (p.review) res.push("Review");
     return res;
 }
 function getTeamPermissions(p: EmployeePermissions['team'] | undefined) {
