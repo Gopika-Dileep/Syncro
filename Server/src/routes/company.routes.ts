@@ -26,6 +26,8 @@ export class CompanyRouter {
     this.router.patch(ENDPOINTS.COMPANY.TOGGLE_BLOCK_EMPLOYEE, authMiddleware, employeeController.toggleBlockEmployee);
     this.router.get(ENDPOINTS.COMPANY.GET_EMPLOYEE_DETAILS, authMiddleware, employeeController.getEmployeeDetails);
     this.router.put(ENDPOINTS.COMPANY.UPDATE_EMPLOYEE_DETAILS, authMiddleware, validateRequest(UpdateEmployeeRequestSchema), employeeController.updateEmployeeDetails);
+    this.router.get(ENDPOINTS.COMPANY.GET_UNASSIGNED_EMPLOYEES, authMiddleware, employeeController.getUnassignedEmployees);
+    this.router.patch(ENDPOINTS.COMPANY.ASSIGN_TEAM_TO_EMPLOYEE, authMiddleware, employeeController.assignTeam);
     this.router.post(ENDPOINTS.COMPANY.TEAMS, authMiddleware, validateRequest(CreateTeamRequestSchema), teamController.createTeam);
     this.router.get(ENDPOINTS.COMPANY.TEAMS, authMiddleware, validateRequest(GetTeamsRequestSchema), teamController.getTeams);
     this.router.put(ENDPOINTS.COMPANY.UPDATE_TEAM, authMiddleware, validateRequest(UpdateTeamRequestSchema), teamController.updateTeam);

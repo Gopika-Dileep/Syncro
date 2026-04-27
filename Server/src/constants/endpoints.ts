@@ -19,6 +19,8 @@ export const ENDPOINTS = {
     TOGGLE_BLOCK_EMPLOYEE: '/employee/:userId/toggle-block',
     GET_EMPLOYEE_DETAILS: '/employee/:userId',
     UPDATE_EMPLOYEE_DETAILS: '/employee/:userId',
+    GET_UNASSIGNED_EMPLOYEES: '/employees/unassigned',
+    ASSIGN_TEAM_TO_EMPLOYEE: '/employee/:employeeId/assign-team',
     TEAMS: '/teams',
     UPDATE_TEAM: '/team/:teamId',
     DELETE_TEAM: '/team/:teamId',

@@ -81,6 +81,10 @@ export const PROJECT_MESSAGES = {
   COMPANY_CONTEXT_NOT_FOUND: 'Company context not found',
 };
 
+export const COMPANY_MESSAGES = {
+  COMPANY_NOT_FOUND: 'Company not found',
+};
+
 export const USER_STORY_MESSAGES = {
   CREATE_SUCCESS: 'User story created successfully',
   CREATE_FAILED: 'Failed to create user story',

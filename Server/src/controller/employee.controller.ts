@@ -5,6 +5,8 @@ import { IGetEmployeesService } from '../interfaces/services/employee/IGetEmploy
 import { IToggleBlockEmployeeService } from '../interfaces/services/employee/IToggleBlockEmployeeService';
 import { IGetEmployeeDetailsService } from '../interfaces/services/employee/IGetEmployeeDetailsService';
 import { IUpdateEmployeeDetailsService } from '../interfaces/services/employee/IUpdateEmployeeDetailsService';
+import { IGetUnassignedEmployeesService } from '../interfaces/services/employee/IGetUnassignedEmployeesService';
+import { IAssignTeamToEmployeeService } from '../interfaces/services/employee/IAssignTeamToEmployeeService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { EMPLOYEE_MESSAGES } from '../constants/messages';
 import { GetEmployeesRequestDTO } from '../dto/employee.dto';
@@ -19,7 +21,30 @@ export class EmployeeController {
     @inject(TYPES.IToggleBlockEmployeeService) private _toggleBlockEmployeeService: IToggleBlockEmployeeService,
     @inject(TYPES.IGetEmployeeDetailsService) private _getEmployeeDetailsService: IGetEmployeeDetailsService,
     @inject(TYPES.IUpdateEmployeeDetailsService) private _updateEmployeeDetailsService: IUpdateEmployeeDetailsService,
+    @inject(TYPES.IGetUnassignedEmployeesService) private _getUnassignedEmployeesService: IGetUnassignedEmployeesService,
+    @inject(TYPES.IAssignTeamToEmployeeService) private _assignTeamToEmployeeService: IAssignTeamToEmployeeService,
   ) {}
+
+  getUnassignedEmployees = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { search } = req.query;
+      const result = await this._getUnassignedEmployeesService.execute(req.userId!, search as string);
+      res.status(HttpStatus.OK).json({ success: true, data: result });
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  assignTeam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { employeeId } = req.params;
+      const { teamId } = req.body;
+      const result = await this._assignTeamToEmployeeService.execute(req.userId!, employeeId as string, teamId);
+      res.status(HttpStatus.OK).json(result);
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
 
   addEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

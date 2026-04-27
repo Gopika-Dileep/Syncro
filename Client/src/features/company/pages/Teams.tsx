@@ -6,6 +6,8 @@ import axios from "axios";
 import { getTeamsApi, createTeamApi, updateTeamApi, deleteTeamApi, type Team } from "@/features/company/api/companyApi";
 import DataTable, { type Column } from "@/components/DataTable";
 import { useDebounce } from "@/hooks/useDebounce";
+import AssignMemberModal from "./AssignMemberModal";
+import { UserPlus } from "lucide-react";
 
 const AVATAR_COLORS = ["#fa8029", "#60a5fa", "#34d399", "#a78bfa", "#f472b6", "#fbbf24"];
 const avatarColor = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
@@ -18,9 +20,10 @@ interface ActionMenuProps {
     onClose: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onAssign: () => void;
 }
 
-function TeamMenu({ pos, onClose, onEdit, onDelete }: ActionMenuProps) {
+function TeamMenu({ pos, onClose, onEdit, onDelete, onAssign }: ActionMenuProps) {
     return createPortal(
         <>
             <div className="fixed inset-0 z-[999]" onClick={onClose} />
@@ -33,6 +36,12 @@ function TeamMenu({ pos, onClose, onEdit, onDelete }: ActionMenuProps) {
                     className="flex items-center gap-2.5 w-full px-3.5 py-2 text-[12px] text-[#555] hover:bg-[#f7f7f7] transition-colors"
                 >
                     <Edit2 size={13} className="text-[#bbb]" /> Edit
+                </button>
+                <button
+                    onClick={() => { onClose(); onAssign(); }}
+                    className="flex items-center gap-2.5 w-full px-3.5 py-2 text-[12px] text-[#555] hover:bg-[#f7f7f7] transition-colors"
+                >
+                    <UserPlus size={13} className="text-[#bbb]" /> Add Member
                 </button>
                 <div className="border-t border-[#f5f5f5] my-1" />
                 <button
@@ -65,6 +74,7 @@ export default function Teams() {
     const [total, setTotal] = useState(0);
     const [openId, setOpenId] = useState<string | null>(null);
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+    const [assignTeam, setAssignTeam] = useState<Team | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
     const limit = 8;
@@ -194,6 +204,7 @@ export default function Teams() {
                                 setShowModal(true);
                             }}
                             onDelete={() => handleDeleteTeam(team)}
+                            onAssign={() => setAssignTeam(team)}
                         />
                     )}
                 </div>
@@ -312,6 +323,19 @@ export default function Teams() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* ── Assign Member Modal ── */}
+            {assignTeam && (
+                <AssignMemberModal
+                    teamId={assignTeam._id}
+                    teamName={assignTeam.name}
+                    onClose={() => setAssignTeam(null)}
+                    onSuccess={() => {
+                        setAssignTeam(null);
+                        fetchTeams();
+                    }}
+                />
             )}
         </>
     );

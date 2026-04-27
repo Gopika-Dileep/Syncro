@@ -45,6 +45,8 @@ export const TYPES = {
   IToggleBlockEmployeeService: Symbol.for('IToggleBlockEmployeeService'),
   IGetEmployeeDetailsService: Symbol.for('IGetEmployeeDetailsService'),
   IUpdateEmployeeDetailsService: Symbol.for('IUpdateEmployeeDetailsService'),
+  IGetUnassignedEmployeesService: Symbol.for('IGetUnassignedEmployeesService'),
+  IAssignTeamToEmployeeService: Symbol.for('IAssignTeamToEmployeeService'),
   ISprintRepository: Symbol.for('ISprintRepository'),
   ICreateSprintService: Symbol.for('ICreateSprintService'),
   IGetSprintsService: Symbol.for('IGetSprintsService'),

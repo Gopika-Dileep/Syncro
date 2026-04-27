@@ -111,4 +111,41 @@ export class EmployeeRepository extends BaseRepository<IEmployee> implements IEm
 
     return (await employeeModel.aggregate(pipeline)) as IPopulatedEmployee[];
   }
+
+  async findUnassignedByCompanyId(companyId: string, search: string = ''): Promise<IPopulatedEmployee[]> {
+    const pipeline: PipelineStage[] = [
+      { 
+        $match: { 
+          company_id: new Types.ObjectId(companyId),
+          $or: [
+            { team_id: null },
+            { team_id: { $exists: false } }
+          ]
+        } 
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_id',
+        },
+      },
+      { $unwind: '$user_id' },
+    ];
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'user_id.name': { $regex: search, $options: 'i' } },
+            { 'user_id.email': { $regex: search, $options: 'i' } },
+            { designation: { $regex: search, $options: 'i' } }
+          ],
+        },
+      });
+    }
+
+    return (await employeeModel.aggregate(pipeline)) as IPopulatedEmployee[];
+  }
 }

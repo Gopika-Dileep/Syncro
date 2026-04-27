@@ -131,3 +131,13 @@ export const deleteTeamApi = async (teamId: string): Promise<{ success: boolean;
     const response = await axiosInstance.delete(ENDPOINTS.COMPANY.DELETE_TEAM(teamId));
     return response.data;
 };
+
+export const getUnassignedEmployeesApi = async (search: string = "") => {
+    const response = await axiosInstance.get(`${ENDPOINTS.COMPANY.GET_UNASSIGNED_EMPLOYEES}?search=${search}`);
+    return response.data;
+};
+
+export const assignTeamToEmployeeApi = async (employeeId: string, teamId: string) => {
+    const response = await axiosInstance.patch(ENDPOINTS.COMPANY.ASSIGN_TEAM_TO_EMPLOYEE(employeeId), { teamId });
+    return response.data;
+};
