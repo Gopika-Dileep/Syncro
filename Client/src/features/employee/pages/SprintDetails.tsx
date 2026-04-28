@@ -10,11 +10,11 @@ import {
     Bug, BookOpen, CheckSquare, X
 } from "lucide-react";
 import { getSprintByIdApi, updateSprintApi, type Sprint } from "../api/sprintApi";
-import { getUserStoriesBySprintApi, updateUserStoryApi, assignUserStoryApi, type UserStory } from "../api/userStoryApi";
-import { getTasksByStoryApi, createTaskApi, updateTaskApi, deleteTaskApi, assignTaskApi, type Task } from "../api/taskApi";
+import { getIssuesBySprintApi, updateIssueApi, assignIssueApi, type Issue } from "../api/issueApi";
+import { getSubTasksByIssueApi, createSubTaskApi, updateSubTaskApi, deleteSubTaskApi, assignSubTaskApi, type SubTask } from "../api/subTaskApi";
 import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 import { usePermission } from "@/features/employee/hooks/usePermission";
-import TaskModal, { type TaskFormData } from "../components/TaskModal";
+import SubTaskModal, { type SubTaskFormData } from "../components/SubTaskModal";
 import ConfirmModal from "@/features/shared/components/ConfirmModal";
 
 const TypeIcon = ({ type, size = 12 }: { type: string; size?: number }) => {
@@ -31,20 +31,20 @@ export default function SprintDetails() {
     const { can } = usePermission();
 
     const [sprint, setSprint] = useState<Sprint | null>(null);
-    const [stories, setStories] = useState<UserStory[]>([]);
-    const [tasksByStory, setTasksByStory] = useState<Record<string, { data: Task[], loading: boolean }>>({});
-    const [expandedStories, setExpandedStories] = useState<Set<string>>(new Set());
+    const [issues, setIssues] = useState<Issue[]>([]);
+    const [subTasksByIssue, setSubTasksByIssue] = useState<Record<string, { data: SubTask[], loading: boolean }>>({});
+    const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
 
     // Modal state
-    const [isTaskModalOpen, setTaskModalOpen] = useState(false);
-    const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
-    const [editingTask, setEditingTask] = useState<Task | null>(null);
-    const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+    const [isSubTaskModalOpen, setSubTaskModalOpen] = useState(false);
+    const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
+    const [editingSubTask, setEditingSubTask] = useState<SubTask | null>(null);
+    const [isSubmittingSubTask, setIsSubmittingSubTask] = useState(false);
     const [members, setMembers] = useState<TeamMember[]>([]);
-    const [taskToDelete, setTaskToDelete] = useState<{ storyId: string, taskId: string } | null>(null);
-    const [storyToAssign, setStoryToAssign] = useState<UserStory | null>(null);
-    const [taskToAssign, setTaskToAssign] = useState<{ storyId: string, task: Task } | null>(null);
+    const [subTaskToDelete, setSubTaskToDelete] = useState<{ issueId: string, subTaskId: string } | null>(null);
+    const [issueToAssign, setIssueToAssign] = useState<Issue | null>(null);
+    const [subTaskToAssign, setSubTaskToAssign] = useState<{ issueId: string, subTask: SubTask } | null>(null);
 
     useEffect(() => {
         if (sprintId) {
@@ -59,8 +59,8 @@ export default function SprintDetails() {
             const currentSprint = sprintRes.data;
             setSprint(currentSprint);
 
-            const res = await getUserStoriesBySprintApi(sprintId!);
-            setStories(res.data || []);
+            const res = await getIssuesBySprintApi(sprintId!);
+            setIssues(res.data || []);
 
             const teamRes = await getTeamDirectoryApi();
             const allMembers = teamRes.data.flatMap(team => team.members);
@@ -74,94 +74,92 @@ export default function SprintDetails() {
         }
     };
 
-    const fetchTasks = async (storyId: string) => {
-        setTasksByStory(prev => ({ ...prev, [storyId]: { data: prev[storyId]?.data || [], loading: true } }));
+    const fetchSubTasks = async (issueId: string) => {
+        setSubTasksByIssue(prev => ({ ...prev, [issueId]: { data: prev[issueId]?.data || [], loading: true } }));
         try {
-            const res = await getTasksByStoryApi(storyId);
-            setTasksByStory(prev => ({ ...prev, [storyId]: { data: res.data || [], loading: false } }));
+            const res = await getSubTasksByIssueApi(issueId);
+            setSubTasksByIssue(prev => ({ ...prev, [issueId]: { data: res.data || [], loading: false } }));
         } catch {
-            toast.error("Failed to load tasks");
-            setTasksByStory(prev => ({ ...prev, [storyId]: { data: [], loading: false } }));
+            toast.error("Failed to load sub-tasks");
+            setSubTasksByIssue(prev => ({ ...prev, [issueId]: { data: [], loading: false } }));
         }
     };
 
-    const toggleStory = (storyId: string) => {
-        const newExpanded = new Set(expandedStories);
-        if (newExpanded.has(storyId)) {
-            newExpanded.delete(storyId);
+    const toggleIssue = (issueId: string) => {
+        const newExpanded = new Set(expandedIssues);
+        if (newExpanded.has(issueId)) {
+            newExpanded.delete(issueId);
         } else {
-            newExpanded.add(storyId);
-            if (!tasksByStory[storyId]) {
-                fetchTasks(storyId);
+            newExpanded.add(issueId);
+            if (!subTasksByIssue[issueId]) {
+                fetchSubTasks(issueId);
             }
         }
-        setExpandedStories(newExpanded);
+        setExpandedIssues(newExpanded);
     };
 
-    const handleOpenTaskModal = (e: React.MouseEvent, storyId: string) => {
+    const handleOpenSubTaskModal = (e: React.MouseEvent, issueId: string) => {
         e.stopPropagation();
-        setActiveStoryId(storyId);
-        setEditingTask(null);
-        setTaskModalOpen(true);
+        setActiveIssueId(issueId);
+        setEditingSubTask(null);
+        setSubTaskModalOpen(true);
     };
 
-    const handleOpenEditModal = (e: React.MouseEvent, storyId: string, task: Task) => {
+    const handleOpenEditModal = (e: React.MouseEvent, issueId: string, subTask: SubTask) => {
         e.stopPropagation();
-        setActiveStoryId(storyId);
-        setEditingTask(task);
-        setTaskModalOpen(true);
+        setActiveIssueId(issueId);
+        setEditingSubTask(subTask);
+        setSubTaskModalOpen(true);
     };
 
-    const handleDeleteTask = async (e: React.MouseEvent, storyId: string, taskId: string) => {
+    const handleDeleteSubTask = async (e: React.MouseEvent, issueId: string, subTaskId: string) => {
         e.stopPropagation();
-        setTaskToDelete({ storyId, taskId });
+        setSubTaskToDelete({ issueId, subTaskId });
     };
 
-    const confirmDeleteTask = async () => {
-        if (!taskToDelete) return;
-        const { storyId, taskId } = taskToDelete;
+    const confirmDeleteSubTask = async () => {
+        if (!subTaskToDelete) return;
+        const { issueId, subTaskId } = subTaskToDelete;
 
         try {
-            await deleteTaskApi(taskId);
-            toast.success("Task deleted");
-            fetchTasks(storyId);
+            await deleteSubTaskApi(subTaskId);
+            toast.success("Sub-task deleted");
+            fetchSubTasks(issueId);
         } catch {
-            toast.error("Failed to delete task");
+            toast.error("Failed to delete sub-task");
         } finally {
-            setTaskToDelete(null);
+            setSubTaskToDelete(null);
         }
     };
 
-    const handleTaskSubmit = async (data: TaskFormData) => {
-        if (!activeStoryId || !sprintId) return;
-        setIsSubmittingTask(true);
+    const handleSubTaskSubmit = async (data: SubTaskFormData) => {
+        if (!activeIssueId || !sprintId) return;
+        setIsSubmittingSubTask(true);
         try {
-            if (editingTask) {
-                await updateTaskApi(editingTask._id, data);
-                toast.success("Task updated successfully");
+            if (editingSubTask) {
+                await updateSubTaskApi(editingSubTask._id, data);
+                toast.success("Sub-task updated successfully");
             } else {
-                await createTaskApi({
+                await createSubTaskApi({
                     ...data,
-                    user_story_id: activeStoryId,
+                    issue_id: activeIssueId,
                     sprint_id: sprintId
                 });
-                toast.success("Task created successfully");
+                toast.success("Sub-task created successfully");
             }
-            setTaskModalOpen(false);
-            fetchTasks(activeStoryId);
+            setSubTaskModalOpen(false);
+            fetchSubTasks(activeIssueId);
 
-            // Ensure story is expanded
-            const newExpanded = new Set(expandedStories);
-            newExpanded.add(activeStoryId);
-            setExpandedStories(newExpanded);
+            // Ensure issue is expanded
+            const newExpanded = new Set(expandedIssues);
+            newExpanded.add(activeIssueId);
+            setExpandedIssues(newExpanded);
         } catch (err: unknown) {
-            toast.error(editingTask ? "Failed to update task" : "Failed to create task");
+            toast.error(editingSubTask ? "Failed to update sub-task" : "Failed to create sub-task");
         } finally {
-            setIsSubmittingTask(false);
+            setIsSubmittingSubTask(false);
         }
     };
-
-
 
     const handleUpdateStatus = async (newStatus: string) => {
         try {
@@ -176,11 +174,11 @@ export default function SprintDetails() {
     };
 
     const handleAssignEmployee = async (employeeId: string) => {
-        if (!storyToAssign) return;
+        if (!issueToAssign) return;
         try {
-            await assignUserStoryApi(storyToAssign._id, { assignee_id: employeeId });
+            await assignIssueApi(issueToAssign._id, { assignee_id: employeeId });
             toast.success("Employee assigned successfully");
-            setStoryToAssign(null);
+            setIssueToAssign(null);
             fetchData();
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };
@@ -189,17 +187,17 @@ export default function SprintDetails() {
         }
     };
 
-    const handleAssignTaskEmployee = async (employeeId: string) => {
-        if (!taskToAssign) return;
+    const handleAssignSubTaskEmployee = async (employeeId: string) => {
+        if (!subTaskToAssign) return;
         try {
-            await assignTaskApi(taskToAssign.task._id, employeeId);
-            toast.success("Employee assigned to task successfully");
-            const sid = taskToAssign.storyId;
-            setTaskToAssign(null);
-            fetchTasks(sid);
+            await assignSubTaskApi(subTaskToAssign.subTask._id, employeeId);
+            toast.success("Employee assigned to sub-task successfully");
+            const sid = subTaskToAssign.issueId;
+            setSubTaskToAssign(null);
+            fetchSubTasks(sid);
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };
-            const msg = error.response?.data?.message || "Failed to assign task";
+            const msg = error.response?.data?.message || "Failed to assign sub-task";
             toast.error(msg);
         }
     };
@@ -289,70 +287,70 @@ export default function SprintDetails() {
                             <p className="text-[11px] font-black text-[#aaa] uppercase tracking-widest mb-1">Points Committed</p>
                             <div className="flex items-center gap-2 text-[13px] font-bold text-[#333]">
                                 <Target size={14} className="text-[#fa8029]" />
-                                {stories.reduce((acc, s) => acc + (s.story_points || 0), 0)} / {sprint.total_points} Points
+                                {issues.reduce((acc, i) => acc + (i.story_points || 0), 0)} / {sprint.total_points} Points
                             </div>
                         </div>
                         <div className="bg-white p-5 rounded-2xl border border-[#f0f0f0] shadow-sm">
                             <p className="text-[11px] font-black text-[#aaa] uppercase tracking-widest mb-1">Items</p>
                             <div className="flex items-center gap-2 text-[13px] font-bold text-[#333]">
                                 <Package size={14} className="text-[#fa8029]" />
-                                {stories.length} Total Items
+                                {issues.length} Total Items
                             </div>
                         </div>
                     </div>
 
-                    {/* Pro Story List */}
+                    {/* Pro Issue List */}
                     <div className="space-y-4">
                         <h2 className="text-[15px] font-black text-[#1f2124] flex items-center gap-2 px-1">
                             <Layout size={18} className="text-[#fa8029]" /> Sprint Backlog
                         </h2>
 
-                        {stories.length === 0 ? (
+                        {issues.length === 0 ? (
                             <div className="bg-white border-2 border-dashed border-[#eee] rounded-[32px] p-20 text-center flex flex-col items-center">
                                 <Layout size={40} className="text-[#ddd] mb-4" />
                                 <h4 className="text-[16px] font-bold text-[#888]">Your sprint backlog is empty</h4>
                             </div>
                         ) : (
                             <div className="space-y-3 pb-20">
-                                {stories.map((story) => {
-                                    const isExpanded = expandedStories.has(story._id);
-                                    const taskConfig = tasksByStory[story._id];
+                                {issues.map((issue) => {
+                                    const isExpanded = expandedIssues.has(issue._id);
+                                    const subTaskConfig = subTasksByIssue[issue._id];
 
                                     return (
-                                        <div key={story._id} className="bg-white border border-[#f0f0f0] rounded-2xl shadow-sm overflow-hidden transition-all hover:border-[#fa8029]/20">
+                                        <div key={issue._id} className="bg-white border border-[#f0f0f0] rounded-2xl shadow-sm overflow-hidden transition-all hover:border-[#fa8029]/20">
                                             <div
-                                                onClick={() => toggleStory(story._id)}
+                                                onClick={() => toggleIssue(issue._id)}
                                                 className="p-5 flex items-center justify-between group cursor-pointer hover:bg-[#fafafa] transition-colors"
                                             >
                                                 <div className="flex items-center gap-4 flex-1">
                                                     <div className="text-[#aaa] group-hover:text-[#fa8029] transition-colors">
                                                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                                                     </div>
-                                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${story.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
-                                                        story.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
+                                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
+                                                        issue.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
                                                             'bg-blue-50 text-blue-500 border-blue-100'
                                                         }`}>
-                                                        <TypeIcon type={story.type} size={18} />
+                                                        <TypeIcon type={issue.type} size={18} />
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-[14px] font-bold text-[#1f2124]">{story.title}</h3>
+                                                        <h3 className="text-[14px] font-bold text-[#1f2124]">{issue.title}</h3>
                                                         <div className="flex items-center gap-2 mt-0.5">
                                                             <p className="text-[11px] text-[#aaa] font-medium uppercase tracking-tighter">
-                                                                {story.type} • {story.priority}
+                                                                {issue.type} • {issue.priority}
                                                             </p>
-                                                            {(story.type === 'bug' || story.type === 'task') && story.assign_to && (
+                                                            {(issue.type === 'bug' || issue.type === 'task') && issue.assignee_id && (
                                                                 <>
-                                                                    {(story.assigned_by || story.created_by)?.name && (
+                                                                    {(issue.assigned_by || issue.created_by)?.name && (
                                                                         <>
                                                                             <span className="w-1 h-1 rounded-full bg-[#eee]" />
                                                                             <p className="text-[11px] font-bold text-blue-500/70">
-                                                                                {(story.assigned_by || story.created_by)?.designation || 'Assigner'}: {(story.assigned_by || story.created_by)?.name}
+                                                                                {(issue.assigned_by || issue.created_by)?.designation || 'Assigner'}: {(issue.assigned_by || issue.created_by)?.name}
                                                                             </p>
                                                                         </>
                                                                     )}
                                                                     <span className="w-1 h-1 rounded-full bg-[#eee]" />
                                                                     <p className="text-[11px] font-bold text-orange-500/70">
-                                                                        {story.assign_to.designation || 'Developer'}: {story.assign_to.name}
+                                                                        {issue.assignee_id.designation || 'Developer'}: {issue.assignee_id.name}
                                                                     </p>
                                                                 </>
                                                             )}
@@ -361,19 +359,19 @@ export default function SprintDetails() {
                                                 </div>
 
                                                 <div className="flex items-center gap-4 shrink-0">
-                                                    {(story.type === 'bug' || story.type === 'task') && can('userStory:assignEmployee') && (
+                                                    {(issue.type === 'bug' || issue.type === 'task') && can('issue:assignEmployee') && (
                                                         <div className="flex items-center gap-2">
-                                                            {story.assign_to ? (
+                                                            {issue.assignee_id ? (
                                                                 <button
-                                                                    onClick={(e) => { e.stopPropagation(); setStoryToAssign(story); }}
+                                                                    onClick={(e) => { e.stopPropagation(); setIssueToAssign(issue); }}
                                                                     className="w-8 h-8 rounded-xl bg-orange-600 flex items-center justify-center text-[11px] font-black text-white uppercase shadow-md hover:scale-105 transition-all"
-                                                                    title={story.assign_to.name}
+                                                                    title={issue.assignee_id.name}
                                                                 >
-                                                                    {story.assign_to.name.substring(0, 2)}
+                                                                    {issue.assignee_id.name.substring(0, 2)}
                                                                 </button>
                                                             ) : (
                                                                 <button
-                                                                    onClick={(e) => { e.stopPropagation(); setStoryToAssign(story); }}
+                                                                    onClick={(e) => { e.stopPropagation(); setIssueToAssign(issue); }}
                                                                     className="w-8 h-8 rounded-xl bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm"
                                                                     title="Assign Employee"
                                                                 >
@@ -382,58 +380,58 @@ export default function SprintDetails() {
                                                             )}
                                                         </div>
                                                     )}
-                                                    {can('task:create') && story.type === 'story' && (
+                                                    {can('task:create') && issue.type === 'story' && (
                                                         <button
-                                                            onClick={(e) => handleOpenTaskModal(e, story._id)}
+                                                            onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-[#fff5ef] text-[#fa8029] hover:bg-[#fa8029] hover:text-white rounded-lg text-[11px] font-bold transition-all active:scale-95"
                                                         >
-                                                            <Plus size={14} /> Add Task
+                                                            <Plus size={14} /> Add Sub-Task
                                                         </button>
                                                     )}
-                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${getPriorityColor(story.priority)}`}>
-                                                        {story.priority}
+                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${getPriorityColor(issue.priority)}`}>
+                                                        {issue.priority}
                                                     </span>
                                                     <div className="flex flex-col items-end gap-1">
                                                         <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight border ${
-                                                            story.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                                            issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
                                                             'bg-orange-50 text-orange-600 border-orange-100'
                                                         }`}>
-                                                            {story.status}
+                                                            {issue.status}
                                                         </span>
                                                     </div>
-                                                    {story.type === 'story' && story.story_points > 0 && (
+                                                    {issue.type === 'story' && issue.story_points > 0 && (
                                                         <div className="bg-[#f9fafb] px-3 py-1 rounded-xl border border-[#eee] text-[11px] font-black text-[#555]">
-                                                            {story.story_points} pts
+                                                            {issue.story_points} pts
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            {/* Tasks Section */}
+                                            {/* Sub-Tasks Section */}
                                             {isExpanded && (
                                                 <div className="px-5 pb-5 pt-2 bg-[#fdfdfd] border-t border-[#f7f7f7]">
                                                     <div className="ml-10 space-y-2">
                                                         <div className="flex items-center gap-2 mb-3 text-[11px] font-bold text-[#888] uppercase tracking-wider">
-                                                            <ListTodo size={14} /> Tasks
+                                                            <ListTodo size={14} /> Sub-Tasks
                                                         </div>
 
-                                                        {taskConfig?.loading ? (
+                                                        {subTaskConfig?.loading ? (
                                                             <div className="py-4 flex justify-center">
                                                                 <div className="w-4 h-4 border-2 border-[#fa8029] border-t-transparent rounded-full animate-spin" />
                                                             </div>
-                                                        ) : taskConfig?.data.length === 0 ? (
+                                                        ) : subTaskConfig?.data.length === 0 ? (
                                                             <div className="py-6 text-center border-2 border-dashed border-[#f0f0f0] rounded-xl">
-                                                                <p className="text-[12px] text-[#aaa] italic">No tasks created yet</p>
+                                                                <p className="text-[12px] text-[#aaa] italic">No sub-tasks created yet</p>
                                                             </div>
                                                         ) : can('task:view:all') ? (
-                                                            // PM VIEW: Group tasks by team
+                                                            // PM VIEW: Group sub-tasks by team
                                                             (() => {
-                                                                const grouped: Record<string, { teamName: string; tasks: typeof taskConfig.data }> = {};
-                                                                taskConfig.data.forEach(task => {
-                                                                    const teamKey = task.team_id?._id || 'unassigned';
-                                                                    const teamName = task.team_id?.name || 'Unassigned Team';
-                                                                    if (!grouped[teamKey]) grouped[teamKey] = { teamName, tasks: [] };
-                                                                    grouped[teamKey].tasks.push(task);
+                                                                const grouped: Record<string, { teamName: string; subTasks: typeof subTaskConfig.data }> = {};
+                                                                subTaskConfig.data.forEach(subTask => {
+                                                                    const teamKey = subTask.team_id?._id || 'unassigned';
+                                                                    const teamName = subTask.team_id?.name || 'Unassigned Team';
+                                                                    if (!grouped[teamKey]) grouped[teamKey] = { teamName, subTasks: [] };
+                                                                    grouped[teamKey].subTasks.push(subTask);
                                                                 });
                                                                 return Object.entries(grouped).map(([teamKey, group]) => (
                                                                     <div key={teamKey} className="mb-4">
@@ -442,33 +440,33 @@ export default function SprintDetails() {
                                                                                 {group.teamName}
                                                                             </span>
                                                                         </div>
-                                                                        {group.tasks.map((task) => (
-                                                                            <div key={task._id} className="flex items-center justify-between p-3 bg-white border border-[#eee] rounded-xl hover:shadow-sm transition-all group/task mb-1">
+                                                                        {group.subTasks.map((subTask) => (
+                                                                            <div key={subTask._id} className="flex items-center justify-between p-3 bg-white border border-[#eee] rounded-xl hover:shadow-sm transition-all group/subTask mb-1">
                                                                                 <div className="flex items-center gap-3">
-                                                                                    <div className={`w-1.5 h-1.5 rounded-full ${task.status === 'Done' ? 'bg-emerald-500' : task.status === 'In Progress' ? 'bg-[#fa8029]' : task.status === 'In Review' ? 'bg-purple-500' : 'bg-blue-400'}`} />
+                                                                                    <div className={`w-1.5 h-1.5 rounded-full ${subTask.status === 'Done' ? 'bg-emerald-500' : subTask.status === 'In Progress' ? 'bg-[#fa8029]' : subTask.status === 'In Review' ? 'bg-purple-500' : 'bg-blue-400'}`} />
                                                                                     <div>
-                                                                                        <h4 className="text-[13px] font-bold text-[#333]">{task.title}</h4>
+                                                                                        <h4 className="text-[13px] font-bold text-[#333]">{subTask.title}</h4>
                                                                                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                                                                            <span className={`text-[9px] font-black uppercase tracking-wider ${getPriorityColor(task.priority)} px-1.5 py-0.5 rounded border`}>{task.priority}</span>
-                                                                                            <span className="text-[10px] text-[#aaa] font-medium">• {task.estimated_hours} hrs</span>
-                                                                                            {task.created_by && (
+                                                                                            <span className={`text-[9px] font-black uppercase tracking-wider ${getPriorityColor(subTask.priority)} px-1.5 py-0.5 rounded border`}>{subTask.priority}</span>
+                                                                                            <span className="text-[10px] text-[#aaa] font-medium">• {subTask.estimated_hours} hrs</span>
+                                                                                            {subTask.created_by && (
                                                                                                 <span className="text-[9px] text-indigo-500 font-bold flex items-center gap-1">
-                                                                                                    <User size={9} /> Lead: {task.created_by.name}
+                                                                                                    <User size={9} /> Lead: {subTask.created_by.name}
                                                                                                 </span>
                                                                                             )}
-                                                                                            {task.assign_to && (
+                                                                                            {subTask.assignee_id && (
                                                                                                 <span className="text-[9px] text-[#fa8029] font-bold flex items-center gap-1">
-                                                                                                    <User size={9} /> Dev: {task.assign_to.name}
+                                                                                                    <User size={9} /> Dev: {subTask.assignee_id.name}
                                                                                                 </span>
                                                                                             )}
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
-                                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${task.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                                                    task.status === 'In Progress' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                                                                        task.status === 'In Review' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${subTask.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                                                    subTask.status === 'In Progress' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                                                                        subTask.status === 'In Review' ? 'bg-purple-50 text-purple-600 border-purple-100' :
                                                                                             'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                                                                    {task.status}
+                                                                                    {subTask.status}
                                                                                 </span>
                                                                             </div>
                                                                         ))}
@@ -476,25 +474,25 @@ export default function SprintDetails() {
                                                                 ));
                                                             })()
                                                         ) : (
-                                                            // LEAD VIEW: Flat list — only their team's tasks
-                                                            taskConfig?.data.map((task) => (
-                                                                <div key={task._id} className="flex items-center justify-between p-3 bg-white border border-[#eee] rounded-xl hover:shadow-sm transition-all group/task">
+                                                            // LEAD VIEW: Flat list — only their team's sub-tasks
+                                                            subTaskConfig?.data.map((subTask) => (
+                                                                <div key={subTask._id} className="flex items-center justify-between p-3 bg-white border border-[#eee] rounded-xl hover:shadow-sm transition-all group/subTask">
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className={`w-1.5 h-1.5 rounded-full ${task.status === 'Done' ? 'bg-emerald-500' : task.status === 'In Progress' ? 'bg-[#fa8029]' : task.status === 'In Review' ? 'bg-purple-500' : 'bg-blue-400'}`} />
+                                                                        <div className={`w-1.5 h-1.5 rounded-full ${subTask.status === 'Done' ? 'bg-emerald-500' : subTask.status === 'In Progress' ? 'bg-[#fa8029]' : subTask.status === 'In Review' ? 'bg-purple-500' : 'bg-blue-400'}`} />
                                                                         <div>
-                                                                            <h4 className="text-[13px] font-bold text-[#333]">{task.title}</h4>
+                                                                            <h4 className="text-[13px] font-bold text-[#333]">{subTask.title}</h4>
                                                                             <div className="flex items-center gap-2 mt-0.5">
-                                                                                <span className={`text-[9px] font-black uppercase tracking-wider ${getPriorityColor(task.priority)} px-1.5 py-0.5 rounded border`}>{task.priority}</span>
-                                                                                <span className="text-[10px] text-[#aaa] font-medium">• {task.estimated_hours} hrs</span>
+                                                                                <span className={`text-[9px] font-black uppercase tracking-wider ${getPriorityColor(subTask.priority)} px-1.5 py-0.5 rounded border`}>{subTask.priority}</span>
+                                                                                <span className="text-[10px] text-[#aaa] font-medium">• {subTask.estimated_hours} hrs</span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
                                                                         {(can('task:update') || can('task:delete')) && (
-                                                                            <div className="flex items-center bg-[#f9fafb] border border-[#eee] rounded-lg p-0.5 opacity-0 group-hover/task:opacity-100 transition-opacity">
+                                                                            <div className="flex items-center bg-[#f9fafb] border border-[#eee] rounded-lg p-0.5 opacity-0 group-hover/subTask:opacity-100 transition-opacity">
                                                                                 {can('task:update') && (
                                                                                     <button
-                                                                                        onClick={(e) => handleOpenEditModal(e, story._id, task)}
+                                                                                        onClick={(e) => handleOpenEditModal(e, issue._id, subTask)}
                                                                                         className="p-1.5 hover:bg-white hover:text-[#fa8029] rounded-md transition-all text-[#aaa]"
                                                                                         title="Edit/Assign"
                                                                                     >
@@ -503,7 +501,7 @@ export default function SprintDetails() {
                                                                                 )}
                                                                                 {can('task:delete') && (
                                                                                     <button
-                                                                                        onClick={(e) => handleDeleteTask(e, story._id, task._id)}
+                                                                                        onClick={(e) => handleDeleteSubTask(e, issue._id, subTask._id)}
                                                                                         className="p-1.5 hover:bg-white hover:text-red-500 rounded-md transition-all text-[#aaa]"
                                                                                         title="Delete"
                                                                                     >
@@ -512,19 +510,19 @@ export default function SprintDetails() {
                                                                                 )}
                                                                             </div>
                                                                         )}
-                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${task.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                                            task.status === 'In Progress' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                                                                task.status === 'In Review' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${subTask.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                                            subTask.status === 'In Progress' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                                                                subTask.status === 'In Review' ? 'bg-purple-50 text-purple-600 border-purple-100' :
                                                                                     'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                                                            {task.status}
+                                                                            {subTask.status}
                                                                         </span>
-                                                                        {task.assign_to ? (
-                                                                            <div className="w-7 h-7 rounded-lg bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-sm" title={task.assign_to.name}>
-                                                                                {task.assign_to.name.substring(0, 2)}
+                                                                        {subTask.assignee_id ? (
+                                                                            <div className="w-7 h-7 rounded-lg bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-sm" title={subTask.assignee_id.name}>
+                                                                                {subTask.assignee_id.name.substring(0, 2)}
                                                                             </div>
                                                                         ) : can('task:assign') ? (
                                                                             <button
-                                                                                onClick={(e) => { e.stopPropagation(); setTaskToAssign({ storyId: story._id, task }); }}
+                                                                                onClick={(e) => { e.stopPropagation(); setSubTaskToAssign({ issueId: issue._id, subTask }); }}
                                                                                 className="w-7 h-7 rounded-lg bg-[#f5f5f5] flex items-center justify-center text-[#ccc] border border-[#eee] hover:border-[#fa8029] hover:text-[#fa8029] transition-all"
                                                                                 title="Assign Employee"
                                                                             >
@@ -547,46 +545,46 @@ export default function SprintDetails() {
                 </div>
             </div>
 
-            <TaskModal
-                isOpen={isTaskModalOpen}
-                onClose={() => setTaskModalOpen(false)}
-                onSubmit={handleTaskSubmit}
-                isSubmitting={isSubmittingTask}
+            <SubTaskModal
+                isOpen={isSubTaskModalOpen}
+                onClose={() => setSubTaskModalOpen(false)}
+                onSubmit={handleSubTaskSubmit}
+                isSubmitting={isSubmittingSubTask}
                 members={members}
-                isEditing={!!editingTask}
-                initialData={editingTask ? {
-                    title: editingTask.title,
-                    description: editingTask.description || "",
-                    priority: editingTask.priority,
-                    estimated_hours: editingTask.estimated_hours,
-                    assign_to: editingTask.assign_to?._id || "",
-                    status: editingTask.status,
+                isEditing={!!editingSubTask}
+                initialData={editingSubTask ? {
+                    title: editingSubTask.title,
+                    description: editingSubTask.description || "",
+                    priority: editingSubTask.priority,
+                    estimated_hours: editingSubTask.estimated_hours,
+                    assignee_id: editingSubTask.assignee_id?._id || "",
+                    status: editingSubTask.status,
                 } : undefined}
             />
 
             <ConfirmModal
-                isOpen={!!taskToDelete}
-                onClose={() => setTaskToDelete(null)}
-                onConfirm={confirmDeleteTask}
-                title="Delete Task"
-                message="Are you sure you want to delete this task? This action cannot be undone."
-                confirmText="Delete Task"
+                isOpen={!!subTaskToDelete}
+                onClose={() => setSubTaskToDelete(null)}
+                onConfirm={confirmDeleteSubTask}
+                title="Delete Sub-Task"
+                message="Are you sure you want to delete this sub-task? This action cannot be undone."
+                confirmText="Delete Sub-Task"
             />
 
             <MemberSelectModal
-                isOpen={!!storyToAssign}
-                onClose={() => setStoryToAssign(null)}
+                isOpen={!!issueToAssign}
+                onClose={() => setIssueToAssign(null)}
                 onSelect={handleAssignEmployee}
                 members={members}
-                title={`Assign to ${storyToAssign?.type === 'bug' ? 'Bug' : 'Task'}`}
+                title={`Assign to ${issueToAssign?.type === 'bug' ? 'Bug' : 'Issue'}`}
             />
 
             <MemberSelectModal
-                isOpen={!!taskToAssign}
-                onClose={() => setTaskToAssign(null)}
-                onSelect={handleAssignTaskEmployee}
+                isOpen={!!subTaskToAssign}
+                onClose={() => setSubTaskToAssign(null)}
+                onSelect={handleAssignSubTaskEmployee}
                 members={members}
-                title="Assign Task"
+                title="Assign Sub-Task"
             />
         </div>
     );
@@ -605,7 +603,7 @@ function MemberSelectModal({ isOpen, onClose, onSelect, members, title }: {
     return (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative z-[2010] animate-in fade-in zoom-in duration-200 overflow-hidden">
+            <div className="bg-white rounded-2xl w-full max-sm shadow-2xl relative z-[2010] animate-in fade-in zoom-in duration-200 overflow-hidden">
                 <div className="p-5 border-b border-[#f0f0f0] flex items-center justify-between">
                     <h3 className="text-[15px] font-bold text-[#1f2124]">{title}</h3>
                     <button onClick={onClose} className="p-1.5 rounded-lg text-[#aaa] hover:bg-[#f5f5f5] transition-colors">

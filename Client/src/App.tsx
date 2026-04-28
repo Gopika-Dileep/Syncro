@@ -25,7 +25,7 @@ import Teams from '@/features/company/pages/Teams'
 import GetEmployee from '@/features/company/pages/GetEmployee'
 import EmployeeProjects from '@/features/employee/pages/Projects'
 import AddProject from '@/features/employee/pages/AddProject'
-import Tasks from '@/features/employee/pages/Task'
+import SubTasks from '@/features/employee/pages/SubTasks'
 import Team from './features/employee/pages/Team'
 import SprintPlanning from '@/features/employee/pages/SprintPlanning'
 import SprintDetails from '@/features/employee/pages/SprintDetails'
@@ -78,7 +78,7 @@ function App() {
               <Route path='sprints' element={<Sprints />} />
               <Route path='sprints/plan/:sprintId' element={<SprintPlanning />} />
               <Route path='sprints/:sprintId' element={<SprintDetails />} />
-              <Route path='tasks' element={<Tasks/>}/>
+              <Route path='tasks' element={<SubTasks/>}/>
               <Route path='teams'  element={<Team/>}/>
               <Route path='notification' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />

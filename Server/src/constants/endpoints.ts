@@ -35,13 +35,13 @@ export const ENDPOINTS = {
     ROOT: '/',
     BY_PROJECT_ID: '/:projectId',
   },
-  USER_STORIES: {
-    BASE: '/user-stories',
+  ISSUES: {
+    BASE: '/issues',
     ROOT: '/',
     BY_PROJECT: '/project/:projectId',
     BY_SPRINT: '/sprint/:sprintId',
-    BY_STORY_ID: '/:storyId',
-    ASSIGN: '/:storyId/assign',
+    BY_ISSUE_ID: '/:issueId',
+    ASSIGN: '/:issueId/assign',
   },
   TEAMS: {
     BASE: '/teams',
@@ -52,12 +52,12 @@ export const ENDPOINTS = {
     ROOT: '/',
     BY_ID: '/:sprintId',
   },
-  TASKS: {
-    BASE: '/tasks',
+  SUBTASKS: {
+    BASE: '/subtasks',
     ROOT: '/',
-    BY_STORY: '/story/:storyId',
-    BY_ID: '/:taskId',
-    ASSIGN: '/:taskId/assign',
+    BY_ISSUE: '/issue/:issueId',
+    BY_ID: '/:subTaskId',
+    ASSIGN: '/:subTaskId/assign',
     ASSIGNED: '/assigned',
   },
 };

@@ -29,12 +29,12 @@ export const ENDPOINTS = {
         BASE: "/projects",
         BY_ID: (id: string) => `/projects/${id}`,
     },
-    USER_STORIES: {
-        BASE: "/user-stories",
-        BY_PROJECT: (projectId: string) => `/user-stories/project/${projectId}`,
-        BY_SPRINT: (sprintId: string) => `/user-stories/sprint/${sprintId}`,
-        BY_ID: (id: string) => `/user-stories/${id}`,
-        ASSIGN: (id: string) => `/user-stories/${id}/assign`,
+    ISSUES: {
+        BASE: "/issues",
+        BY_PROJECT: (projectId: string) => `/issues/project/${projectId}`,
+        BY_SPRINT: (sprintId: string) => `/issues/sprint/${sprintId}`,
+        BY_ID: (id: string) => `/issues/${id}`,
+        ASSIGN: (id: string) => `/issues/${id}/assign`,
     },
     TEAMS: {
         BASE: "/teams",
@@ -44,13 +44,13 @@ export const ENDPOINTS = {
         BASE: "/sprints",
         BY_ID: (id: string) => `/sprints/${id}`,
     },
-    TASKS: {
-        BASE: "/tasks",
-        BY_STORY: (storyId: string) => `/tasks/story/${storyId}`,
-        BY_ID: (id: string) => `/tasks/${id}`,
-        ASSIGN: (id: string) => `/tasks/${id}/assign`,
-        ASSIGNED: "/tasks/assigned",
-        TEAM: "/tasks/team",
-        ALL: "/tasks/all",
+    SUBTASKS: {
+        BASE: "/subtasks",
+        BY_ISSUE: (issueId: string) => `/subtasks/issue/${issueId}`,
+        BY_ID: (id: string) => `/subtasks/${id}`,
+        ASSIGN: (id: string) => `/subtasks/${id}/assign`,
+        ASSIGNED: "/subtasks/assigned",
+        TEAM: "/subtasks/team",
+        ALL: "/subtasks/all",
     },
 };

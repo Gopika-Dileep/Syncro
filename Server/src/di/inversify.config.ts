@@ -59,21 +59,27 @@ import { DeleteProjectService } from '../service/project/deleteProject.service';
 import { GetProjectInsightsService } from '../service/project/getProjectInsights.service';
 import { TeamController } from '../controller/team.controller';
 import { UserController } from '../controller/user.controller';
-import { UserStoryRepository } from '../repositories/userStory.repository';
-import { UserStoryController } from '../controller/userStory.controller';
-import { IUserStoryRepository } from '../interfaces/repositories/IUserStoryRepository';
-import { ICreateUserStoryService } from '../interfaces/services/userStory/ICreateUserStoryService';
-import { IGetUserStoriesByProjectService } from '../interfaces/services/userStory/IGetUserStoriesByProjectService';
-import { IGetUserStoriesBySprintService } from '../interfaces/services/userStory/IGetUserStoriesBySprintService';
-import { IGetUserStoryByIdService } from '../interfaces/services/userStory/IGetUserStoryByIdService';
-import { IUpdateUserStoryService } from '../interfaces/services/userStory/IUpdateUserStoryService';
-import { IDeleteUserStoryService } from '../interfaces/services/userStory/IDeleteUserStoryService';
-import { CreateUserStoryService } from '../service/userStory/createUserStory.service';
-import { GetUserStoriesByProjectService } from '../service/userStory/getUserStoriesByProject.service';
-import { GetUserStoriesBySprintService } from '../service/userStory/getUserStoriesBySprint.service';
-import { GetUserStoryByIdService } from '../service/userStory/getUserStoryById.service';
-import { UpdateUserStoryService } from '../service/userStory/updateUserStory.service';
-import { DeleteUserStoryService } from '../service/userStory/deleteUserStory.service';
+import { IssueRepository } from '../repositories/issue.repository';
+import { IssueController } from '../controller/issue.controller';
+import { IIssueRepository } from '../interfaces/repositories/IIssueRepository';
+
+// Issue Services
+import { ICreateIssueService } from '../interfaces/services/issue/ICreateIssueService';
+import { IGetIssuesByProjectService } from '../interfaces/services/issue/IGetIssuesByProjectService';
+import { IGetIssuesBySprintService } from '../interfaces/services/issue/IGetIssuesBySprintService';
+import { IGetIssueByIdService } from '../interfaces/services/issue/IGetIssueByIdService';
+import { IUpdateIssueService } from '../interfaces/services/issue/IUpdateIssueService';
+import { IDeleteIssueService } from '../interfaces/services/issue/IDeleteIssueService';
+import { IAssignIssueService } from '../interfaces/services/issue/IAssignIssueService';
+import { CreateIssueService } from '../service/issue/CreateIssueService';
+import { GetIssuesByProjectService } from '../service/issue/GetIssuesByProjectService';
+import { GetIssuesBySprintService } from '../service/issue/GetIssuesBySprintService';
+import { GetIssueByIdService } from '../service/issue/GetIssueByIdService';
+import { UpdateIssueService } from '../service/issue/UpdateIssueService';
+import { DeleteIssueService } from '../service/issue/DeleteIssueService';
+import { AssignIssueService } from '../service/issue/AssignIssueService';
+
+// Auth Services
 import { IRegisterService } from '../interfaces/services/auth/IRegisterService';
 import { IVerifyOtpService } from '../interfaces/services/auth/IVerifyOtpService';
 import { IResendOtpService } from '../interfaces/services/auth/IResendOtpService';
@@ -90,40 +96,50 @@ import { RefreshService } from '../service/auth/refresh.service';
 import { LogoutService } from '../service/auth/logout.service';
 import { ForgotPasswordService } from '../service/auth/forgotPassword.service';
 import { ResetPasswordService } from '../service/auth/resetPassword.service';
+
+// Sprint Services
 import { ISprintRepository } from '../interfaces/repositories/ISprintRepository';
 import { SprintRepository } from '../repositories/sprint.repository';
+import { ICreateSprintService } from '../interfaces/services/sprint/ICreateSprintService';
+import { IGetSprintsService } from '../interfaces/services/sprint/IGetSprintsService';
+import { IUpdateSprintService } from '../interfaces/services/sprint/IUpdateSprintService';
+import { IDeleteSprintService } from '../interfaces/services/sprint/IDeleteSprintService';
+import { IGetSprintByIdService } from '../interfaces/services/sprint/IGetSprintByIdService';
 import { CreateSprintService } from '../service/sprint/createSprint.Service';
 import { GetSprintsService } from '../service/sprint/getSprints.service';
 import { UpdateSprintService } from '../service/sprint/updateSprint.service';
 import { DeleteSprintService } from '../service/sprint/deleteSprint.service';
 import { GetSprintByIdService } from '../service/sprint/getSprintById.service';
 import { SprintController } from '../controller/sprint.controller';
-import { ICreateSprintService } from '../interfaces/services/sprint/ICreateSprintService';
-import { IGetSprintsService } from '../interfaces/services/sprint/IGetSprintsService';
-import { IUpdateSprintService } from '../interfaces/services/sprint/IUpdateSprintService';
-import { IDeleteSprintService } from '../interfaces/services/sprint/IDeleteSprintService';
-import { IGetSprintByIdService } from '../interfaces/services/sprint/IGetSprintByIdService';
-import { ITaskRepository } from '../interfaces/repositories/ITaskRepository';
-import { TaskRepository } from '../repositories/task.repository';
-import { ICreateTaskService } from '../interfaces/services/task/ICreateTaskService';
-import { IUpdateTaskService } from '../interfaces/services/task/IUpdateTaskService';
-import { IDeleteTaskService } from '../interfaces/services/task/IDeleteTaskService';
-import { IGetTaskByIdService } from '../interfaces/services/task/IGetTaskByIdService';
-import { IGetTasksByUserStoryService } from '../interfaces/services/task/IGetTasksByUserStoryService';
-import { IAssignTaskService } from '../interfaces/services/task/IAssignTaskService';
-import { IGetAssignedTasksService } from '../interfaces/services/task/IGetAssignedTasksService';
-import { IGetTeamTasksService } from '../interfaces/services/task/IGetTeamTasksService';
-import { IGetAllTasksService } from '../interfaces/services/task/IGetAllTasksService';
-import { CreateTaskService } from '../service/task/createTask.service';
-import { UpdateTaskService } from '../service/task/updateTask.service';
-import { DeleteTaskService } from '../service/task/deleteTask.service';
-import { GetTaskByIdService } from '../service/task/getTaskById.service';
-import { GetTasksByUserStoryService } from '../service/task/getTasksByUserStory.service';
-import { AssignTaskService } from '../service/task/assignTask.service';
-import { GetAssignedTasksService } from '../service/task/getAssignedTasks.service';
-import { GetTeamTasksService } from '../service/task/getTeamTasks.service';
-import { GetAllTasksService } from '../service/task/getAllTasks.service';
-import { TaskController } from '../controller/task.controller';
+
+// SubTask Services
+import { ISubTaskRepository } from '../interfaces/repositories/ISubTaskRepository';
+import { SubTaskRepository } from '../repositories/subTask.repository';
+import { ICreateSubTaskService } from '../interfaces/services/subTask/ICreateSubTaskService';
+import { IUpdateSubTaskService } from '../interfaces/services/subTask/IUpdateSubTaskService';
+import { IDeleteSubTaskService } from '../interfaces/services/subTask/IDeleteSubTaskService';
+import { IGetSubTaskByIdService } from '../interfaces/services/subTask/IGetSubTaskByIdService';
+import { IGetSubTasksByIssueService } from '../interfaces/services/subTask/IGetSubTasksByIssueService';
+import { IAssignSubTaskService } from '../interfaces/services/subTask/IAssignSubTaskService';
+import { IGetAssignedSubTasksService } from '../interfaces/services/subTask/IGetAssignedSubTasksService';
+import { IGetTeamSubTasksService } from '../interfaces/services/subTask/IGetTeamSubTasksService';
+import { IGetAllSubTasksService } from '../interfaces/services/subTask/IGetAllSubTasksService';
+import { IStartSubTaskService } from '../interfaces/services/subTask/IStartSubTaskService';
+import { ISubmitSubTaskService } from '../interfaces/services/subTask/ISubmitSubTaskService';
+import { IReviewSubTaskService } from '../interfaces/services/subTask/IReviewSubTaskService';
+import { CreateSubTaskService } from '../service/subTask/CreateSubTaskService';
+import { UpdateSubTaskService } from '../service/subTask/UpdateSubTaskService';
+import { DeleteSubTaskService } from '../service/subTask/DeleteSubTaskService';
+import { GetSubTaskByIdService } from '../service/subTask/GetSubTaskByIdService';
+import { GetSubTasksByIssueService } from '../service/subTask/GetSubTasksByIssueService';
+import { AssignSubTaskService } from '../service/subTask/AssignSubTaskService';
+import { GetAssignedSubTasksService } from '../service/subTask/GetAssignedSubTasksService';
+import { GetTeamSubTasksService } from '../service/subTask/GetTeamSubTasksService';
+import { GetAllSubTasksService } from '../service/subTask/GetAllSubTasksService';
+import { StartSubTaskService } from '../service/subTask/StartSubTaskService';
+import { SubmitSubTaskService } from '../service/subTask/SubmitSubTaskService';
+import { ReviewSubTaskService } from '../service/subTask/ReviewSubTaskService';
+import { SubTaskController } from '../controller/subTask.controller';
 
 const container = new Container();
 
@@ -133,9 +149,9 @@ container.bind<IEmployeeRepository>(TYPES.IEmployeeRepository).to(EmployeeReposi
 container.bind<IPermissionRepository>(TYPES.IPermissionRepository).to(PermissionRepository);
 container.bind<ITeamRepository>(TYPES.ITeamRepository).to(TeamRepository);
 container.bind<IProjectRepository>(TYPES.IProjectRepository).to(ProjectRepository);
-container.bind<IUserStoryRepository>(TYPES.IUserStoryRepository).to(UserStoryRepository);
+container.bind<IIssueRepository>(TYPES.IIssueRepository).to(IssueRepository);
 container.bind<ISprintRepository>(TYPES.ISprintRepository).to(SprintRepository);
-container.bind<ITaskRepository>(TYPES.ITaskRepository).to(TaskRepository);
+container.bind<ISubTaskRepository>(TYPES.ISubTaskRepository).to(SubTaskRepository);
 
 container.bind<IAddEmployeeService>(TYPES.IAddEmployeeService).to(AddEmployeeService);
 container.bind<IGetEmployeesService>(TYPES.IGetEmployeesService).to(GetEmployeesService);
@@ -158,38 +174,45 @@ container.bind<IGetProjectByIdService>(TYPES.IGetProjectByIdService).to(GetProje
 container.bind<IUpdateProjectService>(TYPES.IUpdateProjectService).to(UpdateProjectService);
 container.bind<IDeleteProjectService>(TYPES.IDeleteProjectService).to(DeleteProjectService);
 container.bind<IGetProjectInsightsService>(TYPES.IGetProjectInsightsService).to(GetProjectInsightsService);
-container.bind<ICreateUserStoryService>(TYPES.ICreateUserStoryService).to(CreateUserStoryService);
-container.bind<IGetUserStoriesByProjectService>(TYPES.IGetUserStoriesByProjectService).to(GetUserStoriesByProjectService);
-container.bind<IGetUserStoriesBySprintService>(TYPES.IGetUserStoriesBySprintService).to(GetUserStoriesBySprintService);
-container.bind<IGetUserStoryByIdService>(TYPES.IGetUserStoryByIdService).to(GetUserStoryByIdService);
-container.bind<IUpdateUserStoryService>(TYPES.IUpdateUserStoryService).to(UpdateUserStoryService);
-container.bind<IDeleteUserStoryService>(TYPES.IDeleteUserStoryService).to(DeleteUserStoryService);
 
+// Issue Service Bindings
+container.bind<ICreateIssueService>(TYPES.ICreateIssueService).to(CreateIssueService);
+container.bind<IGetIssuesByProjectService>(TYPES.IGetIssuesByProjectService).to(GetIssuesByProjectService);
+container.bind<IGetIssuesBySprintService>(TYPES.IGetIssuesBySprintService).to(GetIssuesBySprintService);
+container.bind<IGetIssueByIdService>(TYPES.IGetIssueByIdService).to(GetIssueByIdService);
+container.bind<IUpdateIssueService>(TYPES.IUpdateIssueService).to(UpdateIssueService);
+container.bind<IDeleteIssueService>(TYPES.IDeleteIssueService).to(DeleteIssueService);
+container.bind<IAssignIssueService>(TYPES.IAssignIssueService).to(AssignIssueService);
+
+// Sprint Service Bindings
 container.bind<ICreateSprintService>(TYPES.ICreateSprintService).to(CreateSprintService);
 container.bind<IGetSprintsService>(TYPES.IGetSprintsService).to(GetSprintsService);
 container.bind<IUpdateSprintService>(TYPES.IUpdateSprintService).to(UpdateSprintService);
 container.bind<IDeleteSprintService>(TYPES.IDeleteSprintService).to(DeleteSprintService);
 container.bind<IGetSprintByIdService>(TYPES.IGetSprintByIdService).to(GetSprintByIdService);
 
-container.bind<ICreateTaskService>(TYPES.ICreateTaskService).to(CreateTaskService);
-container.bind<IUpdateTaskService>(TYPES.IUpdateTaskService).to(UpdateTaskService);
-container.bind<IDeleteTaskService>(TYPES.IDeleteTaskService).to(DeleteTaskService);
-container.bind<IGetTaskByIdService>(TYPES.IGetTaskByIdService).to(GetTaskByIdService);
-container.bind<IGetTasksByUserStoryService>(TYPES.IGetTasksByUserStoryService).to(GetTasksByUserStoryService);
-container.bind<IAssignTaskService>(TYPES.IAssignTaskService).to(AssignTaskService);
-container.bind<IGetAssignedTasksService>(TYPES.IGetAssignedTasksService).to(GetAssignedTasksService);
-container.bind<IGetTeamTasksService>(TYPES.IGetTeamTasksService).to(GetTeamTasksService);
-container.bind<IGetAllTasksService>(TYPES.IGetAllTasksService).to(GetAllTasksService);
-
+// SubTask Service Bindings
+container.bind<ICreateSubTaskService>(TYPES.ICreateSubTaskService).to(CreateSubTaskService);
+container.bind<IUpdateSubTaskService>(TYPES.IUpdateSubTaskService).to(UpdateSubTaskService);
+container.bind<IDeleteSubTaskService>(TYPES.IDeleteSubTaskService).to(DeleteSubTaskService);
+container.bind<IGetSubTaskByIdService>(TYPES.IGetSubTaskByIdService).to(GetSubTaskByIdService);
+container.bind<IGetSubTasksByIssueService>(TYPES.IGetSubTasksByIssueService).to(GetSubTasksByIssueService);
+container.bind<IAssignSubTaskService>(TYPES.IAssignSubTaskService).to(AssignSubTaskService);
+container.bind<IGetAssignedSubTasksService>(TYPES.IGetAssignedSubTasksService).to(GetAssignedSubTasksService);
+container.bind<IGetTeamSubTasksService>(TYPES.IGetTeamSubTasksService).to(GetTeamSubTasksService);
+container.bind<IGetAllSubTasksService>(TYPES.IGetAllSubTasksService).to(GetAllSubTasksService);
+container.bind<IStartSubTaskService>(TYPES.IStartSubTaskService).to(StartSubTaskService);
+container.bind<ISubmitSubTaskService>(TYPES.ISubmitSubTaskService).to(SubmitSubTaskService);
+container.bind<IReviewSubTaskService>(TYPES.IReviewSubTaskService).to(ReviewSubTaskService);
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);
 container.bind<TeamController>(TYPES.TeamController).to(TeamController);
 container.bind<UserController>(TYPES.UserController).to(UserController);
 container.bind<ProjectController>(TYPES.ProjectController).to(ProjectController);
-container.bind<UserStoryController>(TYPES.UserStoryController).to(UserStoryController);
+container.bind<IssueController>(TYPES.IssueController).to(IssueController);
 container.bind<SprintController>(TYPES.SprintController).to(SprintController);
-container.bind<TaskController>(TYPES.TaskController).to(TaskController);
+container.bind<SubTaskController>(TYPES.SubTaskController).to(SubTaskController);
 
 container.bind<IRegisterService>(TYPES.IRegisterService).to(RegisterService);
 container.bind<IVerifyOtpService>(TYPES.IVerifyOtpService).to(VerifyOtpService);

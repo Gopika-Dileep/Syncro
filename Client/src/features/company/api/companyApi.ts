@@ -34,7 +34,7 @@ export interface EmployeePermissions {
         start: boolean;
         complete: boolean;
     };
-    userStory: {
+    issue: {
         create: boolean;
         view: { all: boolean };
         update: boolean;

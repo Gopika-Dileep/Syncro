@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { ISprintRepository } from '../../interfaces/repositories/ISprintRepository';
-import { IUserStoryRepository } from '../../interfaces/repositories/IUserStoryRepository';
+import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { IGetSprintByIdService } from '../../interfaces/services/sprint/IGetSprintByIdService';
 import { SprintResponseDTO } from '../../dto/sprint.dto';
 import { SprintMapper } from '../../mappers/sprint.mapper';
@@ -12,7 +12,7 @@ import { NotFoundError } from '../../errors/AppError';
 export class GetSprintByIdService implements IGetSprintByIdService {
   constructor(
     @inject(TYPES.ISprintRepository) private _sprintRepository: ISprintRepository,
-    @inject(TYPES.IUserStoryRepository) private _userStoryRepo: IUserStoryRepository,
+    @inject(TYPES.IIssueRepository) private _issueRepo: IIssueRepository,
   ) {}
 
   async execute(id: string): Promise<{ message: string; data: SprintResponseDTO }> {
@@ -22,8 +22,8 @@ export class GetSprintByIdService implements IGetSprintByIdService {
       throw new NotFoundError(SPRINT_MESSAGES.NOT_FOUND);
     }
 
-    const stories = await this._userStoryRepo.findAllBySprintIds([id]);
-    const committedPoints = stories.reduce((sum, s) => sum + (s.story_points || 0), 0);
+    const issues = await this._issueRepo.findAllBySprintIds([id]);
+    const committedPoints = issues.reduce((sum, i) => sum + (i.story_points || 0), 0);
 
     return {
       message: SPRINT_MESSAGES.FETCH_SUCCESS,

@@ -44,7 +44,7 @@ export class TaskController {
       const userId = req.userId!;
       const task = await this._updateTaskService.execute(taskId as string, req.body, userId);
       res.status(HttpStatus.OK).json({ success: true, data: task, message: TASK_MESSAGES.UPDATE_SUCCESS });
-    } catch (error) {
+    } catch (error) { 
       handleAsyncError(error, next);
     }
   };

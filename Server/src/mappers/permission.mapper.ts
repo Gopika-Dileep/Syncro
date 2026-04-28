@@ -35,14 +35,14 @@ export class PermissionMapper {
       if (p.sprint.complete) keys.push('sprint:complete');
     }
 
-    if (p.userStory) {
-      if (p.userStory.create) keys.push('userStory:create');
-      if (p.userStory.view.all) keys.push('userStory:view:all');
-      if (p.userStory.update) keys.push('userStory:update');
-      if (p.userStory.delete) keys.push('userStory:delete');
-      if (p.userStory.assign) keys.push('userStory:assign');
-      if (p.userStory.assignEmployee) keys.push('userStory:assignEmployee');
-      if (p.userStory.comment) keys.push('userStory:comment');
+    if (p.issue) {
+      if (p.issue.create) keys.push('issue:create');
+      if (p.issue.view.all) keys.push('issue:view:all');
+      if (p.issue.update) keys.push('issue:update');
+      if (p.issue.delete) keys.push('issue:delete');
+      if (p.issue.assign) keys.push('issue:assign');
+      if (p.issue.assignEmployee) keys.push('issue:assignEmployee');
+      if (p.issue.comment) keys.push('issue:comment');
     }
 
     if (p.team) {
@@ -58,7 +58,7 @@ export class PermissionMapper {
       project: { create: false, view: { all: false, assigned: false }, update: false, delete: false },
       task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, start: false, submit: false, review: false },
       sprint: { create: false, view: { all: false }, update: false, delete: false, addStory: false, start: false, complete: false },
-      userStory: { create: false, view: { all: false }, update: false, delete: false, assign: false, assignEmployee: false, comment: false },
+      issue: { create: false, view: { all: false }, update: false, delete: false, assign: false, assignEmployee: false, comment: false },
       team: { view: { team: false, all: false } },
     };
 
@@ -83,4 +83,3 @@ export class PermissionMapper {
     return p;
   }
 }
-

@@ -1,0 +1,512 @@
+# 📘 Full Project Management Guide — Corrected & Complete
+
+---
+
+## 🏗️ PART 1: The Hierarchy (The Structure)
+
+Everything in project management follows a strict Parent → Child structure.
+
+```
+PROJECT
+   |
+   └── EPIC (The Big Goal)
+           |
+           ├── STORY  (A User-facing Feature)
+           ├── TASK   (A Technical Job — no user value)
+           └── BUG    (A Problem to Fix)
+                       |
+                       └── SUB-TASK (The smallest step inside a Story/Task/Bug)
+```
+
+---
+
+### Level 1: PROJECT
+- This is the "House" itself.
+- Everything — Epics, Stories, Bugs — all belong to one Project.
+- Example: *"Build an E-Commerce Website."*
+- **Created by:** Project Manager.
+
+---
+
+### Level 2: EPIC
+- An Epic is a large feature that takes multiple weeks or months.
+- Example: *"User Authentication System"* (Login, Register, Forgot Password — all together).
+- Think of it as the "folder" that holds all the related work.
+- An Epic usually spans multiple Sprints.
+- **Created by:** Project Manager.
+
+---
+
+### Level 3: STORY / TASK / BUG (The Issues — All at the Same Level)
+
+> ⚠️ **Important:** Story, Task, and Bug are all at the SAME level.  
+> They all directly belong to an Epic.  
+> A Task is NOT inside a Story. A Bug is NOT inside a Story.
+
+| Type | What is it? | Written as | Created by | Has Points? |
+|------|------------|------------|------------|-------------|
+| **Story** | A feature from the user's point of view | *"As a user, I want to log in."* | **Project Manager** | ✅ YES |
+| **Task** | A pure technical job with no direct user value | *"Set up the CI/CD pipeline"* | **Team Lead** | ❌ NO (Uses Hours) |
+| **Bug** | A problem or mistake found in the software | *"Login button missing on mobile"* | **Anyone** | ❌ NO (Uses Hours) |
+
+**Why can't a Task be written as a Story?**
+A Story must make sense to the user. *"As a user, I want a CI/CD pipeline"* makes no sense to a user — so it becomes a **Task** instead, and the Team Lead creates it.
+
+---
+
+### Level 4: SUB-TASK (The Smallest Step)
+- A Sub-task lives **inside** a Story, Task, or Bug.
+- These are the tiny technical steps that break down the work.
+- Example: Inside the *"Login Page"* Story:
+  - Sub-task 1: "Design the HTML form" → Frontend Developer
+  - Sub-task 2: "Connect to the API" → Backend Developer
+  - Sub-task 3: "Test on mobile" → QA Developer
+- **Created by:** Team Lead (during Sprint Planning) and Developers (during the active Sprint).
+- **Assigned by:** Team Lead.
+
+---
+
+### ✅ How a Multi-Team Story Works (Login Page Example)
+
+A story like *"As a user, I want a Login Page"* involves multiple teams.  
+**You do NOT split it into two Stories.** You keep it as ONE Story and create Sub-tasks for each team:
+
+```
+STORY: "As a user, I want to log in"  (5 points)
+    |
+    ├── SUB-TASK: "Design Login UI"           → Frontend Developer
+    ├── SUB-TASK: "Build Login API routes"    → Backend Developer
+    └── SUB-TASK: "Connect Frontend to API"  → Frontend Developer
+```
+
+The Story remains ONE item with its Story Points. The Sub-tasks divide the technical work across teams.
+
+---
+
+## 👥 PART 2: The Roles — Who Does What?
+
+### 🟣 Project Manager (The Architect)
+The Manager sees the "Big Picture." They don't do technical work — they define what needs to be built and why.
+
+| What they do | Details |
+|---|---|
+| **Creates** | Project, Epic, User Stories |
+| **Mentions** | Team Leads inside the Stories (to notify them) |
+| **Creates** | The Sprint |
+| **Adds** | Stories, Tasks, Bugs into the Sprint |
+| **Starts** | The Sprint |
+| **Completes** | The Sprint |
+| **Monitors** | Overall progress (Burndown Chart, Velocity) |
+
+---
+
+### 🔵 Team Lead (The Foreman — one per team)
+The Lead bridges the Manager and Developers. There can be multiple Team Leads (Frontend Lead, Backend Lead, Design Lead). Each Lead manages only their team's work.
+
+| What they do | Details |
+|---|---|
+| **Receives** | @Mention notification from the Manager on Stories |
+| **Creates** | Tasks (technical jobs for their team) |
+| **Creates** | Sub-tasks (breaking down Stories during Sprint Planning) |
+| **Assigns** | Tasks, Sub-tasks, and Bugs to their Developers |
+| **Reviews** | Their team's completed work |
+
+> ⚠️ **Multiple Team Leads and Sprint Planning:**  
+> The Manager owns and runs the Sprint. During the Planning Meeting, all Team Leads attend together. Each Lead says how many stories their team can handle. After the meeting, each Lead assigns the work to their own developers. No single Lead "manages" the whole Sprint — that is the Manager's job.
+
+---
+
+### 🟢 Developer (The Worker)
+Developers do the actual building. They receive assignments from the Team Lead.
+
+| What they do | Details |
+|---|---|
+| **Receives** | Task or Sub-task assignment from Team Lead |
+| **Creates** | Additional Sub-tasks (if they discover more work during the Sprint) |
+| **Creates** | Bugs (when they find a problem while working) |
+| **Updates** | Status: To Do → In Progress → In Review → Done |
+| **Estimates** | Hours for Sub-tasks |
+
+---
+
+### 🟡 Anyone (Manager, Lead, Developer, Tester)
+| What they do | Details |
+|---|---|
+| **Creates** | Bugs (anyone who finds a problem can report it) |
+| **Uses** | @Mentions to communicate inside tasks |
+
+---
+
+## ✅ PART 3: The Final "Who Creates What" Summary
+
+```
+MANAGER
+  ├── Creates: Project
+  ├── Creates: Epic
+  ├── Creates: User Stories  (mentions Team Leads inside them)
+  ├── Creates Sprint, Starts Sprint, Completes Sprint
+  └── Adds Stories/Tasks/Bugs into Sprint
+
+TEAM LEAD (per team — Frontend Lead, Backend Lead, etc.)
+  ├── Creates: Tasks (technical jobs under an Epic)
+  ├── Creates: Sub-tasks (during Sprint Planning, to break down Stories)
+  └── Assigns: Sub-tasks, Tasks, Bugs → to their Developers
+
+DEVELOPER
+  ├── Creates: Additional Sub-tasks (during active Sprint if needed)
+  └── Creates: Bugs (when found while working)
+
+ANYONE (Manager / Lead / Developer / Tester)
+  └── Creates: Bugs (whoever finds the problem reports it)
+```
+
+---
+
+## 📦 PART 4: The Backlog (The Waiting Room)
+
+### What is the Backlog?
+The Backlog is a giant prioritized list of ALL the work that has been created but not yet started. Every Story, Task, and Bug goes here first.
+
+- The Manager creates Stories → They go into the Backlog.
+- The Lead creates Tasks → They go into the Backlog.
+- Anyone creates a Bug → It goes into the Backlog.
+- Items at the top of the Backlog = Most important (Highest Priority).
+- Items at the bottom = Less urgent, may never be done.
+
+### Multiple Projects and the Backlog
+A team can be responsible for multiple projects at the same time.  
+During Sprint Planning, the Manager looks at the Backlogs of ALL projects and picks the most urgent items from each to put into the ONE Sprint. The team then works on items from multiple projects in the same 2-week Sprint.
+
+---
+
+## ⏱️ PART 5: The Sprint (The 2-Week Race)
+
+### What is a Sprint?
+A Sprint is a fixed 2-week window where the team picks a set of items from the Backlog and commits to finishing them.
+
+- **Duration:** Always 2 weeks (10 working days).
+- **One at a time:** A team runs only ONE Sprint at a time. Sprint 2 starts only after Sprint 1 ends.
+- **Belongs to:** The Project Manager owns the Sprint.
+
+---
+
+## 📋 PART 6: Sprint Planning (The Setup Meeting)
+
+This meeting happens **BEFORE the Sprint starts**, on the morning of Day 1.
+
+### Step 1 — Look at the Backlog
+The Manager opens the Backlog sorted by Priority. The most important items are at the top.
+
+### Step 2 — Pick Stories and Tasks (The Point Check)
+The team picks Stories until they reach their Velocity Target (e.g., 38–40 points).
+- It does NOT have to be exactly 40. Anywhere from **35 to 42** is fine.
+- It is a Target Range, not a fixed number.
+- Tasks and Bugs with 0 points are also added but they consume available hours.
+
+### Step 3 — Break into Sub-Tasks (The Hour Check)
+The Team Leads and Developers break each Story into Sub-tasks with estimated hours.
+- Story *"Login Page"* → Sub-task A: 4 hrs, Sub-task B: 6 hrs, Sub-task C: 3 hrs = **13 hours total**
+
+### Step 4 — Check the Capacity
+Each team checks if their total Sub-task hours fit within their available time.
+
+> **Example (Backend Team — 3 people):**  
+> 3 Developers × 8 hours/day × 10 days = **240 total hours**  
+> We only plan for 70% = **168 hours** (the other 30% is a buffer for surprise bugs and meetings)
+>
+> - Sub-task hours = 140 hrs → ✅ Safe, proceed.
+> - Sub-task hours = 200 hrs → ❌ Too much! Remove a Story.
+
+### Step 5 — Start the Sprint
+Once all teams agree, the **Manager clicks "Start Sprint."**
+
+---
+
+## 🔢 PART 7: Story Points (The Complexity Score)
+
+### What are Story Points?
+Story Points measure how **complex** a Story is — NOT how many hours it takes.
+
+- Simple Login Form = 3 points
+- Payment Integration = 13 points
+- Send an Email = 1 point
+
+Common scale: **1, 2, 3, 5, 8, 13, 21** (Fibonacci numbers — complexity jumps, not linear)
+
+### Who gets Story Points?
+
+| Item | Gets Story Points? | Measured by |
+|---|---|---|
+| **Story** | ✅ YES | Points (Complexity) |
+| **Task** | ❌ NO | Hours (Time) |
+| **Bug** | ❌ NO | Hours (Time) |
+| **Sub-task** | ❌ NO | Hours (Time) |
+
+### How Sprint Total Points are Calculated
+Sprint Total Points = Sum of all **Story Points** in the Sprint.
+
+> **Example:**
+> - Story 1: 5 points
+> - Story 2: 8 points
+> - Story 3: 5 points
+> - Task 1: 0 points (uses hours instead)
+> - Bug 1: 0 points (uses hours instead)
+> - **Sprint Total = 18 points**
+
+Tasks and Bugs take up hours from the team's capacity but do NOT add to the points total.
+
+---
+
+## 📈 PART 8: Velocity (How Fast is the Team?)
+
+### What is Velocity?
+Velocity = The number of **Story Points the team actually finished** at the end of a Sprint.
+
+### How to Calculate:
+- Sprint 1 finished: 35 points → Velocity = 35
+- Sprint 2 finished: 38 points → Velocity = 38
+- Sprint 3 finished: 30 points → Velocity = 30
+
+**Average Velocity = (35 + 38 + 30) ÷ 3 = 34 points**
+
+> Yes — if you have 5 sprints, you add all 5 and divide by 5.  
+> Most teams use the last 3–5 sprints for the most accurate average.
+
+### What counts toward Velocity?
+**Only 100% "Done" Stories count.**  
+If a Story is 80% finished but not marked "Done" by the end of the Sprint → It counts as **0 points** for this Sprint.
+
+### Why do we track Velocity?
+- Helps the Manager plan the future.
+- If Average Velocity = 34 and you have 340 points left → **10 more Sprints = 20 more weeks** until the project is done.
+- Sets the target for the next Sprint: *"Don't plan more than 34 points."*
+
+---
+
+## 📉 PART 9: Burndown Chart (The Health Monitor)
+
+### What is a Burndown Chart?
+A line graph that shows if the team will finish the Sprint on time.
+
+- **Vertical axis (Y):** Story Points remaining (starts at the Sprint total, e.g., 38)
+- **Horizontal axis (X):** Days of the Sprint (Day 1 to Day 10)
+- **The Line:** As Stories are marked "Done," points drop. The line "burns down" toward zero.
+- **Goal:** The line should reach **zero on the last day.**
+
+### The 3 Scenarios:
+
+**✅ Healthy Sprint (On Track)**
+```
+Day 1:  38 pts  (Sprint starts)
+Day 3:  28 pts
+Day 5:  20 pts
+Day 8:  10 pts
+Day 10:  0 pts  ← Done! ✅
+```
+
+**❌ Behind Schedule**
+```
+Day 5:  35 pts  (Almost no work done — WARNING!)
+Day 10: 20 pts  ← Sprint Failed ❌
+```
+
+**⚠️ Scope Added Mid-Sprint (Emergency Bug)**
+```
+Day 1:  38 pts
+Day 4:  28 pts
+Day 5:  33 pts  ← LINE WENT UP (A Bug was added to the sprint!)
+Day 10:  0 pts  ← Recovered ✅
+```
+The line going UP means extra work was added. This is visible to everyone.
+
+---
+
+## 🔄 PART 10: Managing an Active Sprint
+
+Once the Sprint starts, you are NOT locked. You can still add or remove items.
+
+### Adding items (Emergency Bug):
+1. Create the Bug in the Backlog.
+2. Drag it into the Active Sprint.
+3. The tool shows a warning: *"This changes the Sprint scope."* Confirm it.
+4. The Burndown line goes UP briefly, then continues down as the Bug is fixed.
+5. This is why the 30% buffer time exists — for exactly these situations.
+
+### Removing items (Task is Bigger than Expected):
+1. A Developer says: *"This task needs 50 hours, not 5."*
+2. The Team Lead finds a Story that has NOT been started yet (still in "To Do").
+3. That Story is moved BACK to the Backlog.
+4. The Developer now has time for the bigger-than-expected task.
+
+> ⚠️ **Rule:** Only swap items that have NOT been started.  
+> Never remove a Story that is already "In Progress."
+
+---
+
+## 🏷️ PART 11: Priority (How Urgent?)
+
+Every issue (Story, Task, Bug) has a Priority:
+
+| Priority | Meaning | Example |
+|---|---|---|
+| **Critical** | Fix immediately, everything stops | The whole app is down |
+| **High** | Fix in the current Sprint | Payment system is broken |
+| **Medium** | Fix in the next Sprint | A dropdown shows wrong options |
+| **Low** | Fix whenever there is free time | A spelling mistake on a hidden page |
+
+---
+
+## 📊 PART 12: Kanban Board vs. Scrum
+
+### Scrum
+The entire framework — the rules, the 2-week sprints, the planning meetings, the roles. It is the "Game" you are playing.
+
+### Kanban Board
+Just the **visual board** — the "Scoreboard" with columns: `To Do → In Progress → In Review → Done`
+
+### Can you have BOTH?
+**Yes!** When using Scrum (Sprints), your board is called a **"Scrum Board."** It looks like a Kanban Board but only shows items from the **current active Sprint.** Each card moves across the columns as developers make progress.
+
+| Feature | Scrum | Pure Kanban |
+|---|---|---|
+| Time Box | Yes — Fixed 2-week Sprints | No — Continuous flow |
+| Planning Meeting | Yes — Before each Sprint | No formal planning |
+| Best for | Feature development | Bug fixing, support teams |
+
+---
+
+## ✉️ PART 13: Mentions and Communication
+
+### What is a Mention?
+When inside a Story, Task, or Bug, you type `@SomeonesName` in a comment. That person immediately gets a notification (email or in-app).
+
+| Situation | Who mentions who? |
+|---|---|
+| Developer is stuck | `@TeamLead, I can't connect to the database.` |
+| Developer finished, wants review | `@TeamLead, This story is ready for review.` |
+| Manager assigns a story | `@FrontendLead @BackendLead, please check this story.` |
+| Bug affects another team | `@AnotherLead, this bug is in your module.` |
+
+All communication stays **inside the task** — no separate emails needed. Anyone reading the task later can see the full history.
+
+---
+
+## 🎯 PART 14: Sprint Completion
+
+### What happens at the end of a Sprint?
+
+**Step 1 — Check what's Done**
+Manager and Team Leads look at the Sprint. Which Stories are "Done"? Which are not?
+
+**Step 2 — Carry-over Decision**
+Stories that are NOT done cannot disappear. Two options:
+- Move to **Backlog** (not urgent, will be picked up later)
+- Move to **Next Sprint** (important, must be done next)
+
+**Step 3 — Complete Sprint**
+Manager clicks "Complete Sprint." Incomplete items automatically move to the Backlog.
+
+**Step 4 — Velocity Recorded**
+Only 100% "Done" Stories count. Incomplete Stories = 0 points for this Sprint.
+
+**Step 5 — Retrospective Meeting (30 minutes)**
+Team answers 3 questions:
+- *"What went well this Sprint?"*
+- *"What was slow or painful?"*
+- *"What can we do better next Sprint?"*
+
+---
+
+## 🔁 PART 15: The Complete Flow — Start to Finish
+
+```
+1. MANAGER creates the PROJECT
+          ↓
+2. MANAGER creates the EPIC (Big Goal)
+          ↓
+3. MANAGER creates USER STORIES
+   (mentions Team Leads inside them via @mention)
+   TEAM LEAD creates TASKS
+   (for pure technical work with no user value)
+   All go into the BACKLOG first.
+          ↓
+4. MANAGER creates a SPRINT (sets Start & End Date)
+          ↓
+5. SPRINT PLANNING MEETING (All Leads + Manager together)
+   - Manager picks Stories & Tasks from Backlog
+   - Each Lead says how many items their team can handle
+   - Leads & Developers break Stories into Sub-tasks with hours
+   - Each team checks their hours vs. their capacity (70% rule)
+   - Adjustments made if needed
+          ↓
+6. MANAGER clicks "START SPRINT"
+          ↓
+7. TEAM LEAD assigns Sub-tasks, Tasks, and Bugs to Developers
+          ↓
+8. DEVELOPERS work on their assignments
+   - Move items: To Do → In Progress → In Review → Done
+   - Create Bugs if problems found
+   - @Mention teammates when needed
+   - Add Sub-tasks if more work is discovered
+          ↓
+9. TEAM LEAD monitors their team's progress daily
+   MANAGER monitors the Burndown Chart & overall progress
+          ↓
+10. Sprint ends (Day 10)
+    MANAGER clicks "COMPLETE SPRINT"
+    Incomplete items → moved to Backlog
+    Velocity is recorded
+          ↓
+11. RETROSPECTIVE MEETING (30 minutes)
+          ↓
+12. NEXT SPRINT starts → Go back to Step 4
+          ↓
+13. When ALL Epics are "Done" → PROJECT IS COMPLETE
+```
+
+---
+
+## 🧩 PART 16: Quick Reference Cheat Sheet
+
+### The Hierarchy:
+```
+Project → Epic → Story / Task / Bug → Sub-task
+```
+
+### Who Creates What:
+| Item | Created By |
+|---|---|
+| Project | Manager |
+| Epic | Manager |
+| Story | Manager |
+| Task (at Epic level) | Team Lead |
+| Bug | Anyone |
+| Sprint | Manager |
+| Sub-tasks | Team Lead (planning) / Developer (during Sprint) |
+
+### Who Assigns What:
+| Item | Assigned By |
+|---|---|
+| Story (to a Lead) | Manager (via @mention) |
+| Task → Developer | Team Lead |
+| Sub-task → Developer | Team Lead |
+| Bug → Developer | Team Lead |
+
+### The Two "Currencies":
+| Currency | Used for | Purpose |
+|---|---|---|
+| **Story Points** | Stories only | Planning complexity, measuring Velocity |
+| **Hours** | Tasks, Sub-tasks, Bugs | Time management, checking Capacity |
+
+### Sprint in one line:
+> Pick work from Backlog → Plan it → Start → Work on it → Mark Done → Complete → Repeat.
+
+### Velocity in one line:
+> Add up the Story Points of all "Done" Stories at the end of the Sprint.
+
+### Burndown in one line:
+> A line graph that starts high (total points) and must hit zero by the last day.
+
+---
+
+*This is the complete, corrected guide covering every concept discussed — from the full hierarchy, corrected roles, multi-team management, Sprint planning, Points vs. Hours, Velocity, Burndown Charts, Kanban vs. Scrum, Mentions, and the complete Sprint lifecycle.*

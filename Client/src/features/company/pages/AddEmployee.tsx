@@ -19,7 +19,7 @@ import { employeeSchema, getZodErrors, type EmployeeformInput } from "@/lib/sche
 
 const initialPermissions: EmployeePermissions = {
     project: { create: false, view: { all: false, assigned: false }, update: false, delete: false },
-    userStory: { create: false, view: { all: false }, update: false, delete: false, assign: false, assignEmployee: false, comment: false },
+    issue: { create: false, view: { all: false }, update: false, delete: false, assign: false, assignEmployee: false, comment: false },
     sprint: { create: false, view: { all: false }, update: false, delete: false, addStory: false, start: false, complete: false },
     task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, start: false, submit: false, review: false },
     team: { view: { team: false, all: false } }
@@ -95,6 +95,7 @@ export default function AddEmployee() {
             setFetching(false);
         }
     }, [userId, isEditMode, navigate]);
+
     useEffect(() => {
         const fetchTeams = async () => {
             try {
@@ -306,15 +307,15 @@ export default function AddEmployee() {
                             ]}
                         />
                         <ModuleItem
-                            icon={<Layers size={13} />} title="User Story (Backlog)"
+                            icon={<Layers size={13} />} title="Issue (Story, Bug, Task)"
                             items={[
-                                { label: "Create", checked: permissions.userStory.create, onClick: () => handlePermissionToggle('userStory', 'create') },
-                                { label: "View All", checked: permissions.userStory.view.all, onClick: () => handlePermissionToggle('userStory', 'view', 'all') },
-                                { label: "Update", checked: permissions.userStory.update, onClick: () => handlePermissionToggle('userStory', 'update') },
-                                { label: "Delete", checked: permissions.userStory.delete, onClick: () => handlePermissionToggle('userStory', 'delete') },
-                                { label: "Assign", checked: permissions.userStory.assign, onClick: () => handlePermissionToggle('userStory', 'assign') },
-                                { label: "Assign Employee", checked: permissions.userStory.assignEmployee, onClick: () => handlePermissionToggle('userStory', 'assignEmployee') },
-                                { label: "Comment", checked: permissions.userStory.comment, onClick: () => handlePermissionToggle('userStory', 'comment') },
+                                { label: "Create", checked: permissions.issue.create, onClick: () => handlePermissionToggle('issue', 'create') },
+                                { label: "View All", checked: permissions.issue.view.all, onClick: () => handlePermissionToggle('issue', 'view', 'all') },
+                                { label: "Update", checked: permissions.issue.update, onClick: () => handlePermissionToggle('issue', 'update') },
+                                { label: "Delete", checked: permissions.issue.delete, onClick: () => handlePermissionToggle('issue', 'delete') },
+                                { label: "Assign", checked: permissions.issue.assign, onClick: () => handlePermissionToggle('issue', 'assign') },
+                                { label: "Assign Employee", checked: permissions.issue.assignEmployee, onClick: () => handlePermissionToggle('issue', 'assignEmployee') },
+                                { label: "Comment", checked: permissions.issue.comment, onClick: () => handlePermissionToggle('issue', 'comment') },
                             ]}
                         />
                         <ModuleItem
@@ -330,7 +331,7 @@ export default function AddEmployee() {
                             ]}
                         />
                         <ModuleItem
-                            icon={<CheckCircle size={13} />} title="Task Workflow"
+                            icon={<CheckCircle size={13} />} title="Task Workflow (Sub-tasks)"
                             items={[
                                 { label: "Create", checked: permissions.task.create, onClick: () => handlePermissionToggle('task', 'create') },
                                 { label: "View Assigned", checked: permissions.task.view.assigned, onClick: () => handlePermissionToggle('task', 'view', 'assigned') },

@@ -26,7 +26,7 @@ export const EmployeePermissionsSchema = z.object({
     start: z.boolean(),
     complete: z.boolean(),
   }),
-  userStory: z.object({
+  issue: z.object({
     create: z.boolean(),
     view: z.object({ all: z.boolean() }),
     update: z.boolean(),

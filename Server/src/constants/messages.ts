@@ -85,16 +85,16 @@ export const COMPANY_MESSAGES = {
   COMPANY_NOT_FOUND: 'Company not found',
 };
 
-export const USER_STORY_MESSAGES = {
-  CREATE_SUCCESS: 'User story created successfully',
-  CREATE_FAILED: 'Failed to create user story',
-  FETCH_SUCCESS: 'User stories fetched successfully',
-  FETCH_FAILED: 'Failed to fetch user stories',
-  UPDATE_SUCCESS: 'User story updated successfully',
-  UPDATE_FAILED: 'Failed to update user story',
-  DELETE_SUCCESS: 'User story deleted successfully',
-  DELETE_FAILED: 'Failed to delete user story',
-  NOT_FOUND: 'User story not found',
+export const ISSUE_MESSAGES = {
+  CREATE_SUCCESS: 'Issue created successfully',
+  CREATE_FAILED: 'Failed to create issue',
+  FETCH_SUCCESS: 'Issues fetched successfully',
+  FETCH_FAILED: 'Failed to fetch issues',
+  UPDATE_SUCCESS: 'Issue updated successfully',
+  UPDATE_FAILED: 'Failed to update issue',
+  DELETE_SUCCESS: 'Issue deleted successfully',
+  DELETE_FAILED: 'Failed to delete issue',
+  NOT_FOUND: 'Issue not found',
 };
 
 export const COMMON_MESSAGES = {
@@ -113,6 +113,19 @@ export const SPRINT_MESSAGES = {
   DELETE_FAILED: 'Failed to delete sprint',
   NOT_FOUND: 'Sprint not found',
   COMPANY_CONTEXT_NOT_FOUND: 'Company context not found',
+};
+
+export const SUBTASK_MESSAGES = {
+  CREATE_SUCCESS: 'Sub-task created successfully',
+  CREATE_FAILED: 'Failed to create sub-task',
+  FETCH_SUCCESS: 'Sub-tasks fetched successfully',
+  FETCH_FAILED: 'Failed to fetch sub-tasks',
+  UPDATE_SUCCESS: 'Sub-task updated successfully',
+  UPDATE_FAILED: 'Failed to update sub-task',
+  DELETE_SUCCESS: 'Sub-task deleted successfully',
+  DELETE_FAILED: 'Failed to delete sub-task',
+  ASSIGN_SUCCESS: 'Sub-task assigned successfully',
+  NOT_FOUND: 'Sub-task not found',
 };
 
 export const TASK_MESSAGES = {
