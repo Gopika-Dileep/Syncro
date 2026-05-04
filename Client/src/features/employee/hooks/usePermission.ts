@@ -5,6 +5,7 @@ interface UsePermissionReturn {
     can: (key: string) => boolean;
     hasModuleAccess: (moduleName: string) => boolean;
     permissions: string[];
+    user: any;
 }
 
 export const usePermission = (): UsePermissionReturn => {
@@ -27,5 +28,6 @@ export const usePermission = (): UsePermissionReturn => {
         can,
         hasModuleAccess,
         permissions,
+        user
     };
 };

@@ -10,7 +10,7 @@ import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepo
 export class AssignSubTaskService implements IAssignSubTaskService {
   constructor(
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
-    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository
+    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
   ) {}
 
   async execute(subTaskId: string, data: AssignSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
@@ -20,7 +20,7 @@ export class AssignSubTaskService implements IAssignSubTaskService {
     const subTask = await this._subTaskRepository.updateById(subTaskId, {
       assignee_id: data.assignee_id,
       assigned_by: assigner._id,
-    } as any);
+    } as Record<string, unknown>);
 
     if (!subTask) throw new Error('Sub-task not found');
     return SubTaskMapper.toResponseDTO(subTask);

@@ -44,7 +44,7 @@ export default function SubTaskModal({ isOpen, onClose, onSubmit, initialData, i
                 setDescription(initialData.description || "");
                 setPriority(initialData.priority);
                 setEstimatedHours(initialData.estimated_hours?.toString() || "");
-                setAssigneeId(initialData.assignee_id || "");
+                setAssigneeId(typeof initialData.assignee_id === 'object' ? (initialData.assignee_id as any)?._id : initialData.assignee_id || "");
                 setStatus(initialData.status || "To Do");
             } else {
                 setTitle("");

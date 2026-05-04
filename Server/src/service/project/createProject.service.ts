@@ -17,9 +17,9 @@ export class CreateProjectService implements ICreateProjectService {
 
   async execute(userId: string, data: CreateProjectRequestDTO): Promise<{ message: string; project: ProjectResponseDTO }> {
     const employee = await this._employeeRepo.findByUserId(userId);
-    
+
     if (!employee || !employee.company_id) {
-        throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
+      throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
     }
 
     const companyId = employee.company_id._id ? String(employee.company_id._id) : String(employee.company_id);

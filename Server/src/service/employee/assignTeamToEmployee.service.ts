@@ -7,20 +7,16 @@ import { EMPLOYEE_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class AssignTeamToEmployeeService implements IAssignTeamToEmployeeService {
-  constructor(
-    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
-  ) {}
+  constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository) {}
 
   async execute(adminUserId: string, employeeId: string, teamId: string): Promise<{ success: boolean; message: string }> {
     const employee = await this._employeeRepo.findById(employeeId);
     if (!employee) throw new NotFoundError(EMPLOYEE_MESSAGES.NOT_FOUND);
-
-    // Check if employee is a manager
     if (employee.designation?.toLowerCase().includes('manager')) {
-        throw new BadRequestError('Cannot assign managers to a team');
+      throw new BadRequestError('Cannot assign managers to a team');
     }
 
-    await this._employeeRepo.updateById(employeeId, { team_id: teamId as any });
+    await this._employeeRepo.updateById(employeeId, { team_id: teamId as unknown as import('mongoose').Types.ObjectId });
 
     return { success: true, message: 'Employee assigned to team successfully' };
   }

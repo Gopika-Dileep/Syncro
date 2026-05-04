@@ -23,77 +23,69 @@ export class GetProjectInsightsService implements IGetProjectInsightsService {
   async execute(projectId: string): Promise<ProjectInsightsDTO> {
     const project = await this._projectRepository.findById(projectId);
     if (!project) throw new NotFoundError(PROJECT_MESSAGES.NOT_FOUND);
-
-    // Get all issues for the project
     const issues = await this._issueRepo.findAllByProjectId(projectId);
-    
-    // Get all sub-tasks for those issues
-    const issueIds = issues.map(i => i._id.toString());
-    const subTasks: any[] = [];
+
+    const issueIds = issues.map((i) => i._id.toString());
+    const subTasks: import('../../models/subTask.model').ISubTask[] = [];
     for (const iid of issueIds) {
-        const issueSubTasks = await this._subTaskRepo.findAllByIssueId(iid);
-        subTasks.push(...issueSubTasks);
+      const issueSubTasks = await this._subTaskRepo.findAllByIssueId(iid);
+      subTasks.push(...issueSubTasks);
     }
-
-    // Calculate stats
     const stats = {
-        total_stories: issues.filter(i => i.type === 'story').length,
-        total_tasks: subTasks.length,
-        total_bugs: issues.filter(i => i.type === 'bug').length,
-        completed_points: issues
-            .filter(i => i.status === IssueStatus.DONE)
-            .reduce((acc, i) => acc + (i.story_points || 0), 0),
-        total_points: issues.reduce((acc, i) => acc + (i.story_points || 0), 0),
+      total_stories: issues.filter((i) => i.type === 'story').length,
+      total_tasks: subTasks.length,
+      total_bugs: issues.filter((i) => i.type === 'bug').length,
+      completed_points: issues.filter((i) => i.status === IssueStatus.DONE).reduce((acc, i) => acc + (i.story_points || 0), 0),
+      total_points: issues.reduce((acc, i) => acc + (i.story_points || 0), 0),
     };
+    const teamMap = new Map<string, { _id: string; name: string; role: string; avatar?: string }>();
 
-    // Extract unique team members
-    const teamMap = new Map<string, any>();
-    
-    // Add creator (PM)
     if (project.created_by) {
-        const pm = project.created_by as any;
-        if (pm.user_id) {
-            teamMap.set(pm._id.toString(), {
-                _id: pm._id.toString(),
-                name: pm.user_id.name || 'Project Manager',
-                role: pm.designation || 'Project Manager',
-                avatar: pm.user_id.avatar
-            });
-        }
+      const pm = project.created_by as unknown as Record<string, unknown>;
+      const user = pm.user_id as Record<string, unknown>;
+      if (user) {
+        teamMap.set(String(pm._id), {
+          _id: String(pm._id),
+          name: String(user.name || 'Project Manager'),
+          role: String(pm.designation || 'Project Manager'),
+          avatar: user.avatar ? String(user.avatar) : undefined,
+        });
+      }
     }
 
-    // Add assignees from issues
-    issues.forEach(i => {
-        const assignee = i.assignee_id as any;
-        if (assignee && assignee.user_id) {
-            teamMap.set(assignee._id.toString(), {
-                _id: assignee._id.toString(),
-                name: assignee.user_id.name || 'Unknown',
-                role: assignee.designation || 'Member',
-                avatar: assignee.user_id.avatar
-            });
-        }
+    issues.forEach((i) => {
+      const assignee = i.assignee_id as unknown as Record<string, unknown> | undefined;
+      const user = assignee?.user_id as Record<string, unknown> | undefined;
+      if (assignee && user) {
+        teamMap.set(String(assignee._id), {
+          _id: String(assignee._id),
+          name: String(user.name || 'Unknown'),
+          role: String(assignee.designation || 'Member'),
+          avatar: user.avatar ? String(user.avatar) : undefined,
+        });
+      }
     });
 
-    // Add assignees from sub-tasks
-    subTasks.forEach(st => {
-        const assignee = st.assign_to as any;
-        if (assignee && assignee.user_id) {
-            teamMap.set(assignee._id.toString(), {
-                _id: assignee._id.toString(),
-                name: assignee.user_id.name || 'Unknown',
-                role: assignee.designation || 'Member',
-                avatar: assignee.user_id.avatar
-            });
-        }
+    subTasks.forEach((st) => {
+      const assignee = st.assignee_id as unknown as Record<string, unknown> | undefined;
+      const user = assignee?.user_id as Record<string, unknown> | undefined;
+      if (assignee && user) {
+        teamMap.set(String(assignee._id), {
+          _id: String(assignee._id),
+          name: String(user.name || 'Unknown'),
+          role: String(assignee.designation || 'Member'),
+          avatar: user.avatar ? String(user.avatar) : undefined,
+        });
+      }
     });
 
     return {
       project: ProjectMapper.toResponseDTO(project),
       stats,
       team: Array.from(teamMap.values()),
-      stories: IssueMapper.toResponseList(issues),
-      tasks: SubTaskMapper.toResponseList(subTasks),
+      stories: IssueMapper.toResponseList(issues.filter((i) => i.type === 'story')),
+      bugs: IssueMapper.toResponseList(issues.filter((i) => i.type === 'bug')),
+      subtasks: SubTaskMapper.toResponseList(subTasks),
     };
   }
 }

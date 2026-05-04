@@ -78,6 +78,13 @@ import { GetIssueByIdService } from '../service/issue/GetIssueByIdService';
 import { UpdateIssueService } from '../service/issue/UpdateIssueService';
 import { DeleteIssueService } from '../service/issue/DeleteIssueService';
 import { AssignIssueService } from '../service/issue/AssignIssueService';
+import { IAddCommentToIssueService } from '../interfaces/services/issue/IAddCommentToIssueService';
+import { AddCommentToIssueService } from '../service/issue/AddCommentToIssueService';
+
+import { IGetAssignedIssuesService } from '../interfaces/services/issue/IGetAssignedIssuesService';
+import { IGetTeamIssuesService } from '../interfaces/services/issue/IGetTeamIssuesService';
+import { GetAssignedIssuesService } from '../service/issue/GetAssignedIssuesService';
+import { GetTeamIssuesService } from '../service/issue/GetTeamIssuesService';
 
 // Auth Services
 import { IRegisterService } from '../interfaces/services/auth/IRegisterService';
@@ -139,6 +146,8 @@ import { GetAllSubTasksService } from '../service/subTask/GetAllSubTasksService'
 import { StartSubTaskService } from '../service/subTask/StartSubTaskService';
 import { SubmitSubTaskService } from '../service/subTask/SubmitSubTaskService';
 import { ReviewSubTaskService } from '../service/subTask/ReviewSubTaskService';
+import { IAddCommentToSubTaskService } from '../interfaces/services/subTask/IAddCommentToSubTaskService';
+import { AddCommentToSubTaskService } from '../service/subTask/AddCommentToSubTaskService';
 import { SubTaskController } from '../controller/subTask.controller';
 
 const container = new Container();
@@ -175,7 +184,6 @@ container.bind<IUpdateProjectService>(TYPES.IUpdateProjectService).to(UpdateProj
 container.bind<IDeleteProjectService>(TYPES.IDeleteProjectService).to(DeleteProjectService);
 container.bind<IGetProjectInsightsService>(TYPES.IGetProjectInsightsService).to(GetProjectInsightsService);
 
-// Issue Service Bindings
 container.bind<ICreateIssueService>(TYPES.ICreateIssueService).to(CreateIssueService);
 container.bind<IGetIssuesByProjectService>(TYPES.IGetIssuesByProjectService).to(GetIssuesByProjectService);
 container.bind<IGetIssuesBySprintService>(TYPES.IGetIssuesBySprintService).to(GetIssuesBySprintService);
@@ -183,15 +191,16 @@ container.bind<IGetIssueByIdService>(TYPES.IGetIssueByIdService).to(GetIssueById
 container.bind<IUpdateIssueService>(TYPES.IUpdateIssueService).to(UpdateIssueService);
 container.bind<IDeleteIssueService>(TYPES.IDeleteIssueService).to(DeleteIssueService);
 container.bind<IAssignIssueService>(TYPES.IAssignIssueService).to(AssignIssueService);
+container.bind<IAddCommentToIssueService>(TYPES.IAddCommentToIssueService).to(AddCommentToIssueService);
+container.bind<IGetAssignedIssuesService>(TYPES.IGetAssignedIssuesService).to(GetAssignedIssuesService);
+container.bind<IGetTeamIssuesService>(TYPES.IGetTeamIssuesService).to(GetTeamIssuesService);
 
-// Sprint Service Bindings
 container.bind<ICreateSprintService>(TYPES.ICreateSprintService).to(CreateSprintService);
 container.bind<IGetSprintsService>(TYPES.IGetSprintsService).to(GetSprintsService);
 container.bind<IUpdateSprintService>(TYPES.IUpdateSprintService).to(UpdateSprintService);
 container.bind<IDeleteSprintService>(TYPES.IDeleteSprintService).to(DeleteSprintService);
 container.bind<IGetSprintByIdService>(TYPES.IGetSprintByIdService).to(GetSprintByIdService);
 
-// SubTask Service Bindings
 container.bind<ICreateSubTaskService>(TYPES.ICreateSubTaskService).to(CreateSubTaskService);
 container.bind<IUpdateSubTaskService>(TYPES.IUpdateSubTaskService).to(UpdateSubTaskService);
 container.bind<IDeleteSubTaskService>(TYPES.IDeleteSubTaskService).to(DeleteSubTaskService);
@@ -204,6 +213,7 @@ container.bind<IGetAllSubTasksService>(TYPES.IGetAllSubTasksService).to(GetAllSu
 container.bind<IStartSubTaskService>(TYPES.IStartSubTaskService).to(StartSubTaskService);
 container.bind<ISubmitSubTaskService>(TYPES.ISubmitSubTaskService).to(SubmitSubTaskService);
 container.bind<IReviewSubTaskService>(TYPES.IReviewSubTaskService).to(ReviewSubTaskService);
+container.bind<IAddCommentToSubTaskService>(TYPES.IAddCommentToSubTaskService).to(AddCommentToSubTaskService);
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);

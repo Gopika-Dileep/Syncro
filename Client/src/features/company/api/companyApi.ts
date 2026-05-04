@@ -21,9 +21,8 @@ export interface EmployeePermissions {
         assign: boolean;
         update: boolean;
         delete: boolean;
-        start: boolean;
-        submit: boolean;
-        review: boolean;
+        status_work: boolean;
+        status_review: boolean;
     };
     sprint: {
         create: boolean;
@@ -35,13 +34,9 @@ export interface EmployeePermissions {
         complete: boolean;
     };
     issue: {
-        create: boolean;
-        view: { all: boolean };
-        update: boolean;
-        delete: boolean;
-        assign: boolean;
-        assignEmployee: boolean;
-        comment: boolean;
+        story: { create: boolean; view: boolean; update: boolean; delete: boolean; assign_to_sprint: boolean; comment: boolean; status_work: boolean; status_review: boolean };
+        task: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean };
+        bug: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean };
     };
     team: {
         view: { team: boolean; all: boolean };
@@ -92,7 +87,14 @@ export const addEmployeeApi = async (data: AddEmployeeForm) => {
 
 export const getEmployeesApi = async (page: number = 1, limit: number = 5, search: string = "") => {
     const response = await axiosInstance.get(`${ENDPOINTS.COMPANY.EMPLOYEES}?page=${page}&limit=${limit}&search=${search}`);
-    return response.data;
+    const resData = response.data;
+    return {
+        ...resData,
+        data: resData.data?.employees || resData.data,
+        total: resData.data?.total ?? resData.total,
+        page: resData.data?.page ?? resData.page,
+        limit: resData.data?.limit ?? resData.limit
+    };
 };
 
 export const toggleBlockEmployeeApi = async (userId: string) => {
@@ -119,7 +121,12 @@ export const createTeamApi = async (name: string): Promise<{ success: boolean; d
 
 export const getTeamsApi = async (page: number = 1, limit: number = 10, search: string = ""): Promise<{ success: boolean; data: Team[]; total: number }> => {
     const response = await axiosInstance.get(`${ENDPOINTS.COMPANY.TEAMS}?page=${page}&limit=${limit}&search=${search}`);
-    return response.data;
+    const resData = response.data;
+    return {
+        ...resData,
+        data: resData.data?.teams || resData.data,
+        total: resData.data?.total ?? resData.total
+    };
 }
 
 export const updateTeamApi = async (teamId: string, name: string): Promise<{ success: boolean; data: Team }> => {

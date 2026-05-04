@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
 import { ICreateSubTaskService } from '../interfaces/services/subTask/ICreateSubTaskService';
+import { SubTaskMapper } from '../mappers/subTask.mapper';
 import { IUpdateSubTaskService } from '../interfaces/services/subTask/IUpdateSubTaskService';
 import { IDeleteSubTaskService } from '../interfaces/services/subTask/IDeleteSubTaskService';
 import { IGetSubTaskByIdService } from '../interfaces/services/subTask/IGetSubTaskByIdService';
@@ -12,9 +13,11 @@ import { IGetAllSubTasksService } from '../interfaces/services/subTask/IGetAllSu
 import { IStartSubTaskService } from '../interfaces/services/subTask/IStartSubTaskService';
 import { ISubmitSubTaskService } from '../interfaces/services/subTask/ISubmitSubTaskService';
 import { IReviewSubTaskService } from '../interfaces/services/subTask/IReviewSubTaskService';
+import { IAddCommentToSubTaskService } from '../interfaces/services/subTask/IAddCommentToSubTaskService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
+import { success, created } from '../utils/response.utils';
 import { SUBTASK_MESSAGES } from '../constants/messages';
 
 @injectable()
@@ -32,13 +35,14 @@ export class SubTaskController {
     @inject(TYPES.IStartSubTaskService) private _startSubTaskService: IStartSubTaskService,
     @inject(TYPES.ISubmitSubTaskService) private _submitSubTaskService: ISubmitSubTaskService,
     @inject(TYPES.IReviewSubTaskService) private _reviewSubTaskService: IReviewSubTaskService,
+    @inject(TYPES.IAddCommentToSubTaskService) private _addCommentToSubTaskService: IAddCommentToSubTaskService,
   ) {}
 
   createSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
       const subTask = await this._createSubTaskService.execute(req.body, userId);
-      res.status(HttpStatus.CREATED).json({ success: true, data: subTask, message: SUBTASK_MESSAGES.CREATE_SUCCESS });
+      created(res, subTask, SUBTASK_MESSAGES.CREATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -47,9 +51,8 @@ export class SubTaskController {
   updateSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const userId = req.userId!;
-      const subTask = await this._updateSubTaskService.execute(subTaskId as string, req.body, userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTask, message: SUBTASK_MESSAGES.UPDATE_SUCCESS });
+      const subTask = await this._updateSubTaskService.execute(subTaskId as string, req.body);
+      success(res, subTask, SUBTASK_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -59,7 +62,7 @@ export class SubTaskController {
     try {
       const { subTaskId } = req.params;
       await this._deleteSubTaskService.execute(subTaskId as string);
-      res.status(HttpStatus.OK).json({ success: true, message: SUBTASK_MESSAGES.DELETE_SUCCESS });
+      success(res, SUBTASK_MESSAGES.DELETE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -69,7 +72,7 @@ export class SubTaskController {
     try {
       const { subTaskId } = req.params;
       const subTask = await this._getSubTaskByIdService.execute(subTaskId as string);
-      res.status(HttpStatus.OK).json({ success: true, data: subTask });
+      success(res, subTask);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -79,7 +82,7 @@ export class SubTaskController {
     try {
       const { issueId } = req.params;
       const subTasks = await this._getSubTasksByIssueService.execute(issueId as string);
-      res.status(HttpStatus.OK).json({ success: true, data: subTasks });
+      success(res, subTasks);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -90,7 +93,7 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._assignSubTaskService.execute(subTaskId as string, req.body, userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTask, message: SUBTASK_MESSAGES.ASSIGN_SUCCESS });
+      success(res, subTask, SUBTASK_MESSAGES.ASSIGN_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -99,9 +102,8 @@ export class SubTaskController {
   startSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const userId = req.userId!;
-      const subTask = await this._startSubTaskService.execute(subTaskId as string, userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTask, message: 'Task started successfully' });
+      const subTask = await this._startSubTaskService.execute(subTaskId as string);
+      success(res, subTask, 'Task started successfully');
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -110,9 +112,8 @@ export class SubTaskController {
   submitSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const userId = req.userId!;
-      const subTask = await this._submitSubTaskService.execute(subTaskId as string, req.body, userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTask, message: 'Task submitted for review' });
+      const subTask = await this._submitSubTaskService.execute(subTaskId as string, req.body);
+      success(res, subTask, 'Task submitted for review');
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -121,9 +122,8 @@ export class SubTaskController {
   reviewSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const userId = req.userId!;
-      const subTask = await this._reviewSubTaskService.execute(subTaskId as string, req.body, userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTask, message: 'Review completed' });
+      const subTask = await this._reviewSubTaskService.execute(subTaskId as string, req.body);
+      success(res, subTask, 'Review completed');
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -132,8 +132,9 @@ export class SubTaskController {
   getAssignedSubTasks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
-      const subTasks = await this._getAssignedSubTasksService.execute(userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTasks });
+      const search = (req.query.search as string) || '';
+      const subTasks = await this._getAssignedSubTasksService.execute(userId, search);
+      success(res, subTasks);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -142,8 +143,9 @@ export class SubTaskController {
   getTeamSubTasks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
-      const subTasks = await this._getTeamSubTasksService.execute(userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTasks });
+      const search = (req.query.search as string) || '';
+      const subTasks = await this._getTeamSubTasksService.execute(userId, search);
+      success(res, subTasks);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -152,8 +154,22 @@ export class SubTaskController {
   getAllSubTasks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
-      const subTasks = await this._getAllSubTasksService.execute(userId);
-      res.status(HttpStatus.OK).json({ success: true, data: subTasks });
+      const search = (req.query.search as string) || '';
+      const subTasks = await this._getAllSubTasksService.execute(userId, search);
+      success(res, subTasks);
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  addComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { subTaskId } = req.params;
+      const { text } = req.body;
+      const userId = req.userId!;
+      const subTask = await this._addCommentToSubTaskService.execute(subTaskId as string, userId, text);
+      const mapped = SubTaskMapper.toResponseDTO(subTask);
+      success(res, mapped, 'Comment added successfully');
     } catch (error) {
       handleAsyncError(error, next);
     }

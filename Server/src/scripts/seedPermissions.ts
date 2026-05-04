@@ -11,14 +11,36 @@ const permissions = [
   { module: 'project', action: 'update', scope: 'any', permission_key: 'project:update' },
   { module: 'project', action: 'delete', scope: 'any', permission_key: 'project:delete' },
 
-  // MODULE: issue (Story, Bug, Task)
-  { module: 'issue', action: 'create', scope: 'any', permission_key: 'issue:create' },
-  { module: 'issue', action: 'view', scope: 'all', permission_key: 'issue:view:all' },
-  { module: 'issue', action: 'update', scope: 'any', permission_key: 'issue:update' },
-  { module: 'issue', action: 'delete', scope: 'any', permission_key: 'issue:delete' },
-  { module: 'issue', action: 'assign', scope: 'any', permission_key: 'issue:assign' },
-  { module: 'issue', action: 'assignEmployee', scope: 'any', permission_key: 'issue:assignEmployee' },
-  { module: 'issue', action: 'comment', scope: 'any', permission_key: 'issue:comment' },
+  // MODULE: issue (Story, Task, Bug)
+  // STORY
+  { module: 'issue', action: 'story', scope: 'create', permission_key: 'issue:story:create' },
+  { module: 'issue', action: 'story', scope: 'view', permission_key: 'issue:story:view' },
+  { module: 'issue', action: 'story', scope: 'update', permission_key: 'issue:story:update' },
+  { module: 'issue', action: 'story', scope: 'delete', permission_key: 'issue:story:delete' },
+  { module: 'issue', action: 'story', scope: 'assign_to_sprint', permission_key: 'issue:story:assign_to_sprint' },
+  { module: 'issue', action: 'story', scope: 'comment', permission_key: 'issue:story:comment' },
+  { module: 'issue', action: 'story', scope: 'status:work', permission_key: 'issue:story:status:work' },
+  { module: 'issue', action: 'story', scope: 'status:review', permission_key: 'issue:story:status:review' },
+
+  // TASK
+  { module: 'issue', action: 'task', scope: 'create', permission_key: 'issue:task:create' },
+  { module: 'issue', action: 'task', scope: 'view', permission_key: 'issue:task:view' },
+  { module: 'issue', action: 'task', scope: 'update', permission_key: 'issue:task:update' },
+  { module: 'issue', action: 'task', scope: 'delete', permission_key: 'issue:task:delete' },
+  { module: 'issue', action: 'task', scope: 'assign', permission_key: 'issue:task:assign' },
+  { module: 'issue', action: 'task', scope: 'assign_to_sprint', permission_key: 'issue:task:assign_to_sprint' },
+  { module: 'issue', action: 'task', scope: 'status:work', permission_key: 'issue:task:status:work' },
+  { module: 'issue', action: 'task', scope: 'status:review', permission_key: 'issue:task:status:review' },
+
+  // BUG
+  { module: 'issue', action: 'bug', scope: 'create', permission_key: 'issue:bug:create' },
+  { module: 'issue', action: 'bug', scope: 'view', permission_key: 'issue:bug:view' },
+  { module: 'issue', action: 'bug', scope: 'update', permission_key: 'issue:bug:update' },
+  { module: 'issue', action: 'bug', scope: 'delete', permission_key: 'issue:bug:delete' },
+  { module: 'issue', action: 'bug', scope: 'assign', permission_key: 'issue:bug:assign' },
+  { module: 'issue', action: 'bug', scope: 'assign_to_sprint', permission_key: 'issue:bug:assign_to_sprint' },
+  { module: 'issue', action: 'bug', scope: 'status:work', permission_key: 'issue:bug:status:work' },
+  { module: 'issue', action: 'bug', scope: 'status:review', permission_key: 'issue:bug:status:review' },
 
   // MODULE: sprint
   { module: 'sprint', action: 'create', scope: 'any', permission_key: 'sprint:create' },
@@ -37,9 +59,8 @@ const permissions = [
   { module: 'task', action: 'assign', scope: 'any', permission_key: 'task:assign' },
   { module: 'task', action: 'update', scope: 'any', permission_key: 'task:update' },
   { module: 'task', action: 'delete', scope: 'any', permission_key: 'task:delete' },
-  { module: 'task', action: 'start', scope: 'any', permission_key: 'task:start' },
-  { module: 'task', action: 'submit', scope: 'any', permission_key: 'task:submit' },
-  { module: 'task', action: 'review', scope: 'any', permission_key: 'task:review' },
+  { module: 'task', action: 'status:work', scope: 'any', permission_key: 'task:status:work' },
+  { module: 'task', action: 'status:review', scope: 'any', permission_key: 'task:status:review' },
 
   // MODULE: team
   { module: 'team', action: 'view', scope: 'team', permission_key: 'team:view:team' },
@@ -55,11 +76,7 @@ async function seed() {
     console.log('Connected to MongoDB for permission seeding...');
 
     for (const p of permissions) {
-      await permissionDefinitionModel.findOneAndUpdate(
-        { permission_key: p.permission_key },
-        { $set: p },
-        { upsert: true, new: true }
-      );
+      await permissionDefinitionModel.findOneAndUpdate({ permission_key: p.permission_key }, { $set: p }, { upsert: true, new: true });
     }
 
     console.log(`Successfully synced ${permissions.length} granular permissions.`);

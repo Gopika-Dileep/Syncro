@@ -1,13 +1,14 @@
 import { ISprint } from '../models/sprint.model';
 import { SprintResponseDTO, CreateSprintRequestDTO } from '../dto/sprint.dto';
+import { IssueResponseDTO } from '../dto/issue.dto';
 import { Types } from 'mongoose';
 
 export class SprintMapper {
-  static toResponseDTO(sprint: ISprint, committedPoints: number = 0, itemCount: number = 0, completedPoints: number = 0): SprintResponseDTO {
+  static toResponseDTO(sprint: ISprint, committedPoints: number = 0, itemCount: number = 0, completedPoints: number = 0, issues?: IssueResponseDTO[]): SprintResponseDTO {
     return {
       _id: (sprint._id as Types.ObjectId).toString(),
       company_id: sprint.company_id.toString(),
-      project_id: sprint.project_id ? sprint.project_id.toString() : "",
+      project_id: sprint.project_id ? sprint.project_id.toString() : '',
       name: sprint.name,
       sprint_number: sprint.sprint_number,
       goal: sprint.goal,
@@ -18,14 +19,13 @@ export class SprintMapper {
       status: sprint.status,
       start_date: sprint.start_date.toISOString(),
       end_date: sprint.end_date.toISOString(),
+      issues: issues,
       created_at: sprint.created_at.toISOString(),
       updated_at: sprint.updated_at.toISOString(),
     };
   }
 
   static toResponseList(sprints: ISprint[]): SprintResponseDTO[] {
-    // Note: If using this direct method, committed_points will default to 0. 
-    // Recommended to use toResponseDTO directly in services with calculation.
     return sprints.map((sprint) => this.toResponseDTO(sprint, 0));
   }
 

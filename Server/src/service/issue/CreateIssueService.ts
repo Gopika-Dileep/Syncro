@@ -5,12 +5,13 @@ import { ICreateIssueService } from '../../interfaces/services/issue/ICreateIssu
 import { CreateIssueRequestDTO, IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { IIssue } from '../../models/issue.model';
 
 @injectable()
 export class CreateIssueService implements ICreateIssueService {
   constructor(
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
-    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository
+    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
   ) {}
 
   async execute(data: CreateIssueRequestDTO, userId: string): Promise<IssueResponseDTO> {
@@ -21,7 +22,7 @@ export class CreateIssueService implements ICreateIssueService {
       ...data,
       company_id: employee.company_id,
       created_by: employee._id,
-    } as any);
+    } as unknown as IIssue);
 
     return IssueMapper.toResponseDTO(issue);
   }

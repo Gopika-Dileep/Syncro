@@ -19,6 +19,11 @@ export interface ISubTask extends Document {
   branch_name?: string;
   submission_link?: string;
   submission_description?: string;
+  comments: {
+    user: mongoose.Types.ObjectId;
+    text: string;
+    created_at: Date;
+  }[];
   created_at: Date;
   updated_at: Date;
 }
@@ -106,6 +111,13 @@ const subTaskSchema = new Schema<ISubTask>(
       type: String,
       required: false,
     },
+    comments: [
+      {
+        user: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
+        text: { type: String, required: true },
+        created_at: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

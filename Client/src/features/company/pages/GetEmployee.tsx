@@ -156,21 +156,29 @@ export default function GetEmployee() {
                         <h3 className="text-[12px] font-bold text-[#1f2124] uppercase tracking-wider">Access Permissions</h3>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         <PermissionModule
                             title="Projects" icon={<Layout size={14} />}
                             active={getProjectPermissions(profile.permissions?.project)}
                         />
                         <PermissionModule
-                            title="User Stories" icon={<Layers size={14} />}
-                            active={getUserStoryPermissions(profile.permissions?.userStory)}
+                            title="Stories" icon={<Layers size={14} />}
+                            active={getStoryPermissions(profile.permissions?.issue?.story)}
+                        />
+                        <PermissionModule
+                            title="Issues (Task)" icon={<Layers size={14} />}
+                            active={getIssueTaskPermissions(profile.permissions?.issue?.task)}
+                        />
+                        <PermissionModule
+                            title="Issues (Bug)" icon={<Layers size={14} />}
+                            active={getIssueBugPermissions(profile.permissions?.issue?.bug)}
                         />
                         <PermissionModule
                             title="Sprints" icon={<Zap size={14} />}
                             active={getSprintPermissions(profile.permissions?.sprint)}
                         />
                         <PermissionModule
-                            title="Tasks" icon={<CheckCircle size={14} />}
+                            title="Sub-Tasks" icon={<CheckCircle size={14} />}
                             active={getTaskPermissions(profile.permissions?.task)}
                         />
                         <PermissionModule
@@ -233,15 +241,43 @@ function getProjectPermissions(p: EmployeePermissions['project'] | undefined) {
     if (p.delete) res.push("Delete");
     return res;
 }
-function getUserStoryPermissions(p: EmployeePermissions['userStory'] | undefined) {
+function getStoryPermissions(p: EmployeePermissions['issue']['story'] | undefined) {
     if (!p) return [];
     const res = [];
     if (p.create) res.push("Create");
-    if (p.view?.all) res.push("View (All)");
+    if (p.view) res.push("View");
     if (p.update) res.push("Update");
     if (p.delete) res.push("Delete");
-    if (p.assign) res.push("Assign");
+    if (p.assign_to_sprint) res.push("Assign to Sprint");
     if (p.comment) res.push("Comment");
+    if (p.status_work) res.push("Status (Work)");
+    if (p.status_review) res.push("Status (Review)");
+    return res;
+}
+function getIssueTaskPermissions(p: EmployeePermissions['issue']['task'] | undefined) {
+    if (!p) return [];
+    const res = [];
+    if (p.create) res.push("Create");
+    if (p.view) res.push("View");
+    if (p.update) res.push("Update");
+    if (p.delete) res.push("Delete");
+    if (p.assign) res.push("Assign Employee");
+    if (p.assign_to_sprint) res.push("Assign to Sprint");
+    if (p.status_work) res.push("Status (Work)");
+    if (p.status_review) res.push("Status (Review)");
+    return res;
+}
+function getIssueBugPermissions(p: EmployeePermissions['issue']['bug'] | undefined) {
+    if (!p) return [];
+    const res = [];
+    if (p.create) res.push("Create");
+    if (p.view) res.push("View");
+    if (p.update) res.push("Update");
+    if (p.delete) res.push("Delete");
+    if (p.assign) res.push("Assign Employee");
+    if (p.assign_to_sprint) res.push("Assign to Sprint");
+    if (p.status_work) res.push("Status (Work)");
+    if (p.status_review) res.push("Status (Review)");
     return res;
 }
 function getSprintPermissions(p: EmployeePermissions['sprint'] | undefined) {
@@ -266,9 +302,8 @@ function getTaskPermissions(p: EmployeePermissions['task'] | undefined) {
     if (p.assign) res.push("Assign");
     if (p.update) res.push("Update");
     if (p.delete) res.push("Delete");
-    if (p.start) res.push("Start");
-    if (p.submit) res.push("Submit");
-    if (p.review) res.push("Review");
+    if (p.status_work) res.push("Status (Work)");
+    if (p.status_review) res.push("Status (Review)");
     return res;
 }
 function getTeamPermissions(p: EmployeePermissions['team'] | undefined) {

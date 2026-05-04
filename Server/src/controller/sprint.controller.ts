@@ -6,8 +6,8 @@ import { IGetSprintsService } from '../interfaces/services/sprint/IGetSprintsSer
 import { IUpdateSprintService } from '../interfaces/services/sprint/IUpdateSprintService';
 import { IDeleteSprintService } from '../interfaces/services/sprint/IDeleteSprintService';
 import { IGetSprintByIdService } from '../interfaces/services/sprint/IGetSprintByIdService';
-import { HttpStatus } from '../enums/HttpStatus';
 import { GetSprintRequestDTO } from '../dto/sprint.dto';
+import { success, created } from '../utils/response.utils';
 
 @injectable()
 export class SprintController {
@@ -23,7 +23,7 @@ export class SprintController {
     try {
       const userId = req.userId!;
       const result = await this._createSprintService.execute(userId, req.body);
-      res.status(HttpStatus.CREATED).json({ success: true, ...result });
+      created(res, result.sprint, result.message);
     } catch (error) {
       next(error);
     }
@@ -34,7 +34,7 @@ export class SprintController {
       const userId = req.userId!;
       const query = req.query as unknown as GetSprintRequestDTO;
       const result = await this._getSprintsService.execute(userId, query);
-      res.status(HttpStatus.OK).json({ success: true, ...result });
+      success(res, result.data, result.message);
     } catch (error) {
       next(error);
     }
@@ -44,7 +44,7 @@ export class SprintController {
     try {
       const { sprintId } = req.params;
       const result = await this._getSprintByIdService.execute(sprintId as string);
-      res.status(HttpStatus.OK).json({ success: true, ...result });
+      success(res, result.data, result.message);
     } catch (error) {
       next(error);
     }
@@ -54,7 +54,7 @@ export class SprintController {
     try {
       const { sprintId } = req.params;
       const result = await this._updateSprintService.execute(sprintId as string, req.body);
-      res.status(HttpStatus.OK).json({ success: true, ...result });
+      success(res, result.sprint, result.message);
     } catch (error) {
       next(error);
     }
@@ -64,7 +64,7 @@ export class SprintController {
     try {
       const { sprintId } = req.params;
       const result = await this._deleteSprintService.execute(sprintId as string);
-      res.status(HttpStatus.OK).json({ success: true, ...result });
+      success(res, undefined, result.message);
     } catch (error) {
       next(error);
     }

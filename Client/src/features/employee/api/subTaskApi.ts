@@ -28,6 +28,11 @@ export interface SubTask {
     branch_name?: string;
     submission_link?: string;
     submission_description?: string;
+    comments?: {
+        user: { _id: string; name: string; avatar?: string };
+        text: string;
+        created_at: string;
+    }[];
     created_at: string;
     updated_at: string;
 }
@@ -78,17 +83,37 @@ export const assignSubTaskApi = async (id: string, employeeId: string): Promise<
     return response.data;
 };
 
-export const getAssignedSubTasksApi = async (): Promise<{ success: boolean; data: SubTask[] }> => {
-    const response = await axiosInstance.get(ENDPOINTS.SUBTASKS.ASSIGNED);
+export const getAssignedSubTasksApi = async (search?: string): Promise<{ success: boolean; data: SubTask[] }> => {
+    const response = await axiosInstance.get(ENDPOINTS.SUBTASKS.ASSIGNED, { params: { search } });
     return response.data;
 };
 
-export const getTeamSubTasksApi = async (): Promise<{ success: boolean; data: SubTask[] }> => {
-    const response = await axiosInstance.get(ENDPOINTS.SUBTASKS.TEAM);
+export const getTeamSubTasksApi = async (search?: string): Promise<{ success: boolean; data: SubTask[] }> => {
+    const response = await axiosInstance.get(ENDPOINTS.SUBTASKS.TEAM, { params: { search } });
     return response.data;
 };
 
-export const getAllSubTasksApi = async (): Promise<{ success: boolean; data: SubTask[] }> => {
-    const response = await axiosInstance.get(ENDPOINTS.SUBTASKS.ALL);
+export const getAllSubTasksApi = async (search?: string): Promise<{ success: boolean; data: SubTask[] }> => {
+    const response = await axiosInstance.get(ENDPOINTS.SUBTASKS.ALL, { params: { search } });
+    return response.data;
+};
+
+export const startSubTaskApi = async (id: string): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.patch(ENDPOINTS.SUBTASKS.START(id));
+    return response.data;
+};
+
+export const submitSubTaskApi = async (id: string, data: { submission_link: string; submission_description: string }): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.patch(ENDPOINTS.SUBTASKS.SUBMIT(id), data);
+    return response.data;
+};
+
+export const reviewSubTaskApi = async (id: string, data: { action: 'approve' | 'reject'; rework_reason?: string }): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.patch(ENDPOINTS.SUBTASKS.REVIEW(id), data);
+    return response.data;
+};
+
+export const addSubTaskCommentApi = async (id: string, text: string): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.post(`/subtasks/comment/${id}`, { text });
     return response.data;
 };

@@ -6,4 +6,5 @@ export interface ISubTaskRepository extends IBaseRepository<ISubTask> {
   findAllBySprintId(sprintId: string): Promise<ISubTask[]>;
   findAllByTeamId(teamId: string): Promise<ISubTask[]>;
   findAllByCompanyId(companyId: string): Promise<ISubTask[]>;
+  findAllByAssigneeId(assigneeId: string): Promise<ISubTask[]>;
 }

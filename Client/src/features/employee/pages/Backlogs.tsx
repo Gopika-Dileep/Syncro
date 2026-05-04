@@ -71,10 +71,11 @@ function IssueMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete 
 }
 
 export default function Backlogs() {
-    const { can } = usePermission();
+    const { can, user } = usePermission();
 
     const [projects, setProjects] = useState<Project[]>([]);
     const [fetchingProjects, setFetchingProjects] = useState(true);
+    const [members, setMembers] = useState<{ _id: string; name: string; designation?: string }[]>([]);
 
     // key: projectId, value: array of issues
     const [issuesConfig, setIssuesConfig] = useState<Record<string, { data: Issue[], loading: boolean }>>({});
@@ -101,6 +102,7 @@ export default function Backlogs() {
 
     useEffect(() => {
         fetchProjects();
+        fetchMembers();
     }, []);
 
     const fetchProjects = async () => {
@@ -113,6 +115,18 @@ export default function Backlogs() {
             console.error(err);
         } finally {
             setFetchingProjects(false);
+        }
+    };
+
+    const fetchMembers = async () => {
+        try {
+            const { getTeamDirectoryApi } = await import("../api/teamApi");
+            const res = await getTeamDirectoryApi();
+            const allMembers = res.data.flatMap(t => t.members);
+            const unique = allMembers.filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
+            setMembers(unique);
+        } catch (err) {
+            console.error("Failed to fetch members", err);
         }
     };
 
@@ -245,14 +259,16 @@ export default function Backlogs() {
             );
         }
 
-        const canEditIssue = can('issue:update') || can('issue:update:all');
-        const canDeleteIssue = can('issue:delete') || can('issue:delete:all');
-
         return (
             <div className="p-3 bg-[#fdfdfd] border-t border-[#f0f0f0]">
                 <div className="space-y-2">
-                    {config.data.map((issue) => (
-                        <div key={issue._id} className="flex items-center justify-between p-3 bg-white border border-[#eaeaea] rounded-xl hover:shadow-sm transition-all group">
+                    {config.data.map((issue) => {
+                        const isOwner = (issue.created_by as any)?._id === user?._id || user?.role === 'company';
+                        const canEditIssue = can(`issue:${issue.type.toLowerCase()}:update`) || isOwner;
+                        const canDeleteIssue = can(`issue:${issue.type.toLowerCase()}:delete`) || isOwner;
+
+                        return (
+                            <div key={issue._id} className="flex items-center justify-between p-3 bg-white border border-[#eaeaea] rounded-xl hover:shadow-sm transition-all group">
                             <div className="flex items-center gap-3">
                                 <GripVertical size={16} className="text-[#ddd] cursor-move" />
                                 <div className="p-1.5 bg-gray-50 rounded border border-gray-100">
@@ -305,7 +321,10 @@ export default function Backlogs() {
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    );
+                })}
+
+
                 </div>
             </div>
         );
@@ -355,7 +374,8 @@ export default function Backlogs() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            {can('issue:create') && (
+                                            {(can('issue:story:create') || can('issue:task:create') || can('issue:bug:create')) && (
+
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleOpenCreateModal(project._id); }}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-[#fff5ef] text-[#fa8029] hover:bg-[#fa8029] hover:text-white rounded-lg transition-all"
@@ -389,6 +409,7 @@ export default function Backlogs() {
                 initialData={selectedIssue as ModalIssueFormData}
                 isEditing={isEditing}
                 isSubmitting={isSubmitting}
+                members={members}
             />
 
             <IssueDetailsModal

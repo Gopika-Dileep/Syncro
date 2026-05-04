@@ -28,7 +28,7 @@ export default class App {
     this.app.use('/api/projects', new ProjectRouter().router);
     this.app.use('/api/issues', new IssueRouter().router);
     this.app.use('/api/teams', new TeamRouter().router);
-    this.app.use('/api/sprints',new SprintRouter().router);
+    this.app.use('/api/sprints', new SprintRouter().router);
     this.app.use('/api/subtasks', new SubTaskRouter().router);
   }
   private _configureMiddleware(): void {

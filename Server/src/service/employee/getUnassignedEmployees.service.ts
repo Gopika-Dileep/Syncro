@@ -16,14 +16,12 @@ export class GetUnassignedEmployeesService implements IGetUnassignedEmployeesSer
   ) {}
 
   async execute(userId: string, search: string = ''): Promise<IPopulatedEmployee[]> {
-    // Try to find as employee first
     const employee = await this._employeeRepo.findByUserId(userId);
     let companyId: string;
 
     if (employee) {
-      companyId = (employee.company_id as any)._id?.toString() || employee.company_id.toString();
+      companyId = (employee.company_id as Record<string, unknown>)?._id?.toString() || employee.company_id.toString();
     } else {
-      // If not employee, check if user is company owner
       const company = await this._companyRepo.findOne({ user_id: new Types.ObjectId(userId) });
       if (!company) throw new NotFoundError(COMPANY_MESSAGES.COMPANY_NOT_FOUND);
       companyId = company._id.toString();

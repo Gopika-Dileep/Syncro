@@ -40,7 +40,14 @@ export const getProjectsApi = async (page: number = 1, limit: number = 20, searc
     const response = await axiosInstance.get(
         `${ENDPOINTS.PROJECTS.BASE}?page=${page}&limit=${limit}&search=${search}&status=${status}`
     );
-    return response.data;
+    const resData = response.data;
+    return {
+        ...resData,
+        data: resData.data?.projects || resData.data,
+        total: resData.data?.total ?? resData.total,
+        page: resData.data?.page ?? resData.page,
+        limit: resData.data?.limit ?? resData.limit
+    };
 };
 
 export const getProjectByIdApi = async (id: string): Promise<{ success: boolean; data: Project }> => {

@@ -7,11 +7,9 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 
 @injectable()
 export class UpdateSubTaskService implements IUpdateSubTaskService {
-  constructor(
-    @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository
-  ) {}
+  constructor(@inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository) {}
 
-  async execute(subTaskId: string, data: UpdateSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
+  async execute(subTaskId: string, data: UpdateSubTaskRequestDTO): Promise<SubTaskResponseDTO> {
     const subTask = await this._subTaskRepository.updateById(subTaskId, data);
     if (!subTask) throw new Error('Sub-task not found');
     return SubTaskMapper.toResponseDTO(subTask);

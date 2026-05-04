@@ -1,4 +1,4 @@
-import { X, Flag, Hash, Calendar, CheckCircle2 } from "lucide-react";
+import { X, Flag, Hash, Calendar, CheckCircle2, Users as UsersIcon } from "lucide-react";
 import { createPortal } from "react-dom";
 import { type Issue } from "../api/issueApi";
 
@@ -72,6 +72,15 @@ export default function IssueDetailsModal({ isOpen, onClose, issue }: IssueDetai
                                 </div>
                             </div>
                         )}
+                        {(issue.type === 'task' || issue.type === 'bug') && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#ebebeb] bg-[#fcfcfc] text-[#555]">
+                                <Calendar size={14} className="text-[#888]" />
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] uppercase font-bold text-[#888] leading-none">Est. Time</span>
+                                    <span className="text-[12px] font-bold">{issue.estimated_hours}h</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-6">
@@ -100,23 +109,44 @@ export default function IssueDetailsModal({ isOpen, onClose, issue }: IssueDetai
                         )}
 
                         {issue.type === 'story' && (
-                            <div>
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-[13px] font-bold text-[#333] mb-3 uppercase tracking-wider flex items-center gap-2">
+                                        <CheckCircle2 size={16} className="text-[#fa8029]" />
+                                        Acceptance Criteria
+                                    </h3>
+                                    {issue.criteria && issue.criteria.length > 0 ? (
+                                        <ul className="space-y-2 lg:pl-6 pl-2">
+                                            {issue.criteria.map((crit, idx) => (
+                                                <li key={idx} className="text-[13px] text-[#555] leading-relaxed flex items-start gap-3">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029] shrink-0 mt-2" />
+                                                    <span>{crit}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-[13px] text-[#888] italic px-6">No criteria specified.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {issue.mentions && issue.mentions.length > 0 && (
+                            <div className="mt-6">
                                 <h3 className="text-[13px] font-bold text-[#333] mb-3 uppercase tracking-wider flex items-center gap-2">
-                                    <CheckCircle2 size={16} className="text-[#fa8029]" />
-                                    Acceptance Criteria
+                                    <UsersIcon size={16} className="text-[#fa8029]" />
+                                    Mentioned Members
                                 </h3>
-                                {issue.criteria && issue.criteria.length > 0 ? (
-                                    <ul className="space-y-2 lg:pl-6 pl-2">
-                                        {issue.criteria.map((crit, idx) => (
-                                            <li key={idx} className="text-[13px] text-[#555] leading-relaxed flex items-start gap-3">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029] shrink-0 mt-2" />
-                                                <span>{crit}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-[13px] text-[#888] italic">No criteria specified.</p>
-                                )}
+                                <div className="flex flex-wrap gap-2 lg:pl-6 pl-2">
+                                    {issue.mentions.map((mention: string | { name: string }, idx: number) => {
+                                        const name = typeof mention === 'string' ? mention : mention.name;
+                                        return (
+                                            <span key={idx} className="px-3 py-1 bg-gray-50 border border-gray-100 rounded-lg text-[12px] font-bold text-[#666]">
+                                                {name}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         )}
                     </div>

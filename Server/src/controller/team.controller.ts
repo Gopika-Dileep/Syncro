@@ -10,7 +10,7 @@ import { TEAM_MESSAGES } from '../constants/messages';
 import { GetTeamsRequestDTO, GetTeamDirectoryRequestDTO } from '../dto/team.dto';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
-import { UnauthorizedError } from '../errors/AppError';
+import { success, created } from '../utils/response.utils';
 
 @injectable()
 export class TeamController {
@@ -26,7 +26,7 @@ export class TeamController {
     try {
       const userId = req.userId!;
       const team = await this._createTeamService.execute(req.body.name, userId);
-      res.status(HttpStatus.CREATED).json({ success: true, data: team, message: TEAM_MESSAGES.CREATE_SUCCESS });
+      created(res, team, TEAM_MESSAGES.CREATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -37,7 +37,7 @@ export class TeamController {
       const userId = req.userId!;
       const query = req.query as unknown as GetTeamsRequestDTO;
       const { teams, total } = await this._getTeamsService.execute(userId, query);
-      res.status(HttpStatus.OK).json({ success: true, data: teams, total, page: query.page, limit: query.limit });
+      success(res, { teams, total, page: query.page, limit: query.limit });
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -48,7 +48,7 @@ export class TeamController {
       const { teamId } = req.params;
       const { name } = req.body;
       const team = await this._updateTeamService.execute(teamId as string, name);
-      res.status(HttpStatus.OK).json({ success: true, data: team, message: TEAM_MESSAGES.UPDATE_SUCCESS });
+      success(res, team, TEAM_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -58,7 +58,7 @@ export class TeamController {
     try {
       const { teamId } = req.params;
       await this._deleteTeamService.execute(teamId as string);
-      res.status(HttpStatus.OK).json({ success: true, message: TEAM_MESSAGES.DELETE_SUCCESS });
+      success(res, TEAM_MESSAGES.DELETE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -68,11 +68,7 @@ export class TeamController {
     try {
       const query = req.query as unknown as GetTeamDirectoryRequestDTO;
       const directory = await this._getTeamDirectoryService.execute(req.userId!, req.permissions || [], query);
-      res.status(HttpStatus.OK).json({
-        success: true,
-        data: directory,
-        message: TEAM_MESSAGES.FETCH_SUCCESS,
-      });
+      success(res, directory, TEAM_MESSAGES.FETCH_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }

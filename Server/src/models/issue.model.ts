@@ -6,15 +6,15 @@ export interface IIssue extends Document {
   company_id: mongoose.Types.ObjectId;
   sprint_id?: mongoose.Types.ObjectId;
   assignee_id?: mongoose.Types.ObjectId;
-  parent_id?: mongoose.Types.ObjectId;
   created_by: mongoose.Types.ObjectId;
   assigned_by?: mongoose.Types.ObjectId;
   title: string;
   description?: string;
-  reproduction_steps?: string; // For Bugs
-  environment?: string;        // For Bugs
-  criteria: string[];          // For Stories
+  reproduction_steps?: string; 
+  environment?: string; 
+  criteria: string[]; 
   story_points: number;
+  estimated_hours: number; 
   priority: IssuePriority;
   status: IssueStatus;
   type: IssueType;
@@ -22,6 +22,12 @@ export interface IIssue extends Document {
   branch_name?: string;
   submission_link?: string;
   submission_description?: string;
+  mentions: mongoose.Types.ObjectId[];
+  comments: {
+    user: mongoose.Types.ObjectId;
+    text: string;
+    created_at: Date;
+  }[];
   created_at: Date;
   updated_at: Date;
 }
@@ -46,11 +52,6 @@ const issueSchema = new Schema<IIssue>(
     assignee_id: {
       type: Schema.Types.ObjectId,
       ref: 'Employee',
-      required: false,
-    },
-    parent_id: {
-      type: Schema.Types.ObjectId,
-      ref: 'Issue',
       required: false,
     },
     created_by: {
@@ -87,6 +88,10 @@ const issueSchema = new Schema<IIssue>(
       type: Number,
       default: 0,
     },
+    estimated_hours: {
+      type: Number,
+      default: 0,
+    },
     priority: {
       type: String,
       enum: Object.values(IssuePriority),
@@ -97,7 +102,7 @@ const issueSchema = new Schema<IIssue>(
       type: String,
       enum: Object.values(IssueStatus),
       required: true,
-      default: IssueStatus.TODO,
+      default: IssueStatus.NEW,
     },
     type: {
       type: String,
@@ -121,7 +126,21 @@ const issueSchema = new Schema<IIssue>(
       type: String,
       required: false,
     },
+    mentions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Employee',
+      },
+    ],
+    comments: [
+      {
+        user: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
+        text: { type: String, required: true },
+        created_at: { type: Date, default: Date.now },
+      },
+    ],
   },
+
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   },

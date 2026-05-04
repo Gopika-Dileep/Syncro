@@ -6,7 +6,7 @@ import { UpdateSprintRequestDTO, SprintResponseDTO } from '../../dto/sprint.dto'
 import { SprintMapper } from '../../mappers/sprint.mapper';
 import { TYPES } from '../../di/types';
 import { SPRINT_MESSAGES } from '../../constants/messages';
-import { NotFoundError, BadRequestError } from '../../errors/AppError';
+import { NotFoundError } from '../../errors/AppError';
 import { SprintStatus } from '../../enums/SprintEnums';
 import { IssueStatus } from '../../enums/IssueEnums';
 
@@ -18,19 +18,20 @@ export class UpdateSprintService implements IUpdateSprintService {
   ) {}
 
   async execute(sprintId: string, data: UpdateSprintRequestDTO): Promise<{ message: string; sprint: SprintResponseDTO }> {
-    // 1. Guard: Check if attempting to complete the sprint
     if (data.status === SprintStatus.COMPLETED) {
       const incompleteIssues = await this._issueRepository.find({
         sprint_id: sprintId,
-        status: { $ne: IssueStatus.DONE }
+        status: { $ne: IssueStatus.DONE },
       });
 
       if (incompleteIssues.length > 0) {
-        throw new BadRequestError(`Cannot complete sprint: ${incompleteIssues.length} items are still incomplete. All issues must be 'Done' before finishing the sprint.`);
+        const moveIssuesTo = data.moveIssuesTo;
+        const targetSprintId = moveIssuesTo === 'backlog' ? null : moveIssuesTo;
+
+        await this._issueRepository.updateMany({ sprint_id: sprintId, status: { $ne: IssueStatus.DONE } }, { sprint_id: targetSprintId });
       }
     }
 
-    // 2. Perform update
     const sprint = await this._sprintRepository.updateById(sprintId, data);
     if (!sprint) throw new NotFoundError(SPRINT_MESSAGES.NOT_FOUND);
 

@@ -7,9 +7,7 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 
 @injectable()
 export class GetSubTasksByIssueService implements IGetSubTasksByIssueService {
-  constructor(
-    @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository
-  ) {}
+  constructor(@inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository) {}
 
   async execute(issueId: string): Promise<SubTaskResponseDTO[]> {
     const subTasks = await this._subTaskRepository.findAllByIssueId(issueId);

@@ -24,7 +24,12 @@ export interface ProjectFormData {
 
 export const getProjectsApi = async (page: number = 1, limit: number = 10, search: string = ""): Promise<{ success: boolean; data: Project[]; total: number }> => {
     const response = await axiosInstance.get(`${ENDPOINTS.PROJECTS.BASE}?page=${page}&limit=${limit}&search=${search}`);
-    return response.data;
+    const resData = response.data;
+    return {
+        ...resData,
+        data: resData.data?.projects || resData.data,
+        total: resData.data?.total ?? resData.total
+    };
 };
 
 export const getProjectByIdApi = async (id: string): Promise<{ success: boolean; data: Project }> => {

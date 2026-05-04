@@ -34,6 +34,7 @@ export const ENDPOINTS = {
     BASE: '/projects',
     ROOT: '/',
     BY_PROJECT_ID: '/:projectId',
+    INSIGHTS: '/:projectId/insights',
   },
   ISSUES: {
     BASE: '/issues',
@@ -42,6 +43,9 @@ export const ENDPOINTS = {
     BY_SPRINT: '/sprint/:sprintId',
     BY_ISSUE_ID: '/:issueId',
     ASSIGN: '/:issueId/assign',
+    ASSIGNED: '/assigned/me',
+    TEAM: '/team/all',
+    COMMENT: '/comment/:issueId',
   },
   TEAMS: {
     BASE: '/teams',
@@ -59,5 +63,11 @@ export const ENDPOINTS = {
     BY_ID: '/:subTaskId',
     ASSIGN: '/:subTaskId/assign',
     ASSIGNED: '/assigned',
+    TEAM: '/team',
+    ALL: '/all',
+    START: '/start/:subTaskId',
+    SUBMIT: '/submit/:subTaskId',
+    REVIEW: '/review/:subTaskId',
+    COMMENT: '/comment/:subTaskId',
   },
 };

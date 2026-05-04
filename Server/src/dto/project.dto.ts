@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ProjectStatus, ProjectPriority } from '../enums/ProjectEnums';
-import { UserStoryResponseDTO } from './userStory.dto';
-import { TaskResponseDTO } from './task.dto';
+import { IssueResponseDTO } from './issue.dto';
+import { SubTaskResponseDTO } from './subTask.dto';
 
 export const ProjectBaseSchema = z.object({
   name: z
@@ -89,6 +89,7 @@ export interface ProjectInsightsDTO {
     role: string;
     avatar?: string;
   }[];
-  stories: UserStoryResponseDTO[];
-  tasks: TaskResponseDTO[];
+  stories: IssueResponseDTO[];
+  bugs: IssueResponseDTO[];
+  subtasks: SubTaskResponseDTO[];
 }

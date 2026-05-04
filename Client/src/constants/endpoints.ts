@@ -52,5 +52,8 @@ export const ENDPOINTS = {
         ASSIGNED: "/subtasks/assigned",
         TEAM: "/subtasks/team",
         ALL: "/subtasks/all",
+        START: (id: string) => `/subtasks/start/${id}`,
+        SUBMIT: (id: string) => `/subtasks/submit/${id}`,
+        REVIEW: (id: string) => `/subtasks/review/${id}`,
     },
 };

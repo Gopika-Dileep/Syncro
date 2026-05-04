@@ -7,9 +7,7 @@ import { IssueMapper } from '../../mappers/issue.mapper';
 
 @injectable()
 export class GetIssuesBySprintService implements IGetIssuesBySprintService {
-  constructor(
-    @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository
-  ) {}
+  constructor(@inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository) {}
 
   async execute(sprintId: string): Promise<IssueResponseDTO[]> {
     const issues = await this._issueRepository.findAllBySprintIds([sprintId]);

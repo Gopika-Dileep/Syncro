@@ -5,6 +5,7 @@ import { AUTH_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
 import { cookieUtils } from '../utils/cookie.utils';
 import { handleAsyncError } from '../utils/error.utils';
+import { success, created, sendSuccessResponse } from '../utils/response.utils';
 
 import { IRegisterService } from '../interfaces/services/auth/IRegisterService';
 import { IVerifyOtpService } from '../interfaces/services/auth/IVerifyOtpService';
@@ -31,7 +32,7 @@ export class AuthController {
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._registerService.execute(req.body);
-      res.status(HttpStatus.CREATED).json({ success: true, message: result.message });
+      created(res, result.message);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -41,7 +42,7 @@ export class AuthController {
     try {
       const result = await this._verifyOtpService.execute(req.body);
       cookieUtils.setRefreshToken(res, result.refreshToken);
-      res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions });
+      sendSuccessResponse(res, '', { user: result.user, permissions: result.permissions }, result.accessToken);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -50,7 +51,7 @@ export class AuthController {
   resendOtp = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._resendOtpService.execute(req.body);
-      res.status(HttpStatus.OK).json({ success: true, message: result.message });
+      success(res, result.message);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -60,7 +61,7 @@ export class AuthController {
     try {
       const result = await this._loginService.execute(req.body);
       cookieUtils.setRefreshToken(res, result.refreshToken);
-      res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions });
+      sendSuccessResponse(res, AUTH_MESSAGES.LOGIN_SUCCESS || 'Login successful', { user: result.user, permissions: result.permissions }, result.accessToken);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -74,7 +75,7 @@ export class AuthController {
         return;
       }
       const result = await this._refreshService.execute(refreshToken);
-      res.status(HttpStatus.OK).json({ success: true, token: result.accessToken, user: result.user, permissions: result.permissions });
+      sendSuccessResponse(res, '', { user: result.user, permissions: result.permissions }, result.accessToken);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -85,7 +86,7 @@ export class AuthController {
       const refreshToken = cookieUtils.getRefreshToken(req);
       if (refreshToken) await this._logoutService.execute(refreshToken);
       cookieUtils.clearRefreshToken(res);
-      res.status(HttpStatus.OK).json({ success: true, message: AUTH_MESSAGES.LOGGED_OUT });
+      success(res, AUTH_MESSAGES.LOGGED_OUT);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -94,7 +95,7 @@ export class AuthController {
   forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._forgotPasswordService.execute(req.body);
-      res.status(HttpStatus.OK).json({ success: true, message: result.message });
+      success(res, result.message);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -103,7 +104,7 @@ export class AuthController {
   resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._resetPasswordService.execute(req.body);
-      res.status(HttpStatus.OK).json({ success: true, message: result.message });
+      success(res, result.message);
     } catch (error) {
       handleAsyncError(error, next);
     }

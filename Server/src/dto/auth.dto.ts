@@ -55,6 +55,11 @@ export interface AuthUserDTO {
   role: string;
   designation: string | null;
   companyName: string | null;
+  team_id?: string;
+  team?: {
+    _id: string;
+    name: string;
+  } | null;
 }
 
 export interface AuthResponseDTO {

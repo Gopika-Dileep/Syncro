@@ -10,13 +10,16 @@ export class ProjectRepository extends BaseRepository<IProject> implements IProj
   }
 
   async findAllByCompanyId(companyId: string): Promise<IProject[]> {
-    return await this._model.find({ company_id: companyId })
+    return await this._model
+      .find({ company_id: companyId })
       .populate({ path: 'created_by', populate: { path: 'user_id' } })
-      .sort({ created_at: -1 }).exec();
+      .sort({ created_at: -1 })
+      .exec();
   }
 
   async findById(id: string): Promise<IProject | null> {
-    return await this._model.findById(id)
+    return await this._model
+      .findById(id)
       .populate({ path: 'created_by', populate: { path: 'user_id' } })
       .exec();
   }

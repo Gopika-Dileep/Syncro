@@ -6,13 +6,13 @@ export const IssueBaseSchema = z.object({
   company_id: z.string().optional(),
   sprint_id: z.string().nullable().optional(),
   assignee_id: z.string().nullable().optional(),
-  parent_id: z.string().nullable().optional(),
   title: z.string().min(2, 'Title must be at least 2 characters'),
   description: z.string().optional(),
   reproduction_steps: z.string().optional(), // For Bugs
-  environment: z.string().optional(),        // For Bugs
+  environment: z.string().optional(), // For Bugs
   criteria: z.array(z.string().min(1, 'Criteria string cannot be empty')).optional(),
   story_points: z.number().min(0, 'Story points must be non-negative').optional(),
+  estimated_hours: z.number().min(0, 'Estimated hours must be non-negative').optional(),
   priority: z.nativeEnum(IssuePriority),
   status: z.nativeEnum(IssueStatus).optional(),
   type: z.nativeEnum(IssueType).optional(),
@@ -20,6 +20,7 @@ export const IssueBaseSchema = z.object({
   branch_name: z.string().optional(),
   submission_link: z.string().optional(),
   submission_description: z.string().optional(),
+  mentions: z.array(z.string().min(1)).optional(),
 });
 
 export const CreateIssueRequestSchema = z.object({
@@ -39,19 +40,34 @@ export const AssignIssueRequestSchema = z.object({
   }),
   body: z.object({
     assignee_id: z.string().nullable().optional(),
+    sprint_id: z.string().nullable().optional(),
   }),
 });
 
 export type CreateIssueRequestDTO = z.infer<typeof CreateIssueRequestSchema>['body'];
 export type UpdateIssueRequestDTO = z.infer<typeof UpdateIssueRequestSchema>['body'];
-export type AssignIssueRequestDTO = z.infer<typeof AssignIssueRequestSchema>['body'];
+export type AssignIssueRequestDTO = {
+  issue_id: string;
+  assignee_id?: string | null;
+  sprint_id?: string | null;
+};
 
 export interface IssueResponseDTO {
   _id: string;
   project_id: string;
   company_id: string;
   sprint_id?: string;
-  assignee_id?: string;
+  assignee_id?:
+    | string
+    | null
+    | {
+        _id: string;
+        user_id: {
+          name: string;
+        };
+        designation: string;
+        team_id?: string | { _id: string; name: string };
+      };
   assign_to?: {
     _id: string;
     name: string;
@@ -71,13 +87,13 @@ export interface IssueResponseDTO {
     _id: string;
     name: string;
   };
-  parent_id?: string;
   title: string;
   description?: string;
   reproduction_steps?: string;
   environment?: string;
   criteria: string[];
   story_points: number;
+  estimated_hours: number;
   priority: IssuePriority;
   status: IssueStatus;
   type: IssueType;
@@ -85,6 +101,12 @@ export interface IssueResponseDTO {
   branch_name?: string;
   submission_link?: string;
   submission_description?: string;
+  mentions: string[];
+  comments: {
+    user: { _id: string; name: string; designation: string } | null;
+    text: string;
+    created_at: string;
+  }[];
   created_at: string;
   updated_at: string;
 }

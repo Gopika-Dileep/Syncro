@@ -22,41 +22,37 @@ export class GetSprintsService implements IGetSprintsService {
 
     const employee = await this._employeeRepo.findByUserId(userId);
     const companyId: string = String(employee?.company_id._id || employee?.company_id);
-    
+
     if (!companyId) throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
 
-    const { sprints, total } = await this._sprintRepository.getSprintsWithPagination(
-        companyId, 
-        page, 
-        limit, 
-        search, 
-        status
-    );
+    const { sprints, total } = await this._sprintRepository.getSprintsWithPagination(companyId, page, limit, search, status);
 
-    // Fetch story points commitment and item count for these sprints
-    const sprintIds = sprints.map(s => s._id.toString());
+
+    const sprintIds = sprints.map((s) => s._id.toString());
     const issues = await this._issueRepo.findAllBySprintIds(sprintIds);
 
-    // Group points and counts by sprintId
-    const statsMap = issues.reduce((acc, issue) => {
+    const statsMap = issues.reduce(
+      (acc, issue) => {
         const sid = issue.sprint_id?.toString();
         if (sid) {
-            if (!acc[sid]) acc[sid] = { points: 0, count: 0, completed: 0 };
-            acc[sid].points += (issue.story_points || 0);
-            acc[sid].count += 1;
-            if (issue.status === 'Done') {
-                acc[sid].completed += (issue.story_points || 0);
-            }
+          if (!acc[sid]) acc[sid] = { points: 0, count: 0, completed: 0 };
+          acc[sid].points += issue.story_points || 0;
+          acc[sid].count += 1;
+          if (issue.status === 'Done') {
+            acc[sid].completed += issue.story_points || 0;
+          }
         }
         return acc;
-    }, {} as Record<string, { points: number, count: number, completed: number }>);
+      },
+      {} as Record<string, { points: number; count: number; completed: number }>,
+    );
 
     return {
       message: SPRINT_MESSAGES.FETCH_SUCCESS,
       data: {
-        sprints: sprints.map(s => {
-            const stats = statsMap[s._id.toString()] || { points: 0, count: 0, completed: 0 };
-            return SprintMapper.toResponseDTO(s, stats.points, stats.count, stats.completed);
+        sprints: sprints.map((s) => {
+          const stats = statsMap[s._id.toString()] || { points: 0, count: 0, completed: 0 };
+          return SprintMapper.toResponseDTO(s, stats.points, stats.count, stats.completed);
         }),
         total,
       },

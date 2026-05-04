@@ -7,6 +7,7 @@ import { HttpStatus } from '../enums/HttpStatus';
 import { USER_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
+import { success, created } from '../utils/response.utils';
 
 @injectable()
 export class UserController {
@@ -19,7 +20,7 @@ export class UserController {
   getProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const profile = await this._getProfileService.execute(req.userId!);
-      res.status(HttpStatus.OK).json({ success: true, data: profile });
+      success(res, profile);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -28,7 +29,7 @@ export class UserController {
   changePassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._changePasswordService.execute(req.userId!, req.body);
-      res.status(HttpStatus.OK).json({ success: true, message: result.message });
+      success(res, result.message);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -37,7 +38,7 @@ export class UserController {
   updateProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._updateUserProfileService.execute(req.userId!, req.body);
-      res.status(HttpStatus.OK).json({ success: true, message: USER_MESSAGES.PROFILE_UPDATE_SUCCESS, data: result });
+      success(res, result, USER_MESSAGES.PROFILE_UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }

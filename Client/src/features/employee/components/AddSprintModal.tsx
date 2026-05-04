@@ -75,6 +75,16 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
 
     if (!isOpen) return null;
 
+    const handleStartDateChange = (val: string) => {
+        setStartDate(val);
+        if (val) {
+            const start = new Date(val);
+            const end = new Date(start);
+            end.setDate(start.getDate() + 14);
+            setEndDate(end.toISOString().split('T')[0]);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -95,7 +105,7 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
         }
     };
 
-    const isFormValid = name.trim().length >= 2 && goal.trim().length >= 2 && projectId && startDate && endDate;
+    const isFormValid = name.trim().length >= 2 && goal.trim().length >= 2 && projectId && startDate;
 
     return createPortal(
         <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4">
@@ -164,23 +174,23 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
                                         type="date"
                                         required
                                         value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
+                                        onChange={(e) => handleStartDateChange(e.target.value)}
                                         className="w-full pl-10 pr-3.5 py-2.5 text-[13px] bg-white border border-[#e5e5e5] rounded-xl outline-none focus:border-[#fa8029] transition-all"
                                     />
                                     <Calendar className="absolute left-3.5 top-3 text-[#aaa]" size={14} />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[12px] font-bold text-[#555] mb-1.5">End Date</label>
+                                <label className="block text-[12px] font-bold text-[#555] mb-1.5">Auto-calculated End Date</label>
                                 <div className="relative">
                                     <input
-                                        type="date"
-                                        required
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                        className="w-full pl-10 pr-3.5 py-2.5 text-[13px] bg-white border border-[#e5e5e5] rounded-xl outline-none focus:border-[#fa8029] transition-all"
+                                        type="text"
+                                        readOnly
+                                        disabled
+                                        value={endDate ? new Date(endDate).toLocaleDateString() : "Select start date"}
+                                        className="w-full pl-10 pr-3.5 py-2.5 text-[13px] bg-gray-50 border border-[#e5e5e5] rounded-xl outline-none text-[#888] cursor-not-allowed"
                                     />
-                                    <Calendar className="absolute left-3.5 top-3 text-[#aaa]" size={14} />
+                                    <Calendar className="absolute left-3.5 top-3 text-[#ccc]" size={14} />
                                 </div>
                             </div>
                         </div>

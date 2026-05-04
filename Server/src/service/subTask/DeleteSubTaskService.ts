@@ -5,9 +5,7 @@ import { IDeleteSubTaskService } from '../../interfaces/services/subTask/IDelete
 
 @injectable()
 export class DeleteSubTaskService implements IDeleteSubTaskService {
-  constructor(
-    @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository
-  ) {}
+  constructor(@inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository) {}
 
   async execute(subTaskId: string): Promise<void> {
     await this._subTaskRepository.deleteById(subTaskId);

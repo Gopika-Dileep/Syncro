@@ -4,6 +4,7 @@ import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository
 import { IGetSprintByIdService } from '../../interfaces/services/sprint/IGetSprintByIdService';
 import { SprintResponseDTO } from '../../dto/sprint.dto';
 import { SprintMapper } from '../../mappers/sprint.mapper';
+import { IssueMapper } from '../../mappers/issue.mapper';
 import { TYPES } from '../../di/types';
 import { SPRINT_MESSAGES } from '../../constants/messages';
 import { NotFoundError } from '../../errors/AppError';
@@ -23,11 +24,12 @@ export class GetSprintByIdService implements IGetSprintByIdService {
     }
 
     const issues = await this._issueRepo.findAllBySprintIds([id]);
+    const mappedIssues = IssueMapper.toResponseList(issues);
     const committedPoints = issues.reduce((sum, i) => sum + (i.story_points || 0), 0);
 
     return {
       message: SPRINT_MESSAGES.FETCH_SUCCESS,
-      data: SprintMapper.toResponseDTO(sprint, committedPoints),
+      data: SprintMapper.toResponseDTO(sprint, committedPoints, issues.length, 0, mappedIssues),
     };
   }
 }

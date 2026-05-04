@@ -1,5 +1,6 @@
 import axiosInstance from "@/features/shared/api/axiosinstance";
 import { ENDPOINTS } from "@/constants/endpoints";
+import { type Issue } from "./issueApi";
 
 export interface Sprint {
     _id: string;
@@ -15,6 +16,7 @@ export interface Sprint {
     status: string;
     start_date: string;
     end_date: string;
+    issues?: Issue[]; // Added to support populated issues in details
     created_at: string;
     updated_at: string;
 }
@@ -28,6 +30,7 @@ export interface SprintFormData {
     status?: string;
     start_date: string;
     end_date: string;
+    moveIssuesTo?: string;
 }
 
 export const createSprintApi = async (data: SprintFormData): Promise<{ success: boolean; data: Sprint }> => {
@@ -63,7 +66,7 @@ export const getSprintByIdApi = async (sprintId: string): Promise<{ success: boo
     };
 };
 
-export const updateSprintApi = async (sprintId: string, data: Partial<SprintFormData>): Promise<{ success: boolean; data: Sprint }> => {
+export const updateSprintApi = async (sprintId: string, data: Partial<SprintFormData> & { moveIssuesTo?: string }): Promise<{ success: boolean; data: Sprint }> => {
     const url = `${ENDPOINTS.SPRINTS.BASE}/${sprintId}`;
     const response = await axiosInstance.patch(url, data);
     return {

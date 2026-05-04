@@ -12,6 +12,7 @@ import { EMPLOYEE_MESSAGES } from '../constants/messages';
 import { GetEmployeesRequestDTO } from '../dto/employee.dto';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
+import { success, created } from '../utils/response.utils';
 
 @injectable()
 export class EmployeeController {
@@ -29,7 +30,7 @@ export class EmployeeController {
     try {
       const { search } = req.query;
       const result = await this._getUnassignedEmployeesService.execute(req.userId!, search as string);
-      res.status(HttpStatus.OK).json({ success: true, data: result });
+      success(res, result);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -40,7 +41,7 @@ export class EmployeeController {
       const { employeeId } = req.params;
       const { teamId } = req.body;
       const result = await this._assignTeamToEmployeeService.execute(req.userId!, employeeId as string, teamId);
-      res.status(HttpStatus.OK).json(result);
+      success(res, result);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -49,7 +50,7 @@ export class EmployeeController {
   addEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._addEmployeeService.execute(req.userId!, req.body);
-      res.status(HttpStatus.CREATED).json({ success: true, message: result.message });
+      created(res, result.message);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -59,7 +60,7 @@ export class EmployeeController {
     try {
       const query = req.query as unknown as GetEmployeesRequestDTO;
       const { employees, total } = await this._getEmployeesService.execute(req.userId!, query);
-      res.status(HttpStatus.OK).json({ success: true, data: employees, total, page: query.page, limit: query.limit });
+      success(res, { employees, total, page: query.page, limit: query.limit });
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -68,7 +69,7 @@ export class EmployeeController {
   toggleBlockEmployee = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const isBlocked = await this._toggleBlockEmployeeService.execute(req.userId!, req.params.userId as string);
-      res.status(HttpStatus.OK).json({ success: true, isBlocked, message: EMPLOYEE_MESSAGES.TOGGLE_BLOCK_SUCCESS(isBlocked) });
+      success(res, { isBlocked }, EMPLOYEE_MESSAGES.TOGGLE_BLOCK_SUCCESS(isBlocked));
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -77,7 +78,7 @@ export class EmployeeController {
   getEmployeeDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._getEmployeeDetailsService.execute(req.params.userId as string);
-      res.status(HttpStatus.OK).json({ success: true, data: result });
+      success(res, result);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -86,7 +87,7 @@ export class EmployeeController {
   updateEmployeeDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._updateEmployeeDetailsService.execute(req.params.userId as string, req.body);
-      res.status(HttpStatus.OK).json({ success: true, message: EMPLOYEE_MESSAGES.UPDATE_SUCCESS, data: result });
+      success(res, result, EMPLOYEE_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }

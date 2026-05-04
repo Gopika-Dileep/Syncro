@@ -7,10 +7,15 @@ import { IGetIssueByIdService } from '../interfaces/services/issue/IGetIssueById
 import { IUpdateIssueService } from '../interfaces/services/issue/IUpdateIssueService';
 import { IDeleteIssueService } from '../interfaces/services/issue/IDeleteIssueService';
 import { IAssignIssueService } from '../interfaces/services/issue/IAssignIssueService';
+import { IAddCommentToIssueService } from '../interfaces/services/issue/IAddCommentToIssueService';
+import { IGetAssignedIssuesService } from '../interfaces/services/issue/IGetAssignedIssuesService';
+import { IGetTeamIssuesService } from '../interfaces/services/issue/IGetTeamIssuesService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
+import { success, created } from '../utils/response.utils';
 import { ISSUE_MESSAGES } from '../constants/messages';
+import { IssueMapper } from '../mappers/issue.mapper';
 
 @injectable()
 export class IssueController {
@@ -22,13 +27,16 @@ export class IssueController {
     @inject(TYPES.IUpdateIssueService) private _updateIssueService: IUpdateIssueService,
     @inject(TYPES.IDeleteIssueService) private _deleteIssueService: IDeleteIssueService,
     @inject(TYPES.IAssignIssueService) private _assignIssueService: IAssignIssueService,
-  ) { }
+    @inject(TYPES.IAddCommentToIssueService) private _addCommentToIssueService: IAddCommentToIssueService,
+    @inject(TYPES.IGetAssignedIssuesService) private _getAssignedIssuesService: IGetAssignedIssuesService,
+    @inject(TYPES.IGetTeamIssuesService) private _getTeamIssuesService: IGetTeamIssuesService,
+  ) {}
 
   createIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
       const issue = await this._createIssueService.execute(req.body, userId);
-      res.status(HttpStatus.CREATED).json({ success: true, data: issue, message: ISSUE_MESSAGES.CREATE_SUCCESS });
+      created(res, issue, ISSUE_MESSAGES.CREATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -38,7 +46,7 @@ export class IssueController {
     try {
       const { projectId } = req.params;
       const issues = await this._getIssuesByProjectService.execute(projectId as string);
-      res.status(HttpStatus.OK).json({ success: true, data: issues });
+      success(res, issues);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -48,7 +56,7 @@ export class IssueController {
     try {
       const { sprintId } = req.params;
       const issues = await this._getIssuesBySprintService.execute(sprintId as string);
-      res.status(HttpStatus.OK).json({ success: true, data: issues });
+      success(res, issues);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -58,7 +66,7 @@ export class IssueController {
     try {
       const { issueId } = req.params;
       const issue = await this._getIssueByIdService.execute(issueId as string);
-      res.status(HttpStatus.OK).json({ success: true, data: issue });
+      success(res, issue);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -67,9 +75,8 @@ export class IssueController {
   updateIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { issueId } = req.params;
-      const userId = req.userId!;
-      const issue = await this._updateIssueService.execute(issueId as string, req.body, userId);
-      res.status(HttpStatus.OK).json({ success: true, data: issue, message: ISSUE_MESSAGES.UPDATE_SUCCESS });
+      const issue = await this._updateIssueService.execute(issueId as string, req.body);
+      success(res, issue, ISSUE_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -78,8 +85,10 @@ export class IssueController {
   assignIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
-      const issue = await this._assignIssueService.execute(req.body, userId);
-      res.status(HttpStatus.OK).json({ success: true, data: issue, message: 'Assignee updated successfully' });
+      const { issueId } = req.params;
+      const data = { ...req.body, issue_id: issueId };
+      const issue = await this._assignIssueService.execute(data, userId);
+      success(res, issue, 'Assignment updated successfully');
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -89,7 +98,40 @@ export class IssueController {
     try {
       const { issueId } = req.params;
       await this._deleteIssueService.execute(issueId as string);
-      res.status(HttpStatus.OK).json({ success: true, message: ISSUE_MESSAGES.DELETE_SUCCESS });
+      success(res, ISSUE_MESSAGES.DELETE_SUCCESS);
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  addComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { issueId } = req.params;
+      const { text } = req.body;
+      const userId = req.userId!;
+      const issue = await this._addCommentToIssueService.execute(issueId as string, userId, text);
+      const mapped = IssueMapper.toResponseDTO(issue);
+      success(res, mapped, 'Comment added successfully');
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  getAssignedIssues = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.userId!;
+      const issues = await this._getAssignedIssuesService.execute(userId);
+      success(res, issues);
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  getTeamIssues = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.userId!;
+      const issues = await this._getTeamIssuesService.execute(userId);
+      success(res, issues);
     } catch (error) {
       handleAsyncError(error, next);
     }

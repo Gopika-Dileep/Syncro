@@ -5,11 +5,9 @@ import { IDeleteIssueService } from '../../interfaces/services/issue/IDeleteIssu
 
 @injectable()
 export class DeleteIssueService implements IDeleteIssueService {
-  constructor(
-    @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository
-  ) {}
+  constructor(@inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository) {}
 
   async execute(issueId: string): Promise<void> {
-    await this._issueRepository.delete(issueId);
+    await this._issueRepository.deleteById(issueId);
   }
 }

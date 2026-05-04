@@ -9,6 +9,9 @@ import { useNavigate } from "react-router-dom";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import { getSprintsApi, createSprintApi, updateSprintApi, type Sprint } from "@/features/employee/api/sprintApi";
 import AddSprintModal from "../components/AddSprintModal";
+import CompleteSprintModal from "../components/CompleteSprintModal";
+import { getSprintByIdApi } from "@/features/employee/api/sprintApi";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Sprints() {
     const { can } = usePermission();
@@ -21,15 +24,60 @@ export default function Sprints() {
     const [isModalOpen, setModalOpen] = useState(false);
     const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+    // Completion modal state
+    const [isCompleteModalOpen, setCompleteModalOpen] = useState(false);
+    const [sprintToComplete, setSprintToComplete] = useState<Sprint | null>(null);
+    const [isFetchingCompleteData, setIsFetchingCompleteData] = useState(false);
+
+    const handleCompleteClick = async (sprint: Sprint) => {
+        setIsFetchingCompleteData(true);
+        try {
+            const res = await getSprintByIdApi(sprint._id);
+            if (res.success) {
+                setSprintToComplete(res.data);
+                setCompleteModalOpen(true);
+            }
+        } catch {
+            toast.error("Failed to prepare sprint completion");
+        } finally {
+            setIsFetchingCompleteData(false);
+        }
+    };
+
+    const handleConfirmComplete = async (moveTarget: string) => {
+        if (!sprintToComplete) return;
+        setIsSubmitting(true);
+        try {
+            const res = await updateSprintApi(sprintToComplete._id, { 
+                status: 'Completed',
+                moveIssuesTo: moveTarget 
+            } as any);
+            if (res.success) {
+                toast.success("Sprint completed successfully");
+                setCompleteModalOpen(false);
+                setSprintToComplete(null);
+                fetchSprints();
+            }
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Failed to complete sprint");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     useEffect(() => {
         fetchSprints();
-    }, []);
+    }, [debouncedSearchTerm]);
 
     const fetchSprints = async () => {
         setFetching(true);
         try {
-            const res = await getSprintsApi();
+            const res = await getSprintsApi({ search: debouncedSearchTerm });
             setSprints(res.data.sprints || []);
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };
@@ -153,10 +201,14 @@ export default function Sprints() {
                                     </button>
                                     {can('sprint:update') && (
                                         <button 
-                                            onClick={() => handleStatusUpdate(activeSprint._id, 'Completed')}
-                                            className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl font-bold text-[12px] hover:bg-black transition-all shadow-lg active:scale-95"
+                                            disabled={isFetchingCompleteData}
+                                            onClick={() => handleCompleteClick(activeSprint)}
+                                            className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl font-bold text-[12px] hover:bg-black transition-all shadow-lg active:scale-95 disabled:opacity-50"
                                         >
-                                            <CheckCircle2 size={15} /> Complete Sprint
+                                            {isFetchingCompleteData ? (
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : <CheckCircle2 size={15} />}
+                                            Complete Sprint
                                         </button>
                                     )}
                                 </div>
@@ -186,6 +238,8 @@ export default function Sprints() {
                                 <input 
                                     type="text" 
                                     placeholder="Search sprints..." 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                     className="pl-10 pr-4 py-2.5 bg-white border border-[#eee] rounded-xl text-[13px] outline-none focus:border-[#fa8029] w-64 shadow-sm"
                                 />
                             </div>
@@ -305,6 +359,19 @@ export default function Sprints() {
                     finally { setIsSubmitting(false); }
                 }}
                 initialData={editingSprint}
+                isSubmitting={isSubmitting}
+            />
+
+            <CompleteSprintModal
+                isOpen={isCompleteModalOpen}
+                onClose={() => setCompleteModalOpen(false)}
+                incompleteCount={sprintToComplete?.issues?.filter(i => i.status !== 'Done').length || 0}
+                availableSprints={sprints.filter(s => 
+                    s._id !== sprintToComplete?._id && 
+                    s.status.toLowerCase() === 'planned' && 
+                    s.project_id === sprintToComplete?.project_id
+                )}
+                onConfirm={handleConfirmComplete}
                 isSubmitting={isSubmitting}
             />
         </div>

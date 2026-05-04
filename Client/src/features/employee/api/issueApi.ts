@@ -6,7 +6,12 @@ export interface Issue {
     project_id: string;
     company_id: string;
     sprint_id?: string | null;
-    assignee_id?: string | null;
+    assignee_id?: {
+        _id: string;
+        name: string;
+        designation: string;
+        avatar?: string;
+    } | null;
     assign_to?: {
         _id: string;
         name: string;
@@ -22,12 +27,18 @@ export interface Issue {
         name: string;
         designation: string;
     } | null;
+    mentions?: {
+        _id: string;
+        name: string;
+        designation: string;
+    }[] | string[];
     title: string;
     description?: string;
     reproduction_steps?: string;
     environment?: string;
     criteria: string[];
     story_points: number;
+    estimated_hours: number;
     priority: string;
     status: string;
     type: string;
@@ -36,7 +47,7 @@ export interface Issue {
 }
 
 export interface IssueFormData {
-    project_id: string;
+    project_id?: string;
     company_id?: string;
     sprint_id?: string | null;
     assignee_id?: string | null;
@@ -46,9 +57,11 @@ export interface IssueFormData {
     environment?: string;
     criteria: string[];
     story_points: number;
+    estimated_hours: number;
     priority: string;
     status?: string;
     type: string;
+    mentions?: string[];
 }
 
 export const getIssuesByProjectApi = async (projectId: string): Promise<{ success: boolean; data: Issue[] }> => {
@@ -83,5 +96,10 @@ export const deleteIssueApi = async (id: string): Promise<{ success: boolean; me
 
 export const assignIssueApi = async (id: string, data: { assignee_id: string }): Promise<{ success: boolean; data: Issue }> => {
     const response = await axiosInstance.patch(ENDPOINTS.ISSUES.ASSIGN(id), data);
+    return response.data;
+};
+
+export const addIssueCommentApi = async (id: string, text: string): Promise<{ success: boolean; data: Issue }> => {
+    const response = await axiosInstance.post(`/issues/comment/${id}`, { text });
     return response.data;
 };

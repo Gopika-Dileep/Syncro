@@ -97,6 +97,11 @@ export interface SubTaskResponseDTO {
   submission_link?: string;
   submission_description?: string;
   subtask_type: string;
+  comments: {
+    user: SubTaskPersonRef | null;
+    text: string;
+    created_at: string;
+  }[];
   created_at: string;
   updated_at: string;
 }
