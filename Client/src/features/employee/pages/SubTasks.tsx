@@ -468,7 +468,7 @@ export default function SubTasks() {
                                 }}
                                 placeholder="Explain what needs to be fixed... (Type @ to mention)"
                                 users={employees}
-                                className="h-32 bg-gray-50 border-gray-100"
+                                className="min-h-[120px] bg-gray-50/50 border-gray-100"
                             />
 
                             <div className="mt-8 flex gap-3">

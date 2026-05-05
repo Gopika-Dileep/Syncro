@@ -72,23 +72,34 @@ export default function UserStoryDetailsModal({ isOpen, onClose, story }: UserSt
                         </div>
                     </div>
 
-                    <div>
-                        <h3 className="text-[13px] font-bold text-[#333] mb-3 uppercase tracking-wider flex items-center gap-2">
-                            <CheckCircle2 size={16} className="text-[#fa8029]" />
-                            Acceptance Criteria
-                        </h3>
-                        {story.criteria && story.criteria.length > 0 ? (
-                            <ul className="space-y-2 lg:pl-6 pl-2">
-                                {story.criteria.map((crit, idx) => (
-                                    <li key={idx} className="text-[13px] text-[#555] leading-relaxed flex items-start gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029] shrink-0 mt-2" />
-                                        <MentionText text={crit} />
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-[13px] text-[#888] italic">No criteria specified.</p>
+                    <div className="space-y-6">
+                        {story.description && (
+                            <div>
+                                <h3 className="text-[13px] font-bold text-[#333] mb-2 uppercase tracking-wider">Description</h3>
+                                <div className="text-[14px] text-[#555] leading-relaxed bg-[#fcfcfc] p-4 rounded-xl border border-[#f0f0f0]">
+                                    <MentionText text={story.description} />
+                                </div>
+                            </div>
                         )}
+
+                        <div>
+                            <h3 className="text-[13px] font-bold text-[#333] mb-3 uppercase tracking-wider flex items-center gap-2">
+                                <CheckCircle2 size={16} className="text-[#fa8029]" />
+                                Acceptance Criteria
+                            </h3>
+                            {story.criteria && story.criteria.length > 0 ? (
+                                <ul className="space-y-2 lg:pl-6 pl-2">
+                                    {story.criteria.map((crit, idx) => (
+                                        <li key={idx} className="text-[13px] text-[#555] leading-relaxed flex items-start gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029] shrink-0 mt-2" />
+                                            <MentionText text={crit} />
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-[13px] text-[#888] italic">No criteria specified.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
 

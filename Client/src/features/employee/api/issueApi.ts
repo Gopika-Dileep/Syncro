@@ -47,11 +47,13 @@ export interface Issue {
         text: string;
         created_at: string;
         attachments?: { file_url: string; file_name: string }[];
+        mentions?: string[];
     }[];
     attachments?: {
         file_url: string;
         file_name: string;
         uploaded_by: { _id: string; name: string; avatar?: string } | null;
+        mentions?: string[];
         uploaded_at: string;
     }[];
     history?: {
@@ -118,12 +120,12 @@ export const assignIssueApi = async (id: string, data: { assignee_id: string }):
     return response.data;
 };
 
-export const addCommentToIssueApi = async (id: string, data: { text: string; attachments?: { file_url: string; file_name: string }[] }): Promise<{ success: boolean; data: Issue }> => {
+export const addCommentToIssueApi = async (id: string, data: { text: string; attachments?: { file_url: string; file_name: string }[]; mentions?: string[] }): Promise<{ success: boolean; data: Issue }> => {
     const response = await axiosInstance.post(ENDPOINTS.ISSUES.COMMENT(id), data);
     return response.data;
 };
 
-export const addIssueAttachmentApi = async (id: string, attachments: { file_url: string; file_name: string }[]): Promise<{ success: boolean; data: Issue }> => {
-    const response = await axiosInstance.post(ENDPOINTS.ISSUES.ATTACHMENT(id), { attachments });
+export const addIssueAttachmentApi = async (id: string, attachments: { file_url: string; file_name: string }[], mentions?: string[]): Promise<{ success: boolean; data: Issue }> => {
+    const response = await axiosInstance.post(ENDPOINTS.ISSUES.ATTACHMENT(id), { attachments, mentions });
     return response.data;
 };

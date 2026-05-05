@@ -1,13 +1,13 @@
 import axiosInstance from "@/features/shared/api/axiosinstance";
 import { ENDPOINTS } from "@/constants/endpoints";
 
-export const registerApi = async (name: string, email: string, password: string, companyName:string) => {
+export const registerApi = async (name: string, email: string, password: string, companyName: string) => {
     const response = await axiosInstance.post(ENDPOINTS.AUTH.REGISTER, { name, email, password, companyName })
     return response.data  // {success message}  {otp will be sent to email}
 }
 
-export const verifyOtpApi = async (email:string ,otp:string)=>{
-    const response = await axiosInstance.post(ENDPOINTS.AUTH.VERIFY_OTP,{email,otp})
+export const verifyOtpApi = async (email: string, otp: string) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.VERIFY_OTP, { email, otp })
     const resData = response.data;
     return {
         ...resData,
@@ -16,8 +16,8 @@ export const verifyOtpApi = async (email:string ,otp:string)=>{
     };
 }
 
-export const resendOtpApi = async (email:string) =>{
-    const response = await axiosInstance.post(ENDPOINTS.AUTH.RESEND_OTP,{email})
+export const resendOtpApi = async (email: string) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.RESEND_OTP, { email })
     return response.data;   // {success message}  {otp will be send to email}
 }
 
@@ -31,13 +31,13 @@ export const loginApi = async (email: string, password: string) => {
     };
 }
 
-export const forgotPasswordApi =  async (email:string)=>{
-    const response = await axiosInstance.post (ENDPOINTS.AUTH.FORGOT_PASSWORD,{email})
+export const forgotPasswordApi = async (email: string) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email })
     return response.data  //{success message} {and an email is send with reset password link}
 }
 
-export const resetPasswordApi = async(token:string,newPassword:string)=>{
-    const response = await axiosInstance.post(ENDPOINTS.AUTH.RESET_PASSWORD,{token,newPassword})
+export const resetPasswordApi = async (token: string, newPassword: string) => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH.RESET_PASSWORD, { token, newPassword })
     return response.data   //{success message}
 }
 
