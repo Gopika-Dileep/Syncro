@@ -4,8 +4,11 @@ import { createPortal } from "react-dom";
 import { type Issue, getIssueByIdApi, addCommentToIssueApi, addIssueAttachmentApi } from "../api/issueApi";
 import { type SubTask, getSubTaskByIdApi, addCommentToSubTaskApi, addAttachmentToSubTaskApi, getSubTasksByIssueApi, reviewSubTaskApi } from "../api/subTaskApi";
 import { uploadFileApi } from "../api/fileApi";
+import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 import { toast } from "sonner";
 import { usePermission } from "../hooks/usePermission";
+import MentionTextArea from "@/features/shared/components/MentionTextArea";
+import MentionText from "@/features/shared/components/MentionText";
 
 interface ItemDetailsDrawerProps {
     isOpen: boolean;
@@ -27,34 +30,41 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     const [childSubTasks, setChildSubTasks] = useState<SubTask[]>([]);
     const [activityFilter, setActivityFilter] = useState<string>('all');
     const [fullItem, setFullItem] = useState<Issue | SubTask | null>(item);
+    const [internalType, setInternalType] = useState<'issue' | 'subtask'>(type);
     const [isReviewing, setIsReviewing] = useState(false);
     const [reworkReason, setReworkReason] = useState("");
     const [showReworkInput, setShowReworkInput] = useState(false);
+    const [employees, setEmployees] = useState<TeamMember[]>([]);
+    const [mentions, setMentions] = useState<string[]>([]);
     const { can, user: currentUser } = usePermission();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isOpen && item?._id) {
             setFullItem(item);
+            setInternalType(type);
             fetchFullDetails();
             if (type === 'subtask' && (item as any).issue_id) {
                 fetchParentInfo((item as any).issue_id);
             } else if (type === 'issue' && (item as any).type === 'story') {
                 fetchChildSubTasks(item._id);
             }
+            fetchEmployees();
         } else if (!isOpen) {
             setParentIssue(null);
             setChildSubTasks([]);
             setFullItem(null);
         }
-    }, [isOpen, item?._id, item?.status]); // Added status to trigger refresh if it changes in parent
+    }, [isOpen, item?._id, item?.status, type]); // Added type and status to trigger refresh if it changes in parent
 
-    const fetchFullDetails = async () => {
-        if (!item?._id) return;
+    const fetchFullDetails = async (id?: string, targetType?: 'issue' | 'subtask') => {
+        const activeId = id || fullItem?._id;
+        const activeType = targetType || internalType;
+        if (!activeId) return;
         try {
-            const res = type === 'issue' 
-                ? await getIssueByIdApi(item._id)
-                : await getSubTaskByIdApi(item._id);
+            const res = activeType === 'issue' 
+                ? await getIssueByIdApi(activeId)
+                : await getSubTaskByIdApi(activeId);
             
             if (res.success) {
                 setFullItem(res.data);
@@ -82,6 +92,21 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         }
     };
 
+    const fetchEmployees = async () => {
+        try {
+            const res = await getTeamDirectoryApi();
+            if (res.success) {
+                // Flatten members from all teams
+                const allMembers = res.data.flatMap(team => team.members);
+                // Remove duplicates by ID
+                const uniqueMembers = Array.from(new Map(allMembers.map(m => [m._id, m])).values());
+                setEmployees(uniqueMembers);
+            }
+        } catch (err) {
+            console.error("Failed to fetch employees", err);
+        }
+    };
+
     if (!fullItem) return null;
 
     const handleAddComment = async () => {
@@ -90,10 +115,11 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         try {
             const commentData = { 
                 text: comment, 
-                attachments: pendingAttachments 
+                attachments: pendingAttachments,
+                mentions: mentions
             };
 
-            if (type === 'issue') {
+            if (internalType === 'issue') {
                 await addCommentToIssueApi(fullItem._id, commentData);
             } else {
                 await addCommentToSubTaskApi(fullItem._id, commentData);
@@ -133,7 +159,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                 if (uploadMode === 'item' && fullItem?._id) {
                     try {
-                        if (type === 'issue') {
+                        if (internalType === 'issue') {
                             await addIssueAttachmentApi(fullItem._id, [attachment]);
                         } else {
                             await addAttachmentToSubTaskApi(fullItem._id, [attachment]);
@@ -257,6 +283,18 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-100 shrink-0 bg-white z-10">
                     <div className="flex items-center gap-3">
+                        {internalType === 'subtask' && type === 'issue' && (
+                            <button 
+                                onClick={() => {
+                                    setFullItem(item);
+                                    setInternalType('issue');
+                                }}
+                                className="p-2 hover:bg-gray-50 rounded-full text-[#fa8029] transition-colors mr-1"
+                                title="Back to Story"
+                            >
+                                <RotateCcw size={18} />
+                            </button>
+                        )}
                         <div className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusStyle(fullItem.status)}`}>
                             {fullItem.status}
                         </div>
@@ -367,19 +405,19 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 {/* Description */}
                                 <div>
                                     <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-3">Description</h3>
-                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-[14px] text-gray-600 leading-relaxed whitespace-pre-wrap">
-                                        {fullItem.description || <span className="text-gray-300 italic">No description provided</span>}
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-[14px] text-gray-600 leading-relaxed">
+                                        {fullItem.description ? <MentionText text={fullItem.description} /> : <span className="text-gray-300 italic">No description provided</span>}
                                     </div>
                                 </div>
 
-                                {/* Bug Specifics */}
+                                 {/* Bug Specifics */}
                                 {type === 'issue' && (fullItem as Issue).type === 'bug' && (
                                     <>
                                         {(fullItem as Issue).reproduction_steps && (
                                             <div>
                                                 <h3 className="text-[12px] font-bold text-rose-500 uppercase tracking-wider mb-3">Reproduction Steps</h3>
-                                                <div className="bg-rose-50/30 p-4 rounded-xl border border-rose-100 text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                    {(fullItem as Issue).reproduction_steps}
+                                                <div className="bg-rose-50/30 p-4 rounded-xl border border-rose-100 text-[14px] text-gray-700 leading-relaxed">
+                                                    <MentionText text={(fullItem as Issue).reproduction_steps} />
                                                 </div>
                                             </div>
                                         )}
@@ -392,6 +430,52 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             </div>
                                         )}
                                     </>
+                                )}
+
+                                {/* Acceptance Criteria for Stories */}
+                                {type === 'issue' && (fullItem as Issue).type === 'story' && (fullItem as Issue).criteria && (fullItem as Issue).criteria.length > 0 && (
+                                    <div className="space-y-3">
+                                        <h3 className="text-[12px] font-bold text-emerald-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <CheckCircle size={14} /> Acceptance Criteria
+                                        </h3>
+                                        <div className="bg-emerald-50/10 rounded-2xl border border-emerald-100/50 overflow-hidden">
+                                            {(fullItem as Issue).criteria.map((criterion, index) => (
+                                                <div key={index} className="flex items-start gap-3 p-4 border-b border-emerald-100/20 last:border-0 hover:bg-emerald-50/20 transition-colors">
+                                                    <div className="mt-1 w-4 h-4 rounded-full border-2 border-emerald-500/30 flex items-center justify-center shrink-0">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    </div>
+                                                    <span className="text-[13px] text-gray-700 leading-relaxed font-medium">
+                                                        <MentionText text={criterion} />
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Parent Context for Sub-tasks */}
+                                {type === 'subtask' && parentIssue && (
+                                    <div className="p-4 rounded-2xl bg-[#fff5ef]/50 border border-[#fa8029]/10 space-y-3">
+                                        <div className="flex items-center gap-2 text-[#fa8029]">
+                                            <BookOpen size={14} />
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider">Parent Story</h3>
+                                        </div>
+                                        <h4 className="text-[14px] font-bold text-gray-800 leading-snug">{parentIssue.title}</h4>
+                                        
+                                        {parentIssue.criteria && parentIssue.criteria.length > 0 && (
+                                            <div className="pt-3 border-t border-[#fa8029]/10 space-y-2">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Goal Criteria</span>
+                                                <div className="space-y-1.5">
+                                                    {parentIssue.criteria.map((c, i) => (
+                                                        <div key={i} className="flex items-start gap-2">
+                                                            <div className="mt-1.5 w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
+                                                            <span className="text-[12px] text-gray-600 leading-tight italic">{c}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                                 
                                 {/* SubTask Specifics */}
@@ -428,9 +512,9 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                                             <div>
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Developer Notes</span>
-                                                <p className="text-[13px] text-gray-600 leading-relaxed bg-white p-3 rounded-xl border border-gray-50 shadow-sm italic">
-                                                    "{(fullItem as SubTask).submission_description || "No notes provided"}"
-                                                </p>
+                                                <div className="text-[14px] text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100/50">
+                                                    <MentionText text={(fullItem as SubTask).submission_description || "No notes provided"} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -442,33 +526,77 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             <RotateCcw size={14} />
                                             <h3 className="text-[11px] font-bold uppercase tracking-wider">Rework Required</h3>
                                         </div>
-                                        <p className="text-[13px] text-gray-700 italic">"{(fullItem as any).rework_reason}"</p>
+                                        <div className="text-[13px] text-gray-700 italic">
+                                            <MentionText text={(fullItem as any).rework_reason || ""} />
+                                        </div>
                                     </div>
                                 )}
                                 
-                                {/* Child Sub-tasks Section for Stories */}
+                                 {/* Child Sub-tasks Section for Stories */}
                                 {type === 'issue' && (fullItem as Issue).type === 'story' && childSubTasks.length > 0 && (
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Sub-tasks ({childSubTasks.length})</h3>
+                                            <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Sub-tasks Development ({childSubTasks.length})</h3>
                                         </div>
-                                        <div className="grid grid-cols-1 gap-2">
+                                        <div className="grid grid-cols-1 gap-3">
                                             {childSubTasks.map((st) => (
                                                 <div 
                                                     key={st._id} 
                                                     onClick={() => {
-                                                        setActivityFilter(st._id);
-                                                        setActiveTab('activity');
+                                                        setFullItem(st);
+                                                        setInternalType('subtask');
+                                                        fetchFullDetails(st._id, 'subtask');
                                                     }}
-                                                    className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm group hover:border-[#fa8029]/30 transition-all cursor-pointer"
+                                                    className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm group hover:border-[#fa8029]/30 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
                                                 >
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.status === 'Done' ? 'bg-emerald-500' : st.status === 'In Progress' ? 'bg-blue-500' : 'bg-gray-300'}`} />
-                                                        <span className="text-[13px] font-bold text-gray-700 truncate">{st.title}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 shrink-0">
-                                                        <span className="text-[10px] font-bold text-[#fa8029] opacity-0 group-hover:opacity-100 transition-opacity">View Activity</span>
-                                                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">{st.status}</span>
+                                                    <div className="flex flex-col gap-3">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <div className={`w-2 h-2 rounded-full shrink-0 ${st.status === 'Done' ? 'bg-emerald-500' : st.status === 'In Progress' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                                                                <span className="text-[14px] font-bold text-gray-800 truncate leading-tight">{st.title}</span>
+                                                            </div>
+                                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shrink-0 ${
+                                                                st.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                                st.status === 'In Progress' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                                st.status === 'In Review' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                                                'bg-gray-50 text-gray-400 border-gray-100'
+                                                            }`}>
+                                                                {st.status}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
+                                                            {/* Team Info */}
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-5 h-5 rounded-md bg-[#fff5ef] flex items-center justify-center text-[#fa8029]">
+                                                                    <UsersIcon size={10} />
+                                                                </div>
+                                                                <span className="text-[11px] font-bold text-gray-500">{(st.team_id as any)?.name || 'General'}</span>
+                                                            </div>
+
+                                                            {/* Creator Info */}
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-5 h-5 rounded-md bg-gray-50 flex items-center justify-center text-gray-400">
+                                                                    <User size={10} />
+                                                                </div>
+                                                                <span className="text-[11px] text-gray-400">By <span className="font-bold text-gray-500">{(st.created_by as any)?.name || 'System'}</span></span>
+                                                            </div>
+
+                                                            {/* Assignee Info */}
+                                                            <div className="flex items-center gap-1.5 ml-auto">
+                                                                <span className="text-[11px] font-bold text-gray-400">Assignee:</span>
+                                                                {st.assignee_id ? (
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-black border border-white shadow-sm">
+                                                                            {(st.assignee_id as any).name?.[0].toUpperCase()}
+                                                                        </div>
+                                                                        <span className="text-[11px] font-bold text-gray-700">{(st.assignee_id as any).name}</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-[11px] font-bold text-rose-400 italic">Unassigned</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -647,7 +775,9 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                     
                                                     {entry.type === 'comment' ? (
                                                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                                                            <p className="text-[13px] text-gray-600 leading-relaxed">{entry.text}</p>
+                                                            <div className="text-[13px] text-gray-600 leading-relaxed">
+                                                                <MentionText text={entry.text} />
+                                                            </div>
                                                             {entry.attachments && entry.attachments.length > 0 && (
                                                                 <div className="mt-3 flex flex-wrap gap-2">
                                                                     {entry.attachments.map((att: any, aIdx: number) => (
@@ -723,11 +853,16 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">Rework Reason</span>
                                 <button onClick={() => setShowReworkInput(false)} className="text-[10px] font-bold text-gray-400 hover:text-gray-600">Cancel</button>
                             </div>
-                            <textarea 
+                            <MentionTextArea 
                                 value={reworkReason}
-                                onChange={(e) => setReworkReason(e.target.value)}
-                                placeholder="Explain what needs to be fixed..."
-                                className="w-full bg-rose-50/30 border border-rose-100 rounded-2xl p-4 text-[14px] focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all resize-none min-h-[100px]"
+                                onChange={(text, m) => {
+                                    setReworkReason(text);
+                                    // Optionally we could track rework mentions too, 
+                                    // but for now we'll focus on the text
+                                }}
+                                placeholder="Explain what needs to be fixed... (Type @ to mention)"
+                                users={employees}
+                                className="bg-rose-50/30 border border-rose-100 min-h-[100px]"
                             />
                             <button 
                                 onClick={() => handleReview('reject')}
@@ -756,13 +891,17 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                         </div>
                     )}
                     <div className="relative group">
-                        <textarea
+                        <MentionTextArea
                             value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            placeholder="Add a comment or feedback..."
-                            className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 pr-12 text-[14px] focus:ring-2 focus:ring-[#fa8029]/20 focus:border-[#fa8029] outline-none transition-all resize-none min-h-[100px] custom-scrollbar"
+                            onChange={(text, m) => {
+                                setComment(text);
+                                setMentions(m);
+                            }}
+                            placeholder="Add a comment or feedback... (Type @ to mention)"
+                            users={employees}
+                            className="bg-gray-50 border border-gray-100 pr-12 min-h-[100px]"
                         />
-                        <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                        <div className="absolute bottom-4 right-4 flex items-center gap-2 z-20">
                             <input 
                                 type="file" 
                                 ref={fileInputRef} 

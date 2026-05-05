@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { X, ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
+import MentionTextArea from "@/features/shared/components/MentionTextArea";
 
 interface SubTaskMember {
     _id: string;
@@ -17,6 +18,7 @@ export interface SubTaskFormData {
     estimated_hours: number;
     assignee_id?: string;
     status?: string;
+    mentions?: string[];
 }
 
 interface SubTaskModalProps {
@@ -36,6 +38,7 @@ export default function SubTaskModal({ isOpen, onClose, onSubmit, initialData, i
     const [estimatedHours, setEstimatedHours] = useState<string>("");
     const [assigneeId, setAssigneeId] = useState("");
     const [status, setStatus] = useState("To Do");
+    const [mentions, setMentions] = useState<string[]>([]);
 
     useEffect(() => {
         if (isOpen) {
@@ -53,6 +56,7 @@ export default function SubTaskModal({ isOpen, onClose, onSubmit, initialData, i
                 setEstimatedHours("");
                 setAssigneeId("");
                 setStatus("To Do");
+                setMentions([]);
             }
         }
     }, [isOpen, initialData]);
@@ -67,7 +71,8 @@ export default function SubTaskModal({ isOpen, onClose, onSubmit, initialData, i
             priority, 
             estimated_hours: Number(estimatedHours) || 0,
             assignee_id: assigneeId || undefined,
-            status: status
+            status: status,
+            mentions: mentions
         });
     };
 
@@ -105,12 +110,15 @@ export default function SubTaskModal({ isOpen, onClose, onSubmit, initialData, i
                         {/* Description */}
                         <div>
                             <label className="block text-[12px] font-bold text-[#1f2124] uppercase tracking-wider mb-2 ml-1 opacity-60">Description</label>
-                            <textarea
+                            <MentionTextArea
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={2}
-                                className="w-full px-4 py-2.5 text-[14px] font-medium bg-white border border-[#e5e7eb] rounded-xl outline-none focus:border-[#fa8029] focus:ring-4 focus:ring-[#fa8029]/5 transition-all resize-none placeholder:text-[#9ca3af]"
-                                placeholder="Add details..."
+                                onChange={(text, m) => {
+                                    setDescription(text);
+                                    setMentions(m);
+                                }}
+                                placeholder="Add details... (Type @ to mention)"
+                                users={members}
+                                className="min-h-[80px]"
                             />
                         </div>
 

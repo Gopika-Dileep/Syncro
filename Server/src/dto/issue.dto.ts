@@ -10,12 +10,14 @@ export const AddCommentRequestSchema = z.object({
   body: z.object({
     text: z.string().min(1, 'Comment text is required'),
     attachments: z.array(AttachmentSchema).optional(),
+    mentions: z.array(z.string()).optional(),
   }),
 });
 
 export const AddAttachmentRequestSchema = z.object({
   body: z.object({
     attachments: z.array(AttachmentSchema).min(1, 'At least one attachment is required'),
+    mentions: z.array(z.string()).optional(),
   }),
 });
 

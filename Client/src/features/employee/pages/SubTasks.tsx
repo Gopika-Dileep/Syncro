@@ -30,6 +30,9 @@ import ConfirmModal from "@/features/shared/components/ConfirmModal";
 import SubTaskSubmissionModal from "../components/SubTaskSubmissionModal";
 import AssignSubTaskModal from "../components/AssignSubTaskModal";
 import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
+import MentionText from "@/features/shared/components/MentionText";
+import MentionTextArea from "@/features/shared/components/MentionTextArea";
+import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 
 const COLUMNS = ["To Do", "In Progress", "In Review", "Done"];
 
@@ -51,6 +54,8 @@ export default function SubTasks() {
     const [showReworkModal, setShowReworkModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [reworkReason, setReworkReason] = useState("");
+    const [employees, setEmployees] = useState<TeamMember[]>([]);
+    const [reworkMentions, setReworkMentions] = useState<string[]>([]);
 
     const { can } = usePermission();
 
@@ -60,7 +65,21 @@ export default function SubTasks() {
 
     useEffect(() => {
         fetchSubTasks();
+        fetchEmployees();
     }, [activeTab, isPM, debouncedSearchTerm]);
+
+    const fetchEmployees = async () => {
+        try {
+            const res = await getTeamDirectoryApi();
+            if (res.success) {
+                const allMembers = res.data.flatMap(team => team.members);
+                const uniqueMembers = Array.from(new Map(allMembers.map(m => [m._id, m])).values());
+                setEmployees(uniqueMembers);
+            }
+        } catch (err) {
+            console.error("Failed to fetch employees", err);
+        }
+    };
 
     const fetchSubTasks = async (silent = false) => {
         if (!silent) setLoading(true);
@@ -194,9 +213,13 @@ export default function SubTasks() {
         if (!selectedSubTask || !reworkReason.trim()) return;
         setIsSubmitting(true);
         try {
-            await handleStatusChange(selectedSubTask._id, "In Progress", { rework_reason: reworkReason });
+            await handleStatusChange(selectedSubTask._id, "In Progress", { 
+                rework_reason: reworkReason,
+                mentions: reworkMentions
+            });
             setShowReworkModal(false);
             setReworkReason("");
+            setReworkMentions([]);
         } finally {
             setIsSubmitting(false);
         }
@@ -321,7 +344,9 @@ export default function SubTasks() {
                                                                             )}
                                                                         </div>
                                                                         <div className="flex items-start justify-between gap-3">
-                                                                            <h4 className="text-[12px] font-bold text-[#1f2124] leading-tight group-hover:text-[#fa8029] transition-colors">{item.title}</h4>
+                                                                            <h4 className="text-[12px] font-bold text-[#1f2124] leading-tight group-hover:text-[#fa8029] transition-colors">
+                                                                                <MentionText text={item.title} />
+                                                                            </h4>
                                                                             <div className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider shrink-0 ${
                                                                                 item.priority === 'High' ? 'bg-rose-50 text-rose-500 border border-rose-100' :
                                                                                 item.priority === 'Medium' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
@@ -332,9 +357,9 @@ export default function SubTasks() {
                                                                         </div>
                                                                         {item.rework_reason && item.status !== 'Done' && (
                                                                             <div className="mt-1.5 p-1.5 bg-rose-50 rounded border border-rose-100/50">
-                                                                                <p className="text-[9px] text-rose-600 font-bold leading-tight line-clamp-2 italic">
-                                                                                    "{item.rework_reason}"
-                                                                                </p>
+                                                                                <div className="text-[9px] text-rose-600 font-bold leading-tight line-clamp-2 italic">
+                                                                                    <MentionText text={item.rework_reason} />
+                                                                                </div>
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -390,6 +415,7 @@ export default function SubTasks() {
                 onSubmit={handleSubmissionSubmit}
                 subTaskTitle={selectedSubTask?.title || ""}
                 isSubmitting={isSubmitting}
+                members={employees}
             />
 
             <AssignSubTaskModal
@@ -433,12 +459,16 @@ export default function SubTasks() {
                                 Please specify what needs to be improved.
                             </p>
 
-                            <textarea
+                            <MentionTextArea
                                 autoFocus
                                 value={reworkReason}
-                                onChange={(e) => setReworkReason(e.target.value)}
-                                placeholder="Explain..."
-                                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-[13px] focus:outline-none focus:border-rose-500/30 transition-all resize-none font-medium"
+                                onChange={(text, m) => {
+                                    setReworkReason(text);
+                                    setReworkMentions(m);
+                                }}
+                                placeholder="Explain what needs to be fixed... (Type @ to mention)"
+                                users={employees}
+                                className="h-32 bg-gray-50 border-gray-100"
                             />
 
                             <div className="mt-8 flex gap-3">

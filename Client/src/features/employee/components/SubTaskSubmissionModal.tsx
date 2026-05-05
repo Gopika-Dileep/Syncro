@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import { X, Send } from "lucide-react";
 import { createPortal } from "react-dom";
+import MentionTextArea from "@/features/shared/components/MentionTextArea";
 
 interface SubTaskSubmissionModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: { description: string; branch_name: string; submission_link: string }) => void;
+    onSubmit: (data: { description: string; branch_name: string; submission_link: string; mentions?: string[] }) => void;
     isSubmitting?: boolean;
     subTaskTitle: string;
+    members?: { _id: string; name: string; designation?: string }[];
 }
 
-export default function SubTaskSubmissionModal({ isOpen, onClose, onSubmit, isSubmitting = false, subTaskTitle }: SubTaskSubmissionModalProps) {
+export default function SubTaskSubmissionModal({ isOpen, onClose, onSubmit, isSubmitting = false, subTaskTitle, members = [] }: SubTaskSubmissionModalProps) {
     const [description, setDescription] = useState("");
     const [branchName, setBranchName] = useState("");
     const [link, setLink] = useState("");
+    const [mentions, setMentions] = useState<string[]>([]);
 
     if (!isOpen) return null;
 
@@ -22,7 +25,8 @@ export default function SubTaskSubmissionModal({ isOpen, onClose, onSubmit, isSu
         onSubmit({ 
             description, 
             branch_name: branchName, 
-            submission_link: link 
+            submission_link: link,
+            mentions: mentions
         });
     };
 
@@ -44,13 +48,15 @@ export default function SubTaskSubmissionModal({ isOpen, onClose, onSubmit, isSu
                     <form id="submission-form" onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-[12px] font-bold text-white/60 mb-2 uppercase tracking-wider">What did you implement? *</label>
-                            <textarea
-                                required
+                            <MentionTextArea
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={4}
-                                className="w-full px-4 py-3 text-[14px] bg-white/5 border border-white/10 rounded-xl outline-none focus:border-[#fa8029] focus:ring-1 focus:ring-[#fa8029] transition-all resize-none placeholder:text-white/20"
-                                placeholder="Describe what you've implemented, any important changes, testing done, etc."
+                                onChange={(text, m) => {
+                                    setDescription(text);
+                                    setMentions(m);
+                                }}
+                                placeholder="Describe what you've implemented... (Type @ to mention)"
+                                users={members}
+                                className="bg-white/5 border-white/10 text-white min-h-[100px]"
                             />
                         </div>
 

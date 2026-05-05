@@ -10,12 +10,14 @@ export const AddCommentRequestSchema = z.object({
   body: z.object({
     text: z.string().min(1, 'Comment text is required'),
     attachments: z.array(AttachmentSchema).optional(),
+    mentions: z.array(z.string()).optional(),
   }),
 });
 
 export const AddAttachmentRequestSchema = z.object({
   body: z.object({
     attachments: z.array(AttachmentSchema).min(1, 'At least one attachment is required'),
+    mentions: z.array(z.string()).optional(),
   }),
 });
 
@@ -33,6 +35,7 @@ export const SubTaskBaseSchema = z.object({
   branch_name: z.string().optional(),
   submission_link: z.string().url('Invalid submission link').optional().or(z.literal('')),
   submission_description: z.string().optional(),
+  mentions: z.array(z.string().min(1)).optional(),
 });
 
 export const CreateSubTaskRequestSchema = z.object({
@@ -68,6 +71,7 @@ export const SubmitSubTaskRequestSchema = z.object({
     submission_link: z.string().url('Invalid link').optional().or(z.literal('')),
     submission_description: z.string().optional(),
     branch_name: z.string().optional(),
+    mentions: z.array(z.string().min(1)).optional(),
   }),
 });
 

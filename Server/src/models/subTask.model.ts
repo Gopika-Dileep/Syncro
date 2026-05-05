@@ -26,8 +26,10 @@ export interface ISubTask extends Document {
       file_url: string;
       file_name: string;
     }[];
+    mentions?: mongoose.Types.ObjectId[];
     created_at: Date;
   }[];
+  mentions: mongoose.Types.ObjectId[];
   history: {
     action: string;
     from?: string;
@@ -39,6 +41,7 @@ export interface ISubTask extends Document {
     file_url: string;
     file_name: string;
     uploaded_by: mongoose.Types.ObjectId;
+    mentions?: mongoose.Types.ObjectId[];
     uploaded_at: Date;
   }[];
   created_at: Date;
@@ -128,6 +131,12 @@ const subTaskSchema = new Schema<ISubTask>(
       type: String,
       required: false,
     },
+    mentions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Employee',
+      },
+    ],
     comments: [
       {
         user: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
@@ -136,6 +145,12 @@ const subTaskSchema = new Schema<ISubTask>(
           {
             file_url: { type: String, required: true },
             file_name: { type: String, required: true },
+          },
+        ],
+        mentions: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: 'Employee',
           },
         ],
         created_at: { type: Date, default: Date.now },
@@ -155,6 +170,12 @@ const subTaskSchema = new Schema<ISubTask>(
         file_url: { type: String, required: true },
         file_name: { type: String, required: true },
         uploaded_by: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
+        mentions: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: 'Employee',
+          },
+        ],
         uploaded_at: { type: Date, default: Date.now },
       },
     ],

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Bug, BookOpen, CheckSquare, Users as UsersIcon } from "lucide-react";
 import { createPortal } from "react-dom";
 import { usePermission } from "@/features/employee/hooks/usePermission";
+import MentionTextArea from "@/features/shared/components/MentionTextArea";
 
 export interface IssueFormData {
     title: string;
@@ -181,12 +182,15 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
  
                          <div>
                              <label className="block text-[12px] font-bold text-[#555] mb-1.5">Description</label>
-                             <textarea
+                             <MentionTextArea
                                  value={description}
-                                 onChange={(e) => setDescription(e.target.value)}
-                                 rows={3}
-                                 className="w-full px-3.5 py-2.5 text-[13px] bg-white border border-[#e5e5e5] rounded-xl outline-none focus:border-[#fa8029] focus:ring-1 focus:ring-[#fa8029] transition-all resize-none"
-                                 placeholder="Describe the issue in detail..."
+                                 onChange={(text, m) => {
+                                     setDescription(text);
+                                     setMentions(m);
+                                 }}
+                                 placeholder="Describe the issue in detail... (Type @ to mention)"
+                                 users={members}
+                                 className="min-h-[100px]"
                              />
                          </div>
  
@@ -194,12 +198,15 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                              <>
                                  <div>
                                      <label className="block text-[12px] font-bold text-[#555] mb-1.5">Steps to Reproduce</label>
-                                     <textarea
+                                     <MentionTextArea
                                          value={reproSteps}
-                                         onChange={(e) => setReproSteps(e.target.value)}
-                                         rows={3}
-                                         className="w-full px-3.5 py-2.5 text-[13px] bg-white border border-[#e5e5e5] rounded-xl outline-none focus:border-[#fa8029] focus:ring-1 focus:ring-[#fa8029] transition-all resize-none"
-                                         placeholder="1. Go to... 2. Click on... 3. Observe..."
+                                         onChange={(text, m) => {
+                                             setReproSteps(text);
+                                             setMentions(m);
+                                         }}
+                                         placeholder="1. Go to... 2. Click on... 3. Observe... (Type @ to mention)"
+                                         users={members}
+                                         className="min-h-[100px]"
                                      />
                                  </div>
                                  <div>
@@ -258,29 +265,7 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                              </div>
                          </div>
  
-                         <div>
-                             <label className="block text-[12px] font-bold text-[#555] mb-2">Mention Employees</label>
-                             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-gray-50 rounded-xl border border-gray-100 custom-scrollbar">
-                                 {members.length > 0 ? (
-                                     members.map((member) => (
-                                         <button
-                                             key={member._id}
-                                             type="button"
-                                             onClick={() => toggleMention(member._id)}
-                                             className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
-                                                 mentions.includes(member._id)
-                                                     ? 'bg-[#fa8029] text-white border-[#fa8029]'
-                                                     : 'bg-white text-[#666] border-gray-200 hover:border-[#fa8029]'
-                                             }`}
-                                         >
-                                             {member.name}
-                                         </button>
-                                     ))
-                                 ) : (
-                                     <p className="text-[11px] text-gray-400 italic">No members available to mention</p>
-                                 )}
-                             </div>
-                         </div>
+                         {/* Removed redundant Mention Employees button list as we now have inline tagging */}
 
                          {(type === 'task' || (type === 'bug' && can('issue:bug:assign'))) && (
                              <div>

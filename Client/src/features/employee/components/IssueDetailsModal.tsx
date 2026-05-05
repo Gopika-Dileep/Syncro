@@ -1,6 +1,7 @@
 import { X, Flag, Hash, Calendar, CheckCircle2, Users as UsersIcon } from "lucide-react";
 import { createPortal } from "react-dom";
 import { type Issue } from "../api/issueApi";
+import MentionText from "@/features/shared/components/MentionText";
 
 interface IssueDetailsModalProps {
     isOpen: boolean;
@@ -87,7 +88,9 @@ export default function IssueDetailsModal({ isOpen, onClose, issue }: IssueDetai
                         {issue.description && (
                             <div>
                                 <h3 className="text-[13px] font-bold text-[#333] mb-2 uppercase tracking-wider">Description</h3>
-                                <p className="text-[14px] text-[#555] leading-relaxed whitespace-pre-wrap">{issue.description}</p>
+                                <div className="text-[14px] text-[#555] leading-relaxed">
+                                    <MentionText text={issue.description} />
+                                </div>
                             </div>
                         )}
 
@@ -96,13 +99,17 @@ export default function IssueDetailsModal({ isOpen, onClose, issue }: IssueDetai
                                 {issue.reproduction_steps && (
                                     <div>
                                         <h3 className="text-[13px] font-bold text-[#333] mb-2 uppercase tracking-wider text-rose-600">Steps to Reproduce</h3>
-                                        <p className="text-[14px] text-[#555] leading-relaxed whitespace-pre-wrap">{issue.reproduction_steps}</p>
+                                        <div className="text-[14px] text-[#555] leading-relaxed">
+                                            <MentionText text={issue.reproduction_steps} />
+                                        </div>
                                     </div>
                                 )}
                                 {issue.environment && (
                                     <div>
                                         <h3 className="text-[13px] font-bold text-[#333] mb-2 uppercase tracking-wider">Environment</h3>
-                                        <p className="text-[14px] text-[#555] leading-relaxed">{issue.environment}</p>
+                                        <div className="text-[14px] text-[#555] leading-relaxed">
+                                            <MentionText text={issue.environment} />
+                                        </div>
                                     </div>
                                 )}
                             </>
@@ -120,7 +127,7 @@ export default function IssueDetailsModal({ isOpen, onClose, issue }: IssueDetai
                                             {issue.criteria.map((crit, idx) => (
                                                 <li key={idx} className="text-[13px] text-[#555] leading-relaxed flex items-start gap-3">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029] shrink-0 mt-2" />
-                                                    <span>{crit}</span>
+                                                    <MentionText text={crit} />
                                                 </li>
                                             ))}
                                         </ul>
@@ -131,24 +138,7 @@ export default function IssueDetailsModal({ isOpen, onClose, issue }: IssueDetai
                             </div>
                         )}
 
-                        {issue.mentions && issue.mentions.length > 0 && (
-                            <div className="mt-6">
-                                <h3 className="text-[13px] font-bold text-[#333] mb-3 uppercase tracking-wider flex items-center gap-2">
-                                    <UsersIcon size={16} className="text-[#fa8029]" />
-                                    Mentioned Members
-                                </h3>
-                                <div className="flex flex-wrap gap-2 lg:pl-6 pl-2">
-                                    {issue.mentions.map((mention: string | { name: string }, idx: number) => {
-                                        const name = typeof mention === 'string' ? mention : mention.name;
-                                        return (
-                                            <span key={idx} className="px-3 py-1 bg-gray-50 border border-gray-100 rounded-lg text-[12px] font-bold text-[#666]">
-                                                {name}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
+                        {/* Summary of mentions already shown inline in description */}
                     </div>
                 </div>
             </div>

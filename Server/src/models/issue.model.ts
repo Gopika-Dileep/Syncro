@@ -30,6 +30,7 @@ export interface IIssue extends Document {
       file_url: string;
       file_name: string;
     }[];
+    mentions?: mongoose.Types.ObjectId[];
     created_at: Date;
   }[];
   history: {
@@ -43,6 +44,7 @@ export interface IIssue extends Document {
     file_url: string;
     file_name: string;
     uploaded_by: mongoose.Types.ObjectId;
+    mentions?: mongoose.Types.ObjectId[];
     uploaded_at: Date;
   }[];
   created_at: Date;
@@ -159,6 +161,12 @@ const issueSchema = new Schema<IIssue>(
             file_name: { type: String, required: true },
           },
         ],
+        mentions: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: 'Employee',
+          },
+        ],
         created_at: { type: Date, default: Date.now },
       },
     ],
@@ -176,6 +184,12 @@ const issueSchema = new Schema<IIssue>(
         file_url: { type: String, required: true },
         file_name: { type: String, required: true },
         uploaded_by: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
+        mentions: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: 'Employee',
+          },
+        ],
         uploaded_at: { type: Date, default: Date.now },
       },
     ],
