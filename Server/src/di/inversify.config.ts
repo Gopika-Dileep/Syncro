@@ -62,6 +62,7 @@ import { UserController } from '../controller/user.controller';
 import { IssueRepository } from '../repositories/issue.repository';
 import { IssueController } from '../controller/issue.controller';
 import { IIssueRepository } from '../interfaces/repositories/IIssueRepository';
+import { UploadController } from '../controller/upload.controller';
 
 // Issue Services
 import { ICreateIssueService } from '../interfaces/services/issue/ICreateIssueService';
@@ -85,6 +86,8 @@ import { IGetAssignedIssuesService } from '../interfaces/services/issue/IGetAssi
 import { IGetTeamIssuesService } from '../interfaces/services/issue/IGetTeamIssuesService';
 import { GetAssignedIssuesService } from '../service/issue/GetAssignedIssuesService';
 import { GetTeamIssuesService } from '../service/issue/GetTeamIssuesService';
+import { IAddAttachmentToIssueService } from '../interfaces/services/issue/IAddAttachmentToIssueService';
+import { AddAttachmentToIssueService } from '../service/issue/AddAttachmentToIssueService';
 
 // Auth Services
 import { IRegisterService } from '../interfaces/services/auth/IRegisterService';
@@ -148,6 +151,8 @@ import { SubmitSubTaskService } from '../service/subTask/SubmitSubTaskService';
 import { ReviewSubTaskService } from '../service/subTask/ReviewSubTaskService';
 import { IAddCommentToSubTaskService } from '../interfaces/services/subTask/IAddCommentToSubTaskService';
 import { AddCommentToSubTaskService } from '../service/subTask/AddCommentToSubTaskService';
+import { IAddAttachmentToSubTaskService } from '../interfaces/services/subTask/IAddAttachmentToSubTaskService';
+import { AddAttachmentToSubTaskService } from '../service/subTask/AddAttachmentToSubTaskService';
 import { SubTaskController } from '../controller/subTask.controller';
 
 const container = new Container();
@@ -194,6 +199,7 @@ container.bind<IAssignIssueService>(TYPES.IAssignIssueService).to(AssignIssueSer
 container.bind<IAddCommentToIssueService>(TYPES.IAddCommentToIssueService).to(AddCommentToIssueService);
 container.bind<IGetAssignedIssuesService>(TYPES.IGetAssignedIssuesService).to(GetAssignedIssuesService);
 container.bind<IGetTeamIssuesService>(TYPES.IGetTeamIssuesService).to(GetTeamIssuesService);
+container.bind<IAddAttachmentToIssueService>(TYPES.IAddAttachmentToIssueService).to(AddAttachmentToIssueService);
 
 container.bind<ICreateSprintService>(TYPES.ICreateSprintService).to(CreateSprintService);
 container.bind<IGetSprintsService>(TYPES.IGetSprintsService).to(GetSprintsService);
@@ -214,6 +220,7 @@ container.bind<IStartSubTaskService>(TYPES.IStartSubTaskService).to(StartSubTask
 container.bind<ISubmitSubTaskService>(TYPES.ISubmitSubTaskService).to(SubmitSubTaskService);
 container.bind<IReviewSubTaskService>(TYPES.IReviewSubTaskService).to(ReviewSubTaskService);
 container.bind<IAddCommentToSubTaskService>(TYPES.IAddCommentToSubTaskService).to(AddCommentToSubTaskService);
+container.bind<IAddAttachmentToSubTaskService>(TYPES.IAddAttachmentToSubTaskService).to(AddAttachmentToSubTaskService);
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);
@@ -223,6 +230,7 @@ container.bind<ProjectController>(TYPES.ProjectController).to(ProjectController)
 container.bind<IssueController>(TYPES.IssueController).to(IssueController);
 container.bind<SprintController>(TYPES.SprintController).to(SprintController);
 container.bind<SubTaskController>(TYPES.SubTaskController).to(SubTaskController);
+container.bind<UploadController>(TYPES.UploadController).to(UploadController);
 
 container.bind<IRegisterService>(TYPES.IRegisterService).to(RegisterService);
 container.bind<IVerifyOtpService>(TYPES.IVerifyOtpService).to(VerifyOtpService);

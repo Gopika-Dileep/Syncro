@@ -9,6 +9,7 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IssueStatus } from '../../enums/IssueEnums';
 import { ProjectStatus } from '../../enums/ProjectEnums';
+import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 
 @injectable()
 export class ReviewSubTaskService implements IReviewSubTaskService {
@@ -16,26 +17,47 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
   ) {}
 
-  async execute(subTaskId: string, data: ReviewSubTaskRequestDTO): Promise<SubTaskResponseDTO> {
+  async execute(subTaskId: string, data: ReviewSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
+    const employee = await this._employeeRepository.findOne({ user_id: userId });
+    
+    // Fallback to userId if employee profile is not found (for Owners/Admins)
+    const actorId = employee?._id || userId;
+
     const status = data.action === 'approve' ? SubTaskStatus.DONE : SubTaskStatus.IN_PROGRESS;
+    
+    const historyEntry = {
+      action: 'status_change',
+      from: SubTaskStatus.IN_REVIEW,
+      to: status,
+      user: actorId,
+      created_at: new Date(),
+    };
 
 
     const subTask = await this._subTaskRepository.updateById(subTaskId, {
       status,
-      rework_reason: data.rework_reason,
-    });
+      rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
+      $push: { history: historyEntry }
+    } as any);
 
     if (subTask) {
       if (status === SubTaskStatus.DONE) {
-        const issueId = subTask.issue_id.toString();
-        const allSubTasks = await this._subTaskRepository.findAllByIssueId(issueId);
-        if (allSubTasks.every((st) => st.status === SubTaskStatus.DONE)) {
-          const updatedIssue = await this._issueRepository.updateById(issueId, { status: IssueStatus.DONE });
-          if (updatedIssue) {
-            await this.checkAndCompleteProject(updatedIssue.project_id.toString());
+        try {
+          const issueId = typeof subTask.issue_id === 'object' ? (subTask.issue_id as any)._id?.toString() : String(subTask.issue_id);
+          if (issueId && issueId !== '[object Object]') {
+            const allSubTasks = await this._subTaskRepository.findAllByIssueId(issueId);
+            if (allSubTasks.length > 0 && allSubTasks.every((st) => st.status === SubTaskStatus.DONE)) {
+              const updatedIssue = await this._issueRepository.updateById(issueId, { status: IssueStatus.DONE });
+              if (updatedIssue) {
+                await this.checkAndCompleteProject(String(updatedIssue.project_id));
+              }
+            }
           }
+        } catch (error) {
+          console.error("Auto-completion error (SubTask):", error);
         }
       }
       return SubTaskMapper.toResponseDTO(subTask);
@@ -44,12 +66,20 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
 
     const issue = await this._issueRepository.updateById(subTaskId, {
       status: status === SubTaskStatus.DONE ? IssueStatus.DONE : IssueStatus.IN_PROGRESS,
-      rework_reason: data.rework_reason,
-    });
+      rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
+      $push: { history: historyEntry }
+    } as any);
 
     if (issue) {
       if (status === SubTaskStatus.DONE) {
-        await this.checkAndCompleteProject(issue.project_id.toString());
+        try {
+          const projectId = typeof issue.project_id === 'object' ? (issue.project_id as any)._id?.toString() : String(issue.project_id);
+          if (projectId && projectId !== '[object Object]') {
+            await this.checkAndCompleteProject(projectId);
+          }
+        } catch (error) {
+          console.error("Auto-completion error (Issue):", error);
+        }
       }
       return SubTaskMapper.fromIssue(issue);
     }

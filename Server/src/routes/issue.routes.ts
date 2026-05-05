@@ -5,7 +5,7 @@ import { TYPES } from '../di/types';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { checkPermission } from '../middleware/permission.middleware';
 import { validateRequest } from '../middleware/validation.middleware';
-import { CreateIssueRequestSchema, UpdateIssueRequestSchema, AssignIssueRequestSchema } from '../dto/issue.dto';
+import { CreateIssueRequestSchema, UpdateIssueRequestSchema, AssignIssueRequestSchema, AddCommentRequestSchema, AddAttachmentRequestSchema } from '../dto/issue.dto';
 import { ENDPOINTS } from '../constants/endpoints';
 
 const issueController = container.get<IssueController>(TYPES.IssueController);
@@ -33,7 +33,8 @@ export class IssueRouter {
       validateRequest(AssignIssueRequestSchema),
       issueController.assignIssue,
     );
-    this.router.post(ENDPOINTS.ISSUES.COMMENT, authMiddleware, issueController.addComment);
+    this.router.post(ENDPOINTS.ISSUES.COMMENT, authMiddleware, validateRequest(AddCommentRequestSchema), issueController.addComment);
+    this.router.post(ENDPOINTS.ISSUES.ATTACHMENT, authMiddleware, validateRequest(AddAttachmentRequestSchema), issueController.addAttachment);
     this.router.delete(ENDPOINTS.ISSUES.BY_ISSUE_ID, authMiddleware, checkPermission(['issue:story:delete', 'issue:task:delete', 'issue:bug:delete']), issueController.deleteIssue);
   }
 }

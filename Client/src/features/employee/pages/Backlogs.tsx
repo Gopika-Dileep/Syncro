@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare } from "lucide-react";
+import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import { getProjectsApi, type Project } from "@/features/employee/api/projectApi";
 import { getIssuesByProjectApi, createIssueApi, updateIssueApi, deleteIssueApi, type Issue } from "@/features/employee/api/issueApi";
 import IssueModal, { type IssueFormData as ModalIssueFormData } from "../components/IssueModal";
-import IssueDetailsModal from "../components/IssueDetailsModal";
+import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
 
 const TypeIcon = ({ type, size = 12 }: { type: string; size?: number }) => {
     switch (type?.toLowerCase()) {
@@ -83,7 +83,7 @@ export default function Backlogs() {
 
     // Modals state
     const [isFormModalOpen, setFormModalOpen] = useState(false);
-    const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
+    const [isDetailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
 
     // Selected states
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -168,7 +168,7 @@ export default function Backlogs() {
 
     const handleOpenDetails = (issue: Issue) => {
         setSelectedIssue(issue);
-        setDetailsModalOpen(true);
+        setDetailsDrawerOpen(true);
     };
 
     const openMenu = (issueId: string) => {
@@ -298,6 +298,13 @@ export default function Backlogs() {
                                         <CheckCircle size={12} /> Mark Ready
                                     </button>
                                 )}
+                                <button
+                                    onClick={() => handleOpenDetails(issue)}
+                                    className="p-1.5 text-[#bbb] hover:bg-[#fff5ef] hover:text-[#fa8029] rounded-lg transition-colors"
+                                    title="Comments & Details"
+                                >
+                                    <MessageSquare size={15} />
+                                </button>
                                 <div className="relative">
                                     <button
                                         ref={(el) => { btnRefs.current[issue._id] = el; }}
@@ -412,10 +419,12 @@ export default function Backlogs() {
                 members={members}
             />
 
-            <IssueDetailsModal
-                isOpen={isDetailsModalOpen}
-                onClose={() => setDetailsModalOpen(false)}
-                issue={selectedIssue}
+            <ItemDetailsDrawer
+                isOpen={isDetailsDrawerOpen}
+                onClose={() => setDetailsDrawerOpen(false)}
+                item={selectedIssue}
+                type="issue"
+                onUpdate={() => selectedProjectId && fetchIssuesForProject(selectedProjectId)}
             />
 
             {/* Confirmation Modal - Mark Ready */}

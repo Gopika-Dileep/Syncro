@@ -13,7 +13,7 @@ import {
     FileText,
     History
 } from "lucide-react";
-import { type SubTask, addSubTaskCommentApi } from "../api/subTaskApi";
+import { type SubTask, addCommentToSubTaskApi } from "../api/subTaskApi";
 import { toast } from "sonner";
 import { usePermission } from "../hooks/usePermission";
 
@@ -53,7 +53,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
         if (!comment.trim()) return;
         setIsAddingComment(true);
         try {
-            const response = await addSubTaskCommentApi(subTask._id, comment);
+            const response = await addCommentToSubTaskApi(subTask._id, { text: comment });
             if (response.success) {
                 setComment("");
                 toast.success("Comment added");
@@ -334,6 +334,32 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                             <p className="text-[12px] text-gray-400 italic">Unassigned</p>
                                         )}
                                     </div>
+
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Reporter</p>
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-[11px] font-black border border-blue-100 shadow-sm">
+                                                {subTask.created_by?.name?.[0] || 'S'}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[12px] font-bold text-[#1f2124] truncate">{subTask.created_by?.name || 'System'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {subTask.assigned_by && (
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Assigned By</p>
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center text-[11px] font-black border border-orange-100 shadow-sm">
+                                                    {subTask.assigned_by.name[0]}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-[12px] font-bold text-[#1f2124] truncate">{subTask.assigned_by.name}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="pt-2 border-t border-gray-50 flex items-center gap-3">
                                         <Clock size={16} className="text-gray-300" />

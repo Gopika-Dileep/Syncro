@@ -28,9 +28,29 @@ export interface SubTask {
     branch_name?: string;
     submission_link?: string;
     submission_description?: string;
+    parent_issue?: {
+        _id: string;
+        title: string;
+        type: string;
+        status: string;
+    } | null;
     comments?: {
-        user: { _id: string; name: string; avatar?: string };
+        user: SubTaskPersonRef | null;
         text: string;
+        created_at: string;
+        attachments?: { file_url: string; file_name: string }[];
+    }[];
+    attachments?: {
+        file_url: string;
+        file_name: string;
+        uploaded_by: SubTaskPersonRef | null;
+        uploaded_at: string;
+    }[];
+    history?: {
+        action: string;
+        from?: string;
+        to?: string;
+        user: SubTaskPersonRef | null;
         created_at: string;
     }[];
     created_at: string;
@@ -103,7 +123,7 @@ export const startSubTaskApi = async (id: string): Promise<{ success: boolean; d
     return response.data;
 };
 
-export const submitSubTaskApi = async (id: string, data: { submission_link: string; submission_description: string }): Promise<{ success: boolean; data: SubTask }> => {
+export const submitSubTaskApi = async (id: string, data: { submission_link?: string; submission_description?: string; branch_name?: string }): Promise<{ success: boolean; data: SubTask }> => {
     const response = await axiosInstance.patch(ENDPOINTS.SUBTASKS.SUBMIT(id), data);
     return response.data;
 };
@@ -113,7 +133,12 @@ export const reviewSubTaskApi = async (id: string, data: { action: 'approve' | '
     return response.data;
 };
 
-export const addSubTaskCommentApi = async (id: string, text: string): Promise<{ success: boolean; data: SubTask }> => {
-    const response = await axiosInstance.post(`/subtasks/comment/${id}`, { text });
+export const addCommentToSubTaskApi = async (id: string, data: { text: string; attachments?: { file_url: string; file_name: string }[] }): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.post(ENDPOINTS.SUBTASKS.COMMENT(id), data);
+    return response.data;
+};
+
+export const addAttachmentToSubTaskApi = async (id: string, attachments: { file_url: string; file_name: string }[]): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.post(ENDPOINTS.SUBTASKS.ATTACHMENT(id), { attachments });
     return response.data;
 };

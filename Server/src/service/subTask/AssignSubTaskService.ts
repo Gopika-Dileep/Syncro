@@ -17,10 +17,28 @@ export class AssignSubTaskService implements IAssignSubTaskService {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
     if (!assigner) throw new Error('Assigner not found');
 
+    const oldSubTask = await this._subTaskRepository.findById(subTaskId);
+    if (!oldSubTask) throw new Error('Sub-task not found');
+
+    const assignee = await this._employeeRepository.findById(data.assignee_id);
+    if (assignee) await assignee.populate('user_id');
+    
+    const oldAssignee = oldSubTask.assignee_id ? await this._employeeRepository.findById(String(oldSubTask.assignee_id)) : null;
+    if (oldAssignee) await oldAssignee.populate('user_id');
+
+    const historyEntry = {
+      action: 'assignee_change',
+      from: (oldAssignee as any)?.user_id?.name || 'Unassigned',
+      to: (assignee as any)?.user_id?.name || 'Unknown',
+      user: assigner._id,
+      created_at: new Date(),
+    };
+
     const subTask = await this._subTaskRepository.updateById(subTaskId, {
       assignee_id: data.assignee_id,
       assigned_by: assigner._id,
-    } as Record<string, unknown>);
+      $push: { history: historyEntry }
+    } as any);
 
     if (!subTask) throw new Error('Sub-task not found');
     return SubTaskMapper.toResponseDTO(subTask);

@@ -26,7 +26,24 @@ export interface IIssue extends Document {
   comments: {
     user: mongoose.Types.ObjectId;
     text: string;
+    attachments?: {
+      file_url: string;
+      file_name: string;
+    }[];
     created_at: Date;
+  }[];
+  history: {
+    action: string;
+    from?: string;
+    to?: string;
+    user: mongoose.Types.ObjectId;
+    created_at: Date;
+  }[];
+  attachments: {
+    file_url: string;
+    file_name: string;
+    uploaded_by: mongoose.Types.ObjectId;
+    uploaded_at: Date;
   }[];
   created_at: Date;
   updated_at: Date;
@@ -136,7 +153,30 @@ const issueSchema = new Schema<IIssue>(
       {
         user: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
         text: { type: String, required: true },
+        attachments: [
+          {
+            file_url: { type: String, required: true },
+            file_name: { type: String, required: true },
+          },
+        ],
         created_at: { type: Date, default: Date.now },
+      },
+    ],
+    history: [
+      {
+        action: { type: String, required: true },
+        from: { type: String, required: false },
+        to: { type: String, required: false },
+        user: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
+        created_at: { type: Date, default: Date.now },
+      },
+    ],
+    attachments: [
+      {
+        file_url: { type: String, required: true },
+        file_name: { type: String, required: true },
+        uploaded_by: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
+        uploaded_at: { type: Date, default: Date.now },
       },
     ],
   },

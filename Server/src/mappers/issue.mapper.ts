@@ -1,33 +1,40 @@
 import { IIssue } from '../models/issue.model';
 import { IssueResponseDTO } from '../dto/issue.dto';
 
-function extractEmployee(ref: unknown): { _id: string; name: string; designation: string } | undefined {
+function extractEmployee(ref: unknown): { _id: string; name: string; designation: string; avatar?: string } | undefined {
   if (!ref) return undefined;
 
+  // If it's a populated employee object
   if (typeof ref === 'object' && ref !== null) {
-    const obj = ref as Record<string, unknown>;
-    if (obj.user_id && typeof obj.user_id === 'object') {
-      const user = obj.user_id as Record<string, unknown>;
-      return {
-        _id: String(obj._id),
-        name: String(user.name || ''),
-        designation: String(obj.designation || ''),
-      };
-    }
+    const obj = ref as any;
     if (obj._id) {
+      const userId = obj.user_id;
+      if (typeof userId === 'object' && userId !== null) {
+        return {
+          _id: String(obj._id),
+          name: String(userId.name || ''),
+          designation: String(obj.designation || ''),
+          avatar: userId.avatar ? String(userId.avatar) : undefined,
+        };
+      }
       return {
         _id: String(obj._id),
-        name: String(obj.name || ''),
+        name: '',
         designation: String(obj.designation || ''),
       };
     }
   }
 
-  return {
-    _id: String(ref),
-    name: '',
-    designation: '',
-  };
+  // If it's just an ID
+  if (typeof ref === 'string' || (typeof ref === 'object' && ref !== null && (ref as any).toString)) {
+    return {
+      _id: String(ref),
+      name: '',
+      designation: '',
+    };
+  }
+
+  return undefined;
 }
 
 function mapAssignee(ref: unknown): IssueResponseDTO['assignee_id'] {
@@ -91,15 +98,37 @@ export class IssueMapper {
       mentions: issue.mentions?.map((m) => m.toString()) || [],
       comments: (issue.comments || []).map((c) => ({
         user: extractEmployee(c.user) || null,
-        text: c.text,
-        created_at: c.created_at.toISOString(),
+        text: c.text || '',
+        attachments: c.attachments || [],
+        created_at: safeDate(c.created_at),
       })),
-      created_at: issue.created_at.toISOString(),
-      updated_at: issue.updated_at.toISOString(),
+      attachments: (issue.attachments || []).map((a) => ({
+        file_url: a.file_url || '',
+        file_name: a.file_name || '',
+        uploaded_by: extractEmployee(a.uploaded_by) || null,
+        uploaded_at: safeDate(a.uploaded_at),
+      })),
+      history: (issue.history || []).map((h) => ({
+        action: h.action || 'updated',
+        from: h.from,
+        to: h.to,
+        user: extractEmployee(h.user) || null,
+        created_at: safeDate(h.created_at),
+      })),
+      created_at: safeDate(issue.created_at),
+      updated_at: safeDate(issue.updated_at),
     };
   }
 
   static toResponseList(issues: IIssue[]): IssueResponseDTO[] {
     return issues.map((issue) => this.toResponseDTO(issue));
   }
+}
+
+function safeDate(date: any): string {
+  if (!date) return new Date().toISOString();
+  if (typeof date === 'string') return date;
+  if (date instanceof Date) return date.toISOString();
+  if (typeof date.toISOString === 'function') return date.toISOString();
+  return new Date(date).toISOString();
 }

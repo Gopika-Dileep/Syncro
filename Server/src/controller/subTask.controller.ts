@@ -14,6 +14,7 @@ import { IStartSubTaskService } from '../interfaces/services/subTask/IStartSubTa
 import { ISubmitSubTaskService } from '../interfaces/services/subTask/ISubmitSubTaskService';
 import { IReviewSubTaskService } from '../interfaces/services/subTask/IReviewSubTaskService';
 import { IAddCommentToSubTaskService } from '../interfaces/services/subTask/IAddCommentToSubTaskService';
+import { IAddAttachmentToSubTaskService } from '../interfaces/services/subTask/IAddAttachmentToSubTaskService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
@@ -36,6 +37,7 @@ export class SubTaskController {
     @inject(TYPES.ISubmitSubTaskService) private _submitSubTaskService: ISubmitSubTaskService,
     @inject(TYPES.IReviewSubTaskService) private _reviewSubTaskService: IReviewSubTaskService,
     @inject(TYPES.IAddCommentToSubTaskService) private _addCommentToSubTaskService: IAddCommentToSubTaskService,
+    @inject(TYPES.IAddAttachmentToSubTaskService) private _addAttachmentToSubTaskService: IAddAttachmentToSubTaskService,
   ) {}
 
   createSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -51,7 +53,8 @@ export class SubTaskController {
   updateSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const subTask = await this._updateSubTaskService.execute(subTaskId as string, req.body);
+      const userId = req.userId!;
+      const subTask = await this._updateSubTaskService.execute(subTaskId as string, req.body, userId);
       success(res, subTask, SUBTASK_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
@@ -102,7 +105,8 @@ export class SubTaskController {
   startSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const subTask = await this._startSubTaskService.execute(subTaskId as string);
+      const userId = req.userId!;
+      const subTask = await this._startSubTaskService.execute(subTaskId as string, userId);
       success(res, subTask, 'Task started successfully');
     } catch (error) {
       handleAsyncError(error, next);
@@ -112,7 +116,8 @@ export class SubTaskController {
   submitSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const subTask = await this._submitSubTaskService.execute(subTaskId as string, req.body);
+      const userId = req.userId!;
+      const subTask = await this._submitSubTaskService.execute(subTaskId as string, req.body, userId);
       success(res, subTask, 'Task submitted for review');
     } catch (error) {
       handleAsyncError(error, next);
@@ -122,7 +127,8 @@ export class SubTaskController {
   reviewSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const subTask = await this._reviewSubTaskService.execute(subTaskId as string, req.body);
+      const userId = req.userId!;
+      const subTask = await this._reviewSubTaskService.execute(subTaskId as string, req.body, userId);
       success(res, subTask, 'Review completed');
     } catch (error) {
       handleAsyncError(error, next);
@@ -165,11 +171,24 @@ export class SubTaskController {
   addComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { subTaskId } = req.params;
-      const { text } = req.body;
+      const { text, attachments } = req.body;
       const userId = req.userId!;
-      const subTask = await this._addCommentToSubTaskService.execute(subTaskId as string, userId, text);
+      const subTask = await this._addCommentToSubTaskService.execute(subTaskId as string, userId, text, attachments);
       const mapped = SubTaskMapper.toResponseDTO(subTask);
       success(res, mapped, 'Comment added successfully');
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  addAttachment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { subTaskId } = req.params;
+      const { attachments } = req.body;
+      const userId = req.userId!;
+      const subTask = await this._addAttachmentToSubTaskService.execute(subTaskId as string, userId, attachments);
+      const mapped = SubTaskMapper.toResponseDTO(subTask);
+      success(res, mapped, 'Attachments added successfully');
     } catch (error) {
       handleAsyncError(error, next);
     }

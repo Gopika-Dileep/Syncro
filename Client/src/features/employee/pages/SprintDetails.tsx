@@ -6,7 +6,7 @@ import {
     GripVertical, Layout, ArrowRight, User, Users,
     Pencil, Trash2, UserPlus, Eye,
     Bug, BookOpen, CheckSquare, X,
-    ListTodo, Package, Flag, CheckCircle2
+    ListTodo, Package, Flag, CheckCircle2, MessageSquare
 } from "lucide-react";
 import { getSprintByIdApi, updateSprintApi, getSprintsApi, type Sprint, type SprintFormData } from "../api/sprintApi";
 import { 
@@ -19,8 +19,7 @@ import { getProjectsApi, type Project } from "../api/projectApi";
 import { getTeamDirectoryApi, type TeamMember, type TeamDirectory } from "../api/teamApi";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import SubTaskModal, { type SubTaskFormData } from "../components/SubTaskModal";
-import IssueDetailsModal from "../components/IssueDetailsModal";
-import SubTaskDetailsModal from "../components/SubTaskDetailsModal";
+import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
 import CompleteSprintModal from "../components/CompleteSprintModal";
 import ConfirmModal from "@/features/shared/components/ConfirmModal";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
@@ -47,6 +46,7 @@ const getPriorityColor = (priority: string) => {
 
 export default function SprintDetails() {
     const { sprintId } = useParams<{ sprintId: string }>();
+    const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
     const [sprint, setSprint] = useState<Sprint | null>(null);
     const [issues, setIssues] = useState<Issue[]>([]);
     const [loading, setLoading] = useState(true);
@@ -64,9 +64,9 @@ export default function SprintDetails() {
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [subTaskToDelete, setSubTaskToDelete] = useState<{ issueId: string, subTaskId: string } | null>(null);
     const [issueToAssign, setIssueToAssign] = useState<Issue | null>(null);
-    const [issueToView, setIssueToView] = useState<Issue | null>(null);
     const [subTaskToAssign, setSubTaskToAssign] = useState<{ issueId: string, subTask: SubTask } | null>(null);
-    const [subTaskToView, setSubTaskToView] = useState<SubTask | null>(null);
+    const [itemToView, setItemToView] = useState<{ item: Issue | SubTask, type: 'issue' | 'subtask' } | null>(null);
+    const [isDetailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
     
     // Completion state
     const [isCompleteModalOpen, setCompleteModalOpen] = useState(false);
@@ -137,6 +137,12 @@ export default function SprintDetails() {
             if (response.success) {
                 setSprint(response.data);
                 setIssues(response.data.issues || []);
+                // If board view, pre-fetch subtasks for all issues
+                if (viewMode === 'board') {
+                    (response.data.issues || []).forEach((issue: Issue) => {
+                        fetchSubTasks(issue._id);
+                    });
+                }
             }
         } catch (error) {
             toast.error("Failed to load sprint details");
@@ -216,7 +222,7 @@ export default function SprintDetails() {
 
     const handleOpenSubTaskModal = (e: React.MouseEvent, issueId: string) => {
         e.stopPropagation();
-        setActiveIssueId(issueId);
+        setActiveIssueId(String(issueId));
         setEditingSubTask(null);
         setSubTaskModalOpen(true);
     };
@@ -242,8 +248,8 @@ export default function SprintDetails() {
             } else {
                 const response = await createSubTaskApi({
                     ...data,
-                    issue_id: activeIssueId,
-                    sprint_id: sprintId
+                    issue_id: String(activeIssueId),
+                    sprint_id: String(sprintId)
                 });
                 if (response.success) {
                     toast.success("Sub-task created");
@@ -409,11 +415,13 @@ export default function SprintDetails() {
                                 className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can('task:assign') ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
                                 title={subTask.assignee_id.name}
                             >
-                                {subTask.assignee_id.name ? (
-                                    subTask.assignee_id.name.split(' ').length > 1 
-                                    ? subTask.assignee_id.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-                                    : subTask.assignee_id.name.substring(0, 2).toUpperCase()
-                                ) : '??'}
+                                {(() => {
+                                    const name = (subTask as any).assignee_id?.name || (subTask as any).assignee_id?.user_id?.name || (subTask as any).assign_to?.name;
+                                    if (!name) return '??';
+                                    return name.split(' ').length > 1 
+                                        ? name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
+                                        : name.substring(0, 2).toUpperCase();
+                                })()}
                             </button>
                         ) : can('task:assign') && (
                             <button
@@ -450,12 +458,24 @@ export default function SprintDetails() {
                                     <button
                                         onClick={(e) => { 
                                             e.stopPropagation(); 
-                                            setSubTaskToView(subTask); 
+                                            setItemToView({ item: subTask, type: 'subtask' }); 
+                                            setDetailsDrawerOpen(true);
                                             setActiveSubTaskDropdown(null);
                                         }}
                                         className="w-full px-4 py-2.5 text-left text-[12px] font-bold text-[#555] hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
                                     >
                                         <Eye size={15} /> View Details
+                                    </button>
+                                    <button
+                                        onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            setItemToView({ item: subTask, type: 'subtask' }); 
+                                            setDetailsDrawerOpen(true);
+                                            setActiveSubTaskDropdown(null);
+                                        }}
+                                        className="w-full px-4 py-2.5 text-left text-[12px] font-bold text-[#555] hover:bg-orange-50 hover:text-[#fa8029] transition-colors flex items-center gap-2"
+                                    >
+                                        <MessageSquare size={15} /> Comments
                                     </button>
                                     
                                     {can('task:update') && (
@@ -554,6 +574,25 @@ export default function SprintDetails() {
                         </div>
 
                         <div className="flex items-center gap-3">
+                            <div className="flex items-center bg-gray-100 p-1 rounded-xl mr-2">
+                                <button 
+                                    onClick={() => setViewMode('list')}
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 ${viewMode === 'list' ? 'bg-white text-[#fa8029] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    <ListTodo size={14} /> List
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setViewMode('board');
+                                        issues.forEach(issue => {
+                                            if (!subTasksByIssue[issue._id]) fetchSubTasks(issue._id);
+                                        });
+                                    }}
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 ${viewMode === 'board' ? 'bg-white text-[#fa8029] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    <Layout size={14} /> Board
+                                </button>
+                            </div>
                             {sprint.status?.toLowerCase() === 'active' && can('sprint:update') && (
                                 <button 
                                     onClick={handleCompleteClick}
@@ -614,227 +653,359 @@ export default function SprintDetails() {
             </div>
 
             <div className="max-w-[1400px] mx-auto px-6 py-8">
-                <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-[18px] font-black text-[#1f2124] flex items-center gap-2">
-                        <Layout size={20} className="text-[#fa8029]" /> Sprint Backlog
-                    </h2>
-                    
-                    <div className="flex items-center gap-3">
-                        {can('task:view:all') ? (
-                            <div className="flex items-center gap-2 bg-white border border-[#eee] rounded-xl px-3 py-1.5 shadow-sm">
-                                <Users size={14} className="text-[#aaa]" />
-                                <select 
-                                    value={selectedTeamId}
-                                    onChange={(e) => setSelectedTeamId(e.target.value)}
-                                    className="text-[12px] font-bold text-[#555] outline-none bg-transparent"
-                                >
-                                    <option value="all">All Teams</option>
-                                    {teams.map(t => (
-                                        <option key={t._id} value={t._id}>{t.name}</option>
-                                    ))}
-                                </select>
+                {viewMode === 'list' ? (
+                    <>
+                        <div className="mb-6 flex items-center justify-between">
+                            <h2 className="text-[18px] font-black text-[#1f2124] flex items-center gap-2">
+                                <ListTodo size={20} className="text-[#fa8029]" /> Sprint Backlog
+                            </h2>
+                            
+                            <div className="flex items-center gap-3">
+                                {can('task:view:all') ? (
+                                    <div className="flex items-center gap-2 bg-white border border-[#eee] rounded-xl px-3 py-1.5 shadow-sm">
+                                        <Users size={14} className="text-[#aaa]" />
+                                        <select 
+                                            value={selectedTeamId}
+                                            onChange={(e) => setSelectedTeamId(e.target.value)}
+                                            className="text-[12px] font-bold text-[#555] outline-none bg-transparent"
+                                        >
+                                            <option value="all">All Teams</option>
+                                            {teams.map(t => (
+                                                <option key={t._id} value={t._id}>{t.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ) : user?.team?._id || user?.team_id ? (
+                                    <div className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[11px] font-bold border border-indigo-100 flex items-center gap-2">
+                                        <Users size={12} /> Team View
+                                    </div>
+                                ) : null}
                             </div>
-                        ) : user?.team?._id || user?.team_id ? (
-                            <div className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[11px] font-bold border border-indigo-100 flex items-center gap-2">
-                                <Users size={12} /> Team View
+                        </div>
+
+                        {issues.length === 0 ? (
+                            <div className="bg-white border-2 border-dashed border-[#eee] rounded-[32px] p-20 text-center flex flex-col items-center">
+                                <Layout size={40} className="text-[#ddd] mb-4" />
+                                <h4 className="text-[16px] font-bold text-[#888]">Your sprint backlog is empty</h4>
+                                <button onClick={() => setIsAddItemModalOpen(true)} className="mt-4 text-[#fa8029] font-bold hover:underline">Add items to get started</button>
                             </div>
-                        ) : null}
-                    </div>
-                </div>
+                        ) : (
+                            <div className="space-y-3 pb-20">
+                                {issues.map((issue) => {
+                                    const isExpanded = expandedIssues.has(issue._id);
+                                    const subTaskConfig = subTasksByIssue[issue._id];
 
-                {issues.length === 0 ? (
-                    <div className="bg-white border-2 border-dashed border-[#eee] rounded-[32px] p-20 text-center flex flex-col items-center">
-                        <Layout size={40} className="text-[#ddd] mb-4" />
-                        <h4 className="text-[16px] font-bold text-[#888]">Your sprint backlog is empty</h4>
-                        <button onClick={() => setIsAddItemModalOpen(true)} className="mt-4 text-[#fa8029] font-bold hover:underline">Add items to get started</button>
-                    </div>
-                ) : (
-                    <div className="space-y-3 pb-20">
-                        {issues.map((issue) => {
-                            const isExpanded = expandedIssues.has(issue._id);
-                            const subTaskConfig = subTasksByIssue[issue._id];
-
-                            return (
-                                <div key={issue._id} className="bg-white border border-[#f0f0f0] rounded-2xl shadow-sm overflow-visible transition-all hover:border-[#fa8029]/20">
-                                    <div
-                                        onClick={() => toggleIssue(issue._id)}
-                                        className="p-5 flex items-center justify-between group cursor-pointer hover:bg-[#fafafa] transition-colors"
-                                    >
-                                        <div className="flex items-center gap-4 flex-1">
-                                            <div className="text-[#aaa] group-hover:text-[#fa8029] transition-colors">
-                                                {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                                            </div>
-                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
-                                                issue.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
-                                                    'bg-blue-50 text-blue-500 border-blue-100'
-                                                }`}>
-                                                <TypeIcon type={issue.type} size={18} />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-[14px] font-bold text-[#1f2124]">{issue.title}</h3>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    {issue.type === 'story' ? (
-                                                        <p className="text-[11px] text-[#aaa] font-medium uppercase tracking-tighter">
-                                                            {issue.type} • {issue.priority} • {issue.story_points} pts
-                                                        </p>
-                                                    ) : (
-                                                        <p className="text-[11px] text-[#aaa] font-medium uppercase tracking-tighter">
-                                                            {issue.type} • {issue.priority} • {issue.estimated_hours || 0} hrs
-                                                        </p>
-                                                    )}
-                                                    {(issue.type === 'bug' || issue.type === 'task') && issue.assignee_id && (
-                                                        <>
-                                                            <span className="w-1 h-1 rounded-full bg-[#eee]" />
-                                                            <p className="text-[11px] font-bold text-orange-500/70">
-                                                                {issue.assignee_id.name}
-                                                            </p>
-                                                        </>
-                                                    )}
+                                    return (
+                                        <div key={issue._id} className="bg-white border border-[#f0f0f0] rounded-2xl shadow-sm overflow-visible transition-all hover:border-[#fa8029]/20">
+                                            <div
+                                                onClick={() => toggleIssue(issue._id)}
+                                                className="p-5 flex items-center justify-between group cursor-pointer hover:bg-[#fafafa] transition-colors"
+                                            >
+                                                <div className="flex items-center gap-4 flex-1">
+                                                    <div className="text-[#aaa] group-hover:text-[#fa8029] transition-colors">
+                                                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                                                    </div>
+                                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
+                                                        issue.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
+                                                            'bg-blue-50 text-blue-500 border-blue-100'
+                                                        }`}>
+                                                        <TypeIcon type={issue.type} size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-[14px] font-bold text-[#1f2124]">{issue.title}</h3>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            {issue.type === 'story' ? (
+                                                                <p className="text-[11px] text-[#aaa] font-medium uppercase tracking-tighter">
+                                                                    {issue.type} • {issue.priority} • {issue.story_points} pts
+                                                                </p>
+                                                            ) : (
+                                                                <p className="text-[11px] text-[#aaa] font-medium uppercase tracking-tighter">
+                                                                    {issue.type} • {issue.priority} • {issue.estimated_hours || 0} hrs
+                                                                </p>
+                                                            )}
+                                                            {(issue.type === 'bug' || issue.type === 'task') && issue.assignee_id && (
+                                                                <>
+                                                                    <span className="w-1 h-1 rounded-full bg-[#eee]" />
+                                                                    <p className="text-[11px] font-bold text-orange-500/70">
+                                                                        {(issue as any).assignee_id?.name || (issue as any).assignee_id?.user_id?.name || (issue as any).assign_to?.name}
+                                                                    </p>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        <div className="flex items-center gap-4 shrink-0">
-                                            <div className="flex items-center gap-2">
-                                                {issue.assignee_id ? (
+                                                <div className="flex items-center gap-4 shrink-0">
+                                                    <div className="flex items-center gap-2">
+                                                        {issue.assignee_id ? (
+                                                            <button
+                                                                onClick={(e) => { 
+                                                                    if (can(`issue:${issue.type}:assign` as any)) {
+                                                                        e.stopPropagation(); 
+                                                                        setIssueToAssign(issue); 
+                                                                    }
+                                                                }}
+                                                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
+                                                                title={issue.assignee_id.name}
+                                                            >
+                                                                {(() => {
+                                                                    const name = (issue as any).assignee_id?.name || (issue as any).assignee_id?.user_id?.name || (issue as any).assign_to?.name;
+                                                                    if (!name) return '??';
+                                                                    return name.split(' ').length > 1 
+                                                                        ? name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
+                                                                        : name.substring(0, 2).toUpperCase();
+                                                                })()}
+                                                            </button>
+                                                        ) : can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && (
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setIssueToAssign(issue); }}
+                                                                className="w-8 h-8 rounded-full bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-[#fa8029] hover:text-[#fa8029] transition-all shadow-sm"
+                                                                title="Assign Employee"
+                                                            >
+                                                                <UserPlus size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                     <button
                                                         onClick={(e) => { 
-                                                            if (can(`issue:${issue.type}:assign` as any)) {
-                                                                e.stopPropagation(); 
-                                                                setIssueToAssign(issue); 
-                                                            }
+                                                            e.stopPropagation(); 
+                                                            setItemToView({ item: issue, type: 'issue' }); 
+                                                            setDetailsDrawerOpen(true);
                                                         }}
-                                                        className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
-                                                        title={issue.assignee_id.name}
+                                                        className="p-2 text-[#aaa] hover:text-[#fa8029] hover:bg-[#fff5ef] rounded-xl transition-all"
+                                                        title="Comments & Details"
                                                     >
-                                                        {issue.assignee_id?.name ? (
-                                                            issue.assignee_id.name.split(' ').length > 1 
-                                                            ? issue.assignee_id.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-                                                            : issue.assignee_id.name.substring(0, 2).toUpperCase()
-                                                        ) : '??'}
+                                                        <MessageSquare size={18} />
                                                     </button>
-                                                ) : can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && (
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setIssueToAssign(issue); }}
-                                                        className="w-8 h-8 rounded-full bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-[#fa8029] hover:text-[#fa8029] transition-all shadow-sm"
-                                                        title="Assign Employee"
-                                                    >
-                                                        <UserPlus size={14} />
-                                                    </button>
-                                                )}
+                                                    <div className="flex items-center gap-2 ml-4">
+                                                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                                                            {issue.status}
+                                                        </span>
+                                                        <button 
+                                                            onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
+                                                            className="p-2 bg-[#f9fafb] text-[#aaa] rounded-xl hover:text-[#fa8029] hover:bg-[#fff5ef] transition-all border border-transparent hover:border-[#fa8029]/20"
+                                                            title="Add Sub-task"
+                                                        >
+                                                            <Plus size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setIssueToView(issue); }}
-                                                className="p-2 text-[#aaa] hover:text-[#fa8029] hover:bg-[#fff5ef] rounded-xl transition-all"
-                                                title="View Details"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <div className="flex items-center gap-2 ml-4">
-                                                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                                    {issue.status}
-                                                </span>
-                                                <button 
-                                                    onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
-                                                    className="p-2 bg-[#f9fafb] text-[#aaa] rounded-xl hover:text-[#fa8029] hover:bg-[#fff5ef] transition-all border border-transparent hover:border-[#fa8029]/20"
-                                                    title="Add Sub-task"
-                                                >
-                                                    <Plus size={18} />
-                                                </button>
-                                            </div>
+
+                                            {isExpanded && (
+                                                <div className="px-6 pb-6 pt-0 border-t border-[#fcfcfc] bg-[#fafafa]/50 overflow-visible">
+                                                    <div className="h-4" />
+                                                    <div className="flex items-center gap-2 mb-4 px-2">
+                                                        <ListTodo size={14} className="text-[#aaa]" />
+                                                        <h4 className="text-[12px] font-black text-[#888] uppercase tracking-wider">Sub-Tasks Breakdown</h4>
+                                                    </div>
+                                                    
+                                                    {!subTaskConfig || subTaskConfig.loading ? (
+                                                        <div className="py-8 flex flex-col items-center gap-3">
+                                                            <div className="w-5 h-5 border-2 border-[#eee] border-t-[#fa8029] rounded-full animate-spin" />
+                                                            <p className="text-[11px] text-[#aaa] font-medium italic">Assembling task tree...</p>
+                                                        </div>
+                                                    ) : subTaskConfig.data.length === 0 ? (
+                                                        <div className="py-12 bg-white rounded-3xl border border-[#f0f0f0] border-dashed text-center flex flex-col items-center">
+                                                            <AlertCircle size={24} className="text-[#eee] mb-2" />
+                                                            <p className="text-[12px] text-[#aaa] font-medium">No sub-tasks defined yet.</p>
+                                                            <button 
+                                                                onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
+                                                                className="mt-3 text-[11px] font-bold text-[#fa8029] hover:underline"
+                                                            >
+                                                                Create the first one
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-4">
+                                                            {(() => {
+                                                                const userTeamId = user?.team?._id || user?.team_id;
+                                                                const isPM = can('task:view:all');
+                                                                
+                                                                // Filter subtasks first
+                                                                const filtered = subTaskConfig.data.filter(st => {
+                                                                    const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
+                                                                    
+                                                                    if (isPM) {
+                                                                        if (selectedTeamId === "all") return true;
+                                                                        return stTeamId === selectedTeamId;
+                                                                    }
+                                                                    
+                                                                    if (userTeamId) {
+                                                                        return stTeamId === userTeamId;
+                                                                    }
+                                                                    
+                                                                    return false;
+                                                                });
+
+                                                                // If PM and viewing all teams, group by team
+                                                                if (isPM && selectedTeamId === "all" && filtered.length > 0) {
+                                                                    const grouped = filtered.reduce((acc, st) => {
+                                                                        const teamName = st.team_id?.name || "Unassigned";
+                                                                        if (!acc[teamName]) acc[teamName] = [];
+                                                                        acc[teamName].push(st);
+                                                                        return acc;
+                                                                    }, {} as Record<string, SubTask[]>);
+
+                                                                    return Object.entries(grouped).map(([teamName, tasks]) => (
+                                                                        <div key={teamName} className="mb-6 last:mb-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                                            <div className="flex items-center justify-between mb-3 px-2">
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50 shadow-sm">
+                                                                                        <Users size={14} />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <h5 className="text-[13px] font-black text-[#1f2124] tracking-tight">{teamName}</h5>
+                                                                                        <p className="text-[10px] text-[#aaa] font-bold uppercase tracking-wider">{tasks.length} {tasks.length === 1 ? 'Task' : 'Tasks'}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="h-[1px] flex-1 bg-gradient-to-r from-indigo-100/50 to-transparent ml-4" />
+                                                                            </div>
+                                                                            <div className="space-y-1.5 pl-4 border-l-2 border-indigo-50/50 ml-4">
+                                                                                {tasks.map(subTask => renderSubTask(subTask, issue._id))}
+                                                                            </div>
+                                                                        </div>
+                                                                    ));
+                                                                }
+
+                                                                // Otherwise just show the list
+                                                                return (
+                                                                    <div className="space-y-1">
+                                                                        {filtered.map(subTask => renderSubTask(subTask, issue._id))}
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="overflow-x-auto pb-8 custom-scrollbar">
+                        <div className="min-w-[1400px]">
+                            {/* Column Headers */}
+                            <div className="flex gap-6 mb-6">
+                                <div className="w-[300px] shrink-0" /> {/* Spacer for row headers */}
+                                {['To Do', 'In Progress', 'In Review', 'Done'].map(column => (
+                                    <div key={column} className="flex-1">
+                                        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                                            <h3 className="text-[12px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${
+                                                    column === 'Done' ? 'bg-emerald-500' :
+                                                    column === 'In Progress' ? 'bg-[#fa8029]' :
+                                                    column === 'In Review' ? 'bg-indigo-500' : 'bg-gray-400'
+                                                }`} />
+                                                {column}
+                                            </h3>
                                         </div>
                                     </div>
+                                ))}
+                            </div>
 
-                                    {isExpanded && (
-                                        <div className="px-6 pb-6 pt-0 border-t border-[#fcfcfc] bg-[#fafafa]/50 overflow-visible">
-                                            <div className="h-4" />
-                                            <div className="flex items-center gap-2 mb-4 px-2">
-                                                <ListTodo size={14} className="text-[#aaa]" />
-                                                <h4 className="text-[12px] font-black text-[#888] uppercase tracking-wider">Sub-Tasks Breakdown</h4>
-                                            </div>
-                                            
-                                            {!subTaskConfig || subTaskConfig.loading ? (
-                                                <div className="py-8 flex flex-col items-center gap-3">
-                                                    <div className="w-5 h-5 border-2 border-[#eee] border-t-[#fa8029] rounded-full animate-spin" />
-                                                    <p className="text-[11px] text-[#aaa] font-medium italic">Assembling task tree...</p>
+                            {/* Swimlanes (User Stories) */}
+                            <div className="space-y-8">
+                                {issues.map(issue => (
+                                    <div key={issue._id} className="flex gap-6 group/swimlane">
+                                        {/* Row Header (Story Details) */}
+                                        <div className="w-[300px] shrink-0">
+                                            <div className="sticky top-24 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm group-hover/swimlane:border-[#fa8029]/30 transition-all">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                                                        issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
+                                                        'bg-emerald-50 text-emerald-500 border-emerald-100'
+                                                    }`}>
+                                                        <TypeIcon type={issue.type} size={14} />
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">#{issue._id.slice(-6)}</span>
                                                 </div>
-                                            ) : subTaskConfig.data.length === 0 ? (
-                                                <div className="py-12 bg-white rounded-3xl border border-[#f0f0f0] border-dashed text-center flex flex-col items-center">
-                                                    <AlertCircle size={24} className="text-[#eee] mb-2" />
-                                                    <p className="text-[12px] text-[#aaa] font-medium">No sub-tasks defined yet.</p>
+                                                <h4 className="text-[13px] font-bold text-gray-800 leading-tight mb-3 line-clamp-2">{issue.title}</h4>
+                                                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                                                            {issue.status}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold text-gray-400">{issue.story_points || 0} pts</span>
+                                                    </div>
                                                     <button 
-                                                        onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
-                                                        className="mt-3 text-[11px] font-bold text-[#fa8029] hover:underline"
+                                                        onClick={() => handleOpenSubTaskModal({ stopPropagation: () => {} } as any, issue._id)}
+                                                        className="w-7 h-7 rounded-lg bg-gray-50 text-gray-400 hover:bg-[#fff5ef] hover:text-[#fa8029] flex items-center justify-center transition-all"
                                                     >
-                                                        Create the first one
+                                                        <Plus size={14} />
                                                     </button>
                                                 </div>
-                                            ) : (
-                                                <div className="space-y-4">
+                                            </div>
+                                        </div>
+
+                                        {/* Task Columns */}
+                                        {['To Do', 'In Progress', 'In Review', 'Done'].map(column => (
+                                            <div key={column} className="flex-1 bg-gray-50/30 rounded-2xl border border-dashed border-gray-200/50 p-4 min-h-[150px]">
+                                                <div className="space-y-3">
                                                     {(() => {
                                                         const userTeamId = user?.team?._id || user?.team_id;
                                                         const isPM = can('task:view:all');
+                                                        const allSubTasks = subTasksByIssue[issue._id]?.data || [];
                                                         
-                                                        // Filter subtasks first
-                                                        const filtered = subTaskConfig.data.filter(st => {
+                                                        const filtered = allSubTasks.filter(st => {
                                                             const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
-                                                            
                                                             if (isPM) {
                                                                 if (selectedTeamId === "all") return true;
                                                                 return stTeamId === selectedTeamId;
                                                             }
-                                                            
-                                                            if (userTeamId) {
-                                                                return stTeamId === userTeamId;
-                                                            }
-                                                            
+                                                            if (userTeamId) return stTeamId === userTeamId;
                                                             return false;
                                                         });
 
-                                                        // If PM and viewing all teams, group by team
-                                                        if (isPM && selectedTeamId === "all" && filtered.length > 0) {
-                                                            const grouped = filtered.reduce((acc, st) => {
-                                                                const teamName = st.team_id?.name || "Unassigned";
-                                                                if (!acc[teamName]) acc[teamName] = [];
-                                                                acc[teamName].push(st);
-                                                                return acc;
-                                                            }, {} as Record<string, SubTask[]>);
-
-                                                            return Object.entries(grouped).map(([teamName, tasks]) => (
-                                                                <div key={teamName} className="mb-6 last:mb-2 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                                    <div className="flex items-center justify-between mb-3 px-2">
-                                                                        <div className="flex items-center gap-3">
-                                                                            <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50 shadow-sm">
-                                                                                <Users size={14} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <h5 className="text-[13px] font-black text-[#1f2124] tracking-tight">{teamName}</h5>
-                                                                                <p className="text-[10px] text-[#aaa] font-bold uppercase tracking-wider">{tasks.length} {tasks.length === 1 ? 'Task' : 'Tasks'}</p>
-                                                                            </div>
+                                                        return filtered
+                                                            .filter(st => st.status === column)
+                                                            .map(st => (
+                                                            <div 
+                                                                key={st._id} 
+                                                                onClick={() => {
+                                                                    setItemToView({ item: st, type: 'subtask' });
+                                                                    setDetailsDrawerOpen(true);
+                                                                }}
+                                                                className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-[#fa8029]/30 cursor-pointer transition-all animate-in fade-in zoom-in-95"
+                                                            >
+                                                                <h4 className="text-[13px] font-bold text-gray-800 mb-3 leading-snug">{st.title}</h4>
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${getPriorityColor(st.priority)}`}>
+                                                                            {st.priority}
+                                                                        </span>
+                                                                        <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold">
+                                                                            <Clock size={10} /> {st.estimated_hours}h
                                                                         </div>
-                                                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-indigo-100/50 to-transparent ml-4" />
                                                                     </div>
-                                                                    <div className="space-y-1.5 pl-4 border-l-2 border-indigo-50/50 ml-4">
-                                                                        {tasks.map(subTask => renderSubTask(subTask, issue._id))}
-                                                                    </div>
+                                                                    {st.assignee_id && (
+                                                                        <div className="w-6 h-6 rounded-full bg-[#fa8029] text-white text-[9px] font-black flex items-center justify-center uppercase shadow-md ring-2 ring-white" title={(st as any).assignee_id?.name || (st as any).assignee_id?.user_id?.name || (st as any).assign_to?.name}>
+                                                                            {(() => {
+                                                                                const name = (st as any).assignee_id?.name || (st as any).assignee_id?.user_id?.name || (st as any).assign_to?.name;
+                                                                                if (!name) return '??';
+                                                                                return name.substring(0, 2).toUpperCase();
+                                                                            })()}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                            ));
-                                                        }
-
-                                                        // Otherwise just show the list
-                                                        return (
-                                                            <div className="space-y-1">
-                                                                {filtered.map(subTask => renderSubTask(subTask, issue._id))}
                                                             </div>
-                                                        );
+                                                            ));
                                                     })()}
+                                                    {subTasksByIssue[issue._id]?.loading && (
+                                                        <div className="flex justify-center py-4">
+                                                            <div className="w-4 h-4 border-2 border-[#fa8029]/20 border-t-[#fa8029] rounded-full animate-spin" />
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
@@ -881,75 +1052,21 @@ export default function SprintDetails() {
                 title="Assign Sub-Task"
             />
 
-            <AddIssueToSprintModal
-                isOpen={isAddItemModalOpen}
-                onClose={() => setIsAddItemModalOpen(false)}
-                onAdd={handleAddIssueToSprint}
-                issues={backlogIssues}
-                loading={isFetchingBacklog}
-                projects={backlogProjects}
-                selectedProjectId={selectedBacklogProjectId}
-                onProjectChange={(pid) => {
-                    setSelectedBacklogProjectId(pid);
-                    fetchBacklogForProject(pid);
+
+            <ItemDetailsDrawer
+                isOpen={isDetailsDrawerOpen}
+                onClose={() => setDetailsDrawerOpen(false)}
+                item={itemToView?.item || null}
+                type={itemToView?.type || 'issue'}
+                onUpdate={() => {
+                    fetchSprintDetails();
+                    if (itemToView?.type === 'subtask') {
+                        fetchSubTasks((itemToView.item as SubTask).issue_id);
+                    }
                 }}
-                onDragEnd={onModalDragEnd}
-                sprintIssues={issues}
             />
 
-            <IssueDetailsModal 
-                isOpen={!!issueToView}
-                onClose={() => setIssueToView(null)}
-                issue={issueToView}
-            />
 
-            {subTaskToView && (
-                <SubTaskDetailsModal 
-                    isOpen={!!subTaskToView}
-                    onClose={() => setSubTaskToView(null)}
-                    subTask={subTaskToView}
-                    onStatusChange={async (id, status, extra) => {
-                        try {
-                            let res;
-                            // Use specialized workflow APIs based on target status
-                            if (status === 'In Progress') {
-                                res = await startSubTaskApi(id);
-                            } else if (status === 'In Review' && extra) {
-                                const submission = extra as { submission_link: string; submission_description: string };
-                                res = await submitSubTaskApi(id, {
-                                    submission_link: submission.submission_link || '',
-                                    submission_description: submission.submission_description || ''
-                                });
-                            } else if (status === 'Done') {
-                                res = await reviewSubTaskApi(id, { action: 'approve' });
-                            } else if (status === 'To Do' && subTaskToView.status === 'In Review' && extra) {
-                                const rejection = extra as { rework_reason: string };
-                                res = await reviewSubTaskApi(id, { 
-                                    action: 'reject',
-                                    rework_reason: rejection.rework_reason
-                                });
-                            } else {
-                                // Fallback to generic update if they have permission
-                                res = await updateSubTaskApi(id, { status, ...extra });
-                            }
-
-                            if (res.success) {
-                                toast.success("Status updated");
-                                fetchSubTasks(subTaskToView.issue_id);
-                                setSubTaskToView(res.data);
-                            }
-                        } catch (error: unknown) {
-                            const err = error as { response?: { data?: { message?: string } } };
-                            const errorMsg = err.response?.data?.message || "Failed to update status";
-                            toast.error(errorMsg);
-                        }
-                    }}
-                    onReassign={(id) => {
-                        setSubTaskToView(null);
-                        setSubTaskToAssign({ issueId: subTaskToView.issue_id, subTask: subTaskToView });
-                    }}
-                />
-            )}
 
             <ConfirmModal
                 isOpen={!!isConfirmingScopeChange}
@@ -971,7 +1088,10 @@ export default function SprintDetails() {
                 loading={isFetchingBacklog}
                 projects={backlogProjects}
                 selectedProjectId={selectedBacklogProjectId}
-                onProjectChange={setSelectedBacklogProjectId}
+                onProjectChange={(pid) => {
+                    setSelectedBacklogProjectId(pid);
+                    fetchBacklogForProject(pid);
+                }}
                 onDragEnd={onModalDragEnd}
                 sprintIssues={issues}
             />

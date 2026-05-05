@@ -10,6 +10,7 @@ import { IAssignIssueService } from '../interfaces/services/issue/IAssignIssueSe
 import { IAddCommentToIssueService } from '../interfaces/services/issue/IAddCommentToIssueService';
 import { IGetAssignedIssuesService } from '../interfaces/services/issue/IGetAssignedIssuesService';
 import { IGetTeamIssuesService } from '../interfaces/services/issue/IGetTeamIssuesService';
+import { IAddAttachmentToIssueService } from '../interfaces/services/issue/IAddAttachmentToIssueService';
 import { HttpStatus } from '../enums/HttpStatus';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
@@ -30,6 +31,7 @@ export class IssueController {
     @inject(TYPES.IAddCommentToIssueService) private _addCommentToIssueService: IAddCommentToIssueService,
     @inject(TYPES.IGetAssignedIssuesService) private _getAssignedIssuesService: IGetAssignedIssuesService,
     @inject(TYPES.IGetTeamIssuesService) private _getTeamIssuesService: IGetTeamIssuesService,
+    @inject(TYPES.IAddAttachmentToIssueService) private _addAttachmentToIssueService: IAddAttachmentToIssueService,
   ) {}
 
   createIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -75,7 +77,8 @@ export class IssueController {
   updateIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { issueId } = req.params;
-      const issue = await this._updateIssueService.execute(issueId as string, req.body);
+      const userId = req.userId!;
+      const issue = await this._updateIssueService.execute(issueId as string, req.body, userId);
       success(res, issue, ISSUE_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
@@ -107,11 +110,24 @@ export class IssueController {
   addComment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { issueId } = req.params;
-      const { text } = req.body;
+      const { text, attachments } = req.body;
       const userId = req.userId!;
-      const issue = await this._addCommentToIssueService.execute(issueId as string, userId, text);
+      const issue = await this._addCommentToIssueService.execute(issueId as string, userId, text, attachments);
       const mapped = IssueMapper.toResponseDTO(issue);
       success(res, mapped, 'Comment added successfully');
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  addAttachment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { issueId } = req.params;
+      const { attachments } = req.body;
+      const userId = req.userId!;
+      const issue = await this._addAttachmentToIssueService.execute(issueId as string, userId, attachments);
+      const mapped = IssueMapper.toResponseDTO(issue);
+      success(res, mapped, 'Attachments added successfully');
     } catch (error) {
       handleAsyncError(error, next);
     }

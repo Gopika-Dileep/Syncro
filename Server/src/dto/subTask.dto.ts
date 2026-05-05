@@ -1,6 +1,24 @@
 import { z } from 'zod';
 import { SubTaskStatus, SubTaskPriority } from '../enums/SubTaskEnums';
 
+export const AttachmentSchema = z.object({
+  file_url: z.string().url('Invalid file URL'),
+  file_name: z.string().min(1, 'File name is required'),
+});
+
+export const AddCommentRequestSchema = z.object({
+  body: z.object({
+    text: z.string().min(1, 'Comment text is required'),
+    attachments: z.array(AttachmentSchema).optional(),
+  }),
+});
+
+export const AddAttachmentRequestSchema = z.object({
+  body: z.object({
+    attachments: z.array(AttachmentSchema).min(1, 'At least one attachment is required'),
+  }),
+});
+
 export const SubTaskBaseSchema = z.object({
   issue_id: z.string().min(1, 'Issue ID is required'),
   sprint_id: z.string().min(1, 'Sprint ID is required'),
@@ -97,9 +115,29 @@ export interface SubTaskResponseDTO {
   submission_link?: string;
   submission_description?: string;
   subtask_type: string;
+  parent_issue?: {
+    _id: string;
+    title: string;
+    type: string;
+    status: string;
+  } | null;
   comments: {
     user: SubTaskPersonRef | null;
     text: string;
+    attachments?: { file_url: string; file_name: string }[];
+    created_at: string;
+  }[];
+  attachments: {
+    file_url: string;
+    file_name: string;
+    uploaded_by: SubTaskPersonRef | null;
+    uploaded_at: string;
+  }[];
+  history: {
+    action: string;
+    from?: string;
+    to?: string;
+    user: SubTaskPersonRef | null;
     created_at: string;
   }[];
   created_at: string;

@@ -42,6 +42,25 @@ export interface Issue {
     priority: string;
     status: string;
     type: string;
+    comments?: {
+        user: { _id: string; name: string; avatar?: string };
+        text: string;
+        created_at: string;
+        attachments?: { file_url: string; file_name: string }[];
+    }[];
+    attachments?: {
+        file_url: string;
+        file_name: string;
+        uploaded_by: { _id: string; name: string; avatar?: string } | null;
+        uploaded_at: string;
+    }[];
+    history?: {
+        action: string;
+        from?: string;
+        to?: string;
+        user: { _id: string; name: string; avatar?: string } | null;
+        created_at: string;
+    }[];
     created_at: string;
     updated_at: string;
 }
@@ -99,7 +118,12 @@ export const assignIssueApi = async (id: string, data: { assignee_id: string }):
     return response.data;
 };
 
-export const addIssueCommentApi = async (id: string, text: string): Promise<{ success: boolean; data: Issue }> => {
-    const response = await axiosInstance.post(`/issues/comment/${id}`, { text });
+export const addCommentToIssueApi = async (id: string, data: { text: string; attachments?: { file_url: string; file_name: string }[] }): Promise<{ success: boolean; data: Issue }> => {
+    const response = await axiosInstance.post(ENDPOINTS.ISSUES.COMMENT(id), data);
+    return response.data;
+};
+
+export const addIssueAttachmentApi = async (id: string, attachments: { file_url: string; file_name: string }[]): Promise<{ success: boolean; data: Issue }> => {
+    const response = await axiosInstance.post(ENDPOINTS.ISSUES.ATTACHMENT(id), { attachments });
     return response.data;
 };

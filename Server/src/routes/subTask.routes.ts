@@ -5,7 +5,7 @@ import { TYPES } from '../di/types';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { checkPermission } from '../middleware/permission.middleware';
 import { validateRequest } from '../middleware/validation.middleware';
-import { CreateSubTaskRequestSchema, UpdateSubTaskRequestSchema, AssignSubTaskRequestSchema, SubmitSubTaskRequestSchema, ReviewSubTaskRequestSchema } from '../dto/subTask.dto';
+import { CreateSubTaskRequestSchema, UpdateSubTaskRequestSchema, AssignSubTaskRequestSchema, SubmitSubTaskRequestSchema, ReviewSubTaskRequestSchema, AddCommentRequestSchema, AddAttachmentRequestSchema } from '../dto/subTask.dto';
 import { ENDPOINTS } from '../constants/endpoints';
 
 const subTaskController = container.get<SubTaskController>(TYPES.SubTaskController);
@@ -31,6 +31,7 @@ export class SubTaskRouter {
     this.router.patch(ENDPOINTS.SUBTASKS.REVIEW, authMiddleware, checkPermission('task:status:review'), validateRequest(ReviewSubTaskRequestSchema), subTaskController.reviewSubTask);
     this.router.delete(ENDPOINTS.SUBTASKS.BY_ID, authMiddleware, checkPermission('task:delete'), subTaskController.deleteSubTask);
     this.router.patch(ENDPOINTS.SUBTASKS.ASSIGN, authMiddleware, checkPermission('task:assign'), validateRequest(AssignSubTaskRequestSchema), subTaskController.assignSubTask);
-    this.router.post(ENDPOINTS.SUBTASKS.COMMENT, authMiddleware, subTaskController.addComment);
+    this.router.post(ENDPOINTS.SUBTASKS.COMMENT, authMiddleware, validateRequest(AddCommentRequestSchema), subTaskController.addComment);
+    this.router.post(ENDPOINTS.SUBTASKS.ATTACHMENT, authMiddleware, validateRequest(AddAttachmentRequestSchema), subTaskController.addAttachment);
   }
 }

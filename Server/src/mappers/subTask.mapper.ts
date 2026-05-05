@@ -5,24 +5,35 @@ import { SubTaskStatus, SubTaskPriority } from '../enums/SubTaskEnums';
 
 function extractRef(ref: unknown): SubTaskPersonRef | null {
   if (!ref) return null;
-  const obj = ref as Record<string, unknown>;
 
-  if (obj.user_id && typeof obj.user_id === 'object') {
-    const userObj = obj.user_id as Record<string, unknown>;
-    return {
-      _id: obj._id?.toString() ?? '',
-      name: (userObj.name as string) ?? '',
-      avatar: userObj.avatar as string | undefined,
-      designation: obj.designation as string | undefined,
-      team_name: (obj.team_id as Record<string, unknown>)?.name as string | undefined,
-    };
+  // If it's a populated employee object
+  if (typeof ref === 'object' && ref !== null) {
+    const obj = ref as any;
+    if (obj._id) {
+      const userId = obj.user_id;
+      if (typeof userId === 'object' && userId !== null) {
+        return {
+          _id: String(obj._id),
+          name: String(userId.name || ''),
+          designation: String(obj.designation || ''),
+          avatar: userId.avatar ? String(userId.avatar) : undefined,
+          team_name: obj.team_id?.name ? String(obj.team_id.name) : undefined,
+        };
+      }
+      return {
+        _id: String(obj._id),
+        name: obj.name ? String(obj.name) : '',
+        designation: String(obj.designation || ''),
+      };
+    }
   }
 
-  if (obj.name) {
-    return { _id: obj._id?.toString() ?? '', name: obj.name as string };
-  }
-
-  return { _id: String(ref), name: '' };
+  // If it's just an ID or has a name
+  const obj = ref as any;
+  return {
+    _id: obj._id?.toString() ?? String(ref),
+    name: obj.name ? String(obj.name) : '',
+  };
 }
 
 export class SubTaskMapper {
@@ -30,7 +41,7 @@ export class SubTaskMapper {
     const t = subTask as unknown as Record<string, unknown>;
     return {
       _id: subTask._id.toString(),
-      issue_id: subTask.issue_id.toString(),
+      issue_id: typeof t.issue_id === 'object' && t.issue_id !== null ? String((t.issue_id as any)._id) : String(t.issue_id),
       sprint_id: subTask.sprint_id.toString(),
       company_id: subTask.company_id?.toString() ?? '',
       team_id: extractRef(t.team_id),
@@ -48,13 +59,33 @@ export class SubTaskMapper {
       branch_name: subTask.branch_name,
       submission_link: subTask.submission_link,
       submission_description: subTask.submission_description,
+      parent_issue: t.issue_id && typeof t.issue_id === 'object' ? {
+        _id: String((t.issue_id as any)._id),
+        title: String((t.issue_id as any).title),
+        type: String((t.issue_id as any).type),
+        status: String((t.issue_id as any).status),
+      } : null,
       comments: (subTask.comments || []).map((c) => ({
         user: extractRef(c.user),
-        text: c.text,
-        created_at: c.created_at.toISOString(),
+        text: c.text || '',
+        attachments: c.attachments || [],
+        created_at: c.created_at ? (typeof c.created_at === 'string' ? c.created_at : c.created_at.toISOString()) : new Date().toISOString(),
       })),
-      created_at: subTask.created_at.toISOString(),
-      updated_at: subTask.updated_at.toISOString(),
+      attachments: (subTask.attachments || []).map((a) => ({
+        file_url: a.file_url || '',
+        file_name: a.file_name || '',
+        uploaded_by: extractRef(a.uploaded_by),
+        uploaded_at: a.uploaded_at ? (typeof a.uploaded_at === 'string' ? a.uploaded_at : a.uploaded_at.toISOString()) : new Date().toISOString(),
+      })),
+      history: (subTask.history || []).map((h) => ({
+        action: h.action || 'updated',
+        from: h.from,
+        to: h.to,
+        user: extractRef(h.user),
+        created_at: h.created_at ? (typeof h.created_at === 'string' ? h.created_at : h.created_at.toISOString()) : new Date().toISOString(),
+      })),
+      created_at: safeDate(subTask.created_at),
+      updated_at: safeDate(subTask.updated_at),
     };
   }
 
@@ -85,15 +116,37 @@ export class SubTaskMapper {
       submission_description: issue.submission_description,
       comments: (issue.comments || []).map((c) => ({
         user: extractRef(c.user),
-        text: c.text,
-        created_at: c.created_at.toISOString(),
+        text: c.text || '',
+        attachments: c.attachments || [],
+        created_at: safeDate(c.created_at),
       })),
-      created_at: issue.created_at.toISOString(),
-      updated_at: issue.updated_at.toISOString(),
+      attachments: (issue.attachments || []).map((a) => ({
+        file_url: a.file_url || '',
+        file_name: a.file_name || '',
+        uploaded_by: extractRef(a.uploaded_by),
+        uploaded_at: safeDate(a.uploaded_at),
+      })),
+      history: (issue.history || []).map((h) => ({
+        action: h.action || 'updated',
+        from: h.from,
+        to: h.to,
+        user: extractRef(h.user),
+        created_at: safeDate(h.created_at),
+      })),
+      created_at: safeDate(issue.created_at),
+      updated_at: safeDate(issue.updated_at),
     };
   }
 
   static toResponseList(subTasks: ISubTask[]): SubTaskResponseDTO[] {
     return subTasks.map((subTask) => this.toResponseDTO(subTask));
   }
+}
+
+function safeDate(date: any): string {
+  if (!date) return new Date().toISOString();
+  if (typeof date === 'string') return date;
+  if (date instanceof Date) return date.toISOString();
+  if (typeof date.toISOString === 'function') return date.toISOString();
+  return new Date(date).toISOString();
 }

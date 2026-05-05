@@ -14,6 +14,8 @@ export class IssueRepository extends BaseRepository<IIssue> implements IIssueRep
     { path: 'created_by', populate: { path: 'user_id' } },
     { path: 'assigned_by', populate: { path: 'user_id' } },
     { path: 'comments.user', populate: { path: 'user_id', select: 'name avatar' } },
+    { path: 'history.user', populate: { path: 'user_id', select: 'name avatar' } },
+    { path: 'attachments.uploaded_by', populate: { path: 'user_id', select: 'name avatar' } },
   ];
 
   async findAllByProjectId(projectId: string): Promise<IIssue[]> {
@@ -33,5 +35,9 @@ export class IssueRepository extends BaseRepository<IIssue> implements IIssueRep
 
   override async findById(id: string): Promise<IIssue | null> {
     return await this._model.findById(id).populate(this.POPULATE_OPTS).exec();
+  }
+
+  override async updateById(id: string, update: Record<string, unknown>): Promise<IIssue | null> {
+    return await this._model.findByIdAndUpdate(id, update, { new: true }).populate(this.POPULATE_OPTS).exec();
   }
 }

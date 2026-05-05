@@ -35,6 +35,8 @@ export const ENDPOINTS = {
         BY_SPRINT: (sprintId: string) => `/issues/sprint/${sprintId}`,
         BY_ID: (id: string) => `/issues/${id}`,
         ASSIGN: (id: string) => `/issues/${id}/assign`,
+        COMMENT: (id: string) => `/issues/comment/${id}`,
+        ATTACHMENT: (id: string) => `/issues/attachment/${id}`,
     },
     TEAMS: {
         BASE: "/teams",
@@ -55,5 +57,11 @@ export const ENDPOINTS = {
         START: (id: string) => `/subtasks/start/${id}`,
         SUBMIT: (id: string) => `/subtasks/submit/${id}`,
         REVIEW: (id: string) => `/subtasks/review/${id}`,
+        COMMENT: (id: string) => `/subtasks/comment/${id}`,
+        ATTACHMENT: (id: string) => `/subtasks/attachment/${id}`,
     },
+    UPLOAD: {
+        SINGLE: "/upload/single",
+        MULTIPLE: "/upload/multiple",
+    }
 };

@@ -34,7 +34,40 @@ export class AssignIssueService implements IAssignIssueService {
       updateData.assignee_id = data.assignee_id;
     }
 
-    const updatedIssue = await this._issueRepository.updateById(data.issue_id, updateData);
+    const historyEntries: any[] = [];
+    const now = new Date();
+
+    if (data.assignee_id && String(data.assignee_id) !== String(issueToUpdate.assignee_id)) {
+      const assignee = await this._employeeRepository.findById(data.assignee_id);
+      if (assignee) await assignee.populate('user_id');
+      
+      const oldAssignee = issueToUpdate.assignee_id ? await this._employeeRepository.findById(String(issueToUpdate.assignee_id)) : null;
+      if (oldAssignee) await oldAssignee.populate('user_id');
+      
+      historyEntries.push({
+        action: 'assignee_change',
+        from: (oldAssignee as any)?.user_id?.name || 'Unassigned',
+        to: (assignee as any)?.user_id?.name || 'Unknown',
+        user: assigner._id,
+        created_at: now,
+      });
+    }
+
+    if (data.sprint_id && String(data.sprint_id) !== String(issueToUpdate.sprint_id)) {
+      // In a real app we'd fetch sprint names here too
+      historyEntries.push({
+        action: 'sprint_change',
+        from: issueToUpdate.sprint_id ? 'Previous Sprint' : 'Backlog',
+        to: 'New Sprint',
+        user: assigner._id,
+        created_at: now,
+      });
+    }
+
+    const updatedIssue = await this._issueRepository.updateById(data.issue_id, {
+      ...updateData,
+      $push: { history: { $each: historyEntries } }
+    });
 
     if (!updatedIssue) throw new Error('Failed to update issue');
     return IssueMapper.toResponseDTO(updatedIssue);

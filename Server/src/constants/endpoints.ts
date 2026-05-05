@@ -46,6 +46,7 @@ export const ENDPOINTS = {
     ASSIGNED: '/assigned/me',
     TEAM: '/team/all',
     COMMENT: '/comment/:issueId',
+    ATTACHMENT: '/attachment/:issueId',
   },
   TEAMS: {
     BASE: '/teams',
@@ -69,5 +70,6 @@ export const ENDPOINTS = {
     SUBMIT: '/submit/:subTaskId',
     REVIEW: '/review/:subTaskId',
     COMMENT: '/comment/:subTaskId',
+    ATTACHMENT: '/attachment/:subTaskId',
   },
 };

@@ -1,6 +1,24 @@
 import { z } from 'zod';
 import { IssueStatus, IssuePriority, IssueType } from '../enums/IssueEnums';
 
+export const AttachmentSchema = z.object({
+  file_url: z.string().url('Invalid file URL'),
+  file_name: z.string().min(1, 'File name is required'),
+});
+
+export const AddCommentRequestSchema = z.object({
+  body: z.object({
+    text: z.string().min(1, 'Comment text is required'),
+    attachments: z.array(AttachmentSchema).optional(),
+  }),
+});
+
+export const AddAttachmentRequestSchema = z.object({
+  body: z.object({
+    attachments: z.array(AttachmentSchema).min(1, 'At least one attachment is required'),
+  }),
+});
+
 export const IssueBaseSchema = z.object({
   project_id: z.string().min(1, 'Project ID is required'),
   company_id: z.string().optional(),
@@ -103,8 +121,22 @@ export interface IssueResponseDTO {
   submission_description?: string;
   mentions: string[];
   comments: {
-    user: { _id: string; name: string; designation: string } | null;
+    user: { _id: string; name: string; designation: string; avatar?: string } | null;
     text: string;
+    attachments?: { file_url: string; file_name: string }[];
+    created_at: string;
+  }[];
+  attachments: {
+    file_url: string;
+    file_name: string;
+    uploaded_by: { _id: string; name: string; designation: string; avatar?: string } | null;
+    uploaded_at: string;
+  }[];
+  history: {
+    action: string;
+    from?: string;
+    to?: string;
+    user: { _id: string; name: string; designation: string; avatar?: string } | null;
     created_at: string;
   }[];
   created_at: string;

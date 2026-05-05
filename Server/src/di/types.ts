@@ -24,6 +24,7 @@ export const TYPES = {
   TeamController: Symbol.for('TeamController'),
   UserController: Symbol.for('UserController'),
   ProjectController: Symbol.for('ProjectController'),
+  UploadController: Symbol.for('UploadController'),
   IIssueRepository: Symbol.for('IIssueRepository'),
   ICreateIssueService: Symbol.for('ICreateIssueService'),
   IGetIssuesByProjectService: Symbol.for('IGetIssuesByProjectService'),
@@ -34,6 +35,7 @@ export const TYPES = {
   IAddCommentToIssueService: Symbol.for('IAddCommentToIssueService'),
   IGetAssignedIssuesService: Symbol.for('IGetAssignedIssuesService'),
   IGetTeamIssuesService: Symbol.for('IGetTeamIssuesService'),
+  IAddAttachmentToIssueService: Symbol.for('IAddAttachmentToIssueService'),
   IssueController: Symbol.for('IssueController'),
   IRegisterService: Symbol.for('IRegisterService'),
   IVerifyOtpService: Symbol.for('IVerifyOtpService'),
@@ -73,4 +75,5 @@ export const TYPES = {
   ISubmitSubTaskService: Symbol.for('ISubmitSubTaskService'),
   IReviewSubTaskService: Symbol.for('IReviewSubTaskService'),
   IAddCommentToSubTaskService: Symbol.for('IAddCommentToSubTaskService'),
+  IAddAttachmentToSubTaskService: Symbol.for('IAddAttachmentToSubTaskService'),
 };

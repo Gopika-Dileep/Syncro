@@ -24,7 +24,7 @@ export class GetAllSubTasksService implements IGetAllSubTasksService {
 
     const issues = await this._issueRepository.findPopulated({
       company_id: employee.company_id,
-      type: { $in: [IssueType.TASK, IssueType.BUG] },
+      type: { $in: [IssueType.TASK, IssueType.BUG, IssueType.STORY] },
       status: { $ne: 'Backlog' },
     });
 
