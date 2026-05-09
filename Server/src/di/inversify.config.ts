@@ -120,6 +120,8 @@ import { GetSprintsService } from '../service/sprint/getSprints.service';
 import { UpdateSprintService } from '../service/sprint/updateSprint.service';
 import { DeleteSprintService } from '../service/sprint/deleteSprint.service';
 import { GetSprintByIdService } from '../service/sprint/getSprintById.service';
+import { IVelocityService } from '../interfaces/services/sprint/IVelocityService';
+import { VelocityService } from '../service/sprint/VelocityService';
 import { SprintController } from '../controller/sprint.controller';
 
 // SubTask Services
@@ -206,6 +208,7 @@ container.bind<IGetSprintsService>(TYPES.IGetSprintsService).to(GetSprintsServic
 container.bind<IUpdateSprintService>(TYPES.IUpdateSprintService).to(UpdateSprintService);
 container.bind<IDeleteSprintService>(TYPES.IDeleteSprintService).to(DeleteSprintService);
 container.bind<IGetSprintByIdService>(TYPES.IGetSprintByIdService).to(GetSprintByIdService);
+container.bind<IVelocityService>(TYPES.IVelocityService).to(VelocityService);
 
 container.bind<ICreateSubTaskService>(TYPES.ICreateSubTaskService).to(CreateSubTaskService);
 container.bind<IUpdateSubTaskService>(TYPES.IUpdateSubTaskService).to(UpdateSubTaskService);

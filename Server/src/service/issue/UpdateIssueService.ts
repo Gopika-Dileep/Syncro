@@ -22,22 +22,23 @@ export class UpdateIssueService implements IUpdateIssueService {
     const oldIssue = await this._issueRepository.findById(issueId);
     if (!oldIssue) throw new Error('Issue not found');
 
-    const historyEntry: any = {
+    const historyEntry = {
       user: employee?._id,
       created_at: new Date(),
+      action: 'updated' as string,
+      from: undefined as string | undefined,
+      to: undefined as string | undefined,
     };
 
     if (data.status && data.status !== oldIssue.status) {
       historyEntry.action = 'status_change';
       historyEntry.from = oldIssue.status;
       historyEntry.to = data.status;
-    } else {
-      historyEntry.action = 'updated';
     }
 
     const issue = await this._issueRepository.updateById(issueId, {
       ...data,
-      $push: { history: historyEntry }
+      $push: { history: historyEntry },
     });
     if (!issue) throw new Error('Issue not found');
 

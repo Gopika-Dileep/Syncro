@@ -11,7 +11,6 @@ import { IAddCommentToIssueService } from '../interfaces/services/issue/IAddComm
 import { IGetAssignedIssuesService } from '../interfaces/services/issue/IGetAssignedIssuesService';
 import { IGetTeamIssuesService } from '../interfaces/services/issue/IGetTeamIssuesService';
 import { IAddAttachmentToIssueService } from '../interfaces/services/issue/IAddAttachmentToIssueService';
-import { HttpStatus } from '../enums/HttpStatus';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';

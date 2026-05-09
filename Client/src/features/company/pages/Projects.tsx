@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
     Search, 
@@ -35,11 +35,7 @@ export default function Projects() {
     const [total, setTotal] = useState(0);
     const limit = 50;
 
-    useEffect(() => {
-        fetchProjects();
-    }, [page, debouncedSearchTerm]);
-
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         setLoading(true);
         try {
             const response = await getProjectsApi(page, limit, debouncedSearchTerm);
@@ -50,7 +46,11 @@ export default function Projects() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, debouncedSearchTerm]);
+
+    useEffect(() => {
+        fetchProjects();
+    }, [page, debouncedSearchTerm, fetchProjects]);
 
     const groupedProjects = useMemo(() => {
         const groups: Record<string, Project[]> = { "Active": [], "On-Hold": [], "Completed": [] };

@@ -5,6 +5,8 @@ import { ICreateSubTaskService } from '../../interfaces/services/subTask/ICreate
 import { CreateSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { BadRequestError } from '../../errors/AppError';
+
 import { ISubTask } from '../../models/subTask.model';
 
 @injectable()
@@ -12,25 +14,24 @@ export class CreateSubTaskService implements ICreateSubTaskService {
   constructor(
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
-  ) { }
+  ) {}
 
   async execute(data: CreateSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const creator = await this._employeeRepository.findByUserId(userId);
     if (!creator) throw new Error('Employee not found');
 
     const creatorTeamId = creator.team_id?._id?.toString() || creator.team_id?.toString();
-    
+
     if (creatorTeamId) {
       const existingSubTasks = await this._subTaskRepository.findAllByIssueId(data.issue_id);
       const teamSubTaskCount = existingSubTasks.filter((st) => {
-        const stTeamId = (st.team_id as any)?._id?.toString() || st.team_id?.toString();
+        const teamObj = st.team_id as unknown as { _id?: { toString(): string } };
+        const stTeamId = teamObj?._id?.toString() || st.team_id?.toString();
         return stTeamId === creatorTeamId;
       }).length;
 
       if (teamSubTaskCount >= 4) {
-        const error = new Error('A team can create a maximum of 4 subtasks per user story');
-        (error as any).statusCode = 400;
-        throw error;
+        throw new BadRequestError('A team can create a maximum of 4 subtasks per user story');
       }
     }
 

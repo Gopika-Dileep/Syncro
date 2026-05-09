@@ -28,8 +28,8 @@ export class StartSubTaskService implements IStartSubTaskService {
 
     const subTask = await this._subTaskRepository.updateById(subTaskId, {
       status: SubTaskStatus.IN_PROGRESS,
-      $push: { history: historyEntry }
-    } as any);
+      $push: { history: historyEntry },
+    } as unknown as Record<string, unknown>);
 
     if (subTask) {
       return SubTaskMapper.toResponseDTO(subTask);

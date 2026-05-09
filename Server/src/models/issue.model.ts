@@ -10,11 +10,11 @@ export interface IIssue extends Document {
   assigned_by?: mongoose.Types.ObjectId;
   title: string;
   description?: string;
-  reproduction_steps?: string; 
-  environment?: string; 
-  criteria: string[]; 
+  reproduction_steps?: string;
+  environment?: string;
+  criteria: string[];
   story_points: number;
-  estimated_hours: number; 
+  estimated_hours: number;
   priority: IssuePriority;
   status: IssueStatus;
   type: IssueType;

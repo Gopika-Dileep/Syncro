@@ -15,10 +15,10 @@ export class AddAttachmentToIssueService implements IAddAttachmentToIssueService
 
   async execute(issueId: string, userId: string, attachments: { file_url: string; file_name: string }[]): Promise<IIssue> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    const formattedAttachments = attachments.map(att => ({
+    const formattedAttachments = attachments.map((att) => ({
       ...att,
-      uploaded_by: employee?._id as any,
-      uploaded_at: new Date()
+      uploaded_by: employee?._id,
+      uploaded_at: new Date(),
     }));
 
     const issue = await this._issueRepository.updateById(issueId, {

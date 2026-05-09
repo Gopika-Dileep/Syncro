@@ -34,20 +34,27 @@ export class AssignIssueService implements IAssignIssueService {
       updateData.assignee_id = data.assignee_id;
     }
 
-    const historyEntries: any[] = [];
+    interface HistoryEntry {
+      action: string;
+      from: string;
+      to: string;
+      user: unknown;
+      created_at: Date;
+    }
+    const historyEntries: HistoryEntry[] = [];
     const now = new Date();
 
     if (data.assignee_id && String(data.assignee_id) !== String(issueToUpdate.assignee_id)) {
       const assignee = await this._employeeRepository.findById(data.assignee_id);
       if (assignee) await assignee.populate('user_id');
-      
+
       const oldAssignee = issueToUpdate.assignee_id ? await this._employeeRepository.findById(String(issueToUpdate.assignee_id)) : null;
       if (oldAssignee) await oldAssignee.populate('user_id');
-      
+
       historyEntries.push({
         action: 'assignee_change',
-        from: (oldAssignee as any)?.user_id?.name || 'Unassigned',
-        to: (assignee as any)?.user_id?.name || 'Unknown',
+        from: (oldAssignee as unknown as { user_id?: { name: string } })?.user_id?.name || 'Unassigned',
+        to: (assignee as unknown as { user_id?: { name: string } })?.user_id?.name || 'Unknown',
         user: assigner._id,
         created_at: now,
       });
@@ -66,7 +73,7 @@ export class AssignIssueService implements IAssignIssueService {
 
     const updatedIssue = await this._issueRepository.updateById(data.issue_id, {
       ...updateData,
-      $push: { history: { $each: historyEntries } }
+      $push: { history: { $each: historyEntries } },
     });
 
     if (!updatedIssue) throw new Error('Failed to update issue');

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Flag, Hash, Users as UsersIcon, User, Send, Paperclip, Clock, MessageSquare, History, CheckCircle, ExternalLink, BookOpen, GitBranch, Check, RotateCcw } from "lucide-react";
 import { createPortal } from "react-dom";
 import { type Issue, getIssueByIdApi, addCommentToIssueApi, addIssueAttachmentApi } from "../api/issueApi";
@@ -39,25 +39,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     const { can, user: currentUser } = usePermission();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        if (isOpen && item?._id) {
-            setFullItem(item);
-            setInternalType(type);
-            fetchFullDetails();
-            if (type === 'subtask' && (item as any).issue_id) {
-                fetchParentInfo((item as any).issue_id);
-            } else if (type === 'issue' && (item as any).type === 'story') {
-                fetchChildSubTasks(item._id);
-            }
-            fetchEmployees();
-        } else if (!isOpen) {
-            setParentIssue(null);
-            setChildSubTasks([]);
-            setFullItem(null);
-        }
-    }, [isOpen, item?._id, item?.status, type]); // Added type and status to trigger refresh if it changes in parent
-
-    const fetchFullDetails = async (id?: string, targetType?: 'issue' | 'subtask') => {
+    const fetchFullDetails = useCallback(async (id?: string, targetType?: 'issue' | 'subtask') => {
         const activeId = id || fullItem?._id;
         const activeType = targetType || internalType;
         if (!activeId) return;
@@ -72,27 +54,27 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         } catch (err) {
             console.error("Failed to fetch full details", err);
         }
-    };
+    }, [fullItem?._id, internalType]);
 
-    const fetchParentInfo = async (id: string) => {
+    const fetchParentInfo = useCallback(async (id: string) => {
         try {
             const res = await getIssueByIdApi(id);
             if (res.success) setParentIssue(res.data);
         } catch (err) {
             console.error("Failed to fetch parent context", err);
         }
-    };
+    }, []);
 
-    const fetchChildSubTasks = async (issueId: string) => {
+    const fetchChildSubTasks = useCallback(async (issueId: string) => {
         try {
             const res = await getSubTasksByIssueApi(issueId);
             if (res.success) setChildSubTasks(res.data);
         } catch (err) {
             console.error("Failed to fetch child sub-tasks", err);
         }
-    };
+    }, []);
 
-    const fetchEmployees = async () => {
+    const fetchEmployees = useCallback(async () => {
         try {
             const res = await getTeamDirectoryApi();
             if (res.success) {
@@ -105,7 +87,27 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         } catch (err) {
             console.error("Failed to fetch employees", err);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        if (isOpen && item?._id) {
+            setFullItem(item);
+            setInternalType(type);
+            fetchFullDetails();
+            if (type === 'subtask') {
+                const subtaskItem = item as SubTask;
+                if (subtaskItem.issue_id) fetchParentInfo(subtaskItem.issue_id);
+            } else if (type === 'issue') {
+                const issueItem = item as Issue;
+                if (issueItem.type === 'story') fetchChildSubTasks(item._id);
+            }
+            fetchEmployees();
+        } else if (!isOpen) {
+            setParentIssue(null);
+            setChildSubTasks([]);
+            setFullItem(null);
+        }
+    }, [isOpen, item, item?._id, item?.status, type, fetchFullDetails, fetchParentInfo, fetchChildSubTasks, fetchEmployees]); // Added type and status to trigger refresh if it changes in parent
 
     if (!fullItem) return null;
 
@@ -128,7 +130,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             setPendingAttachments([]);
             toast.success("Comment added");
             onUpdate?.();
-        } catch (err) {
+        } catch {
             toast.error("Failed to add comment");
         } finally {
             setIsSubmitting(false);
@@ -145,9 +147,10 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             let uploadRes;
             try {
                 uploadRes = await uploadFileApi(file);
-            } catch (err: any) {
-                console.error("Upload network/server error:", err);
-                toast.error(`Upload failed: ${err.message || 'Server error'}`);
+            } catch (err: unknown) {
+                const error = err as { message?: string };
+                console.error("Upload network/server error:", error);
+                toast.error(`Upload failed: ${error.message || 'Server error'}`);
                 return;
             }
 
@@ -241,8 +244,9 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                 onUpdate?.();
                 onClose?.();
             }
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.message || err.message || "Failed to complete review";
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } }; message?: string };
+            const errorMsg = error.response?.data?.message || error.message || "Failed to complete review";
             toast.error(errorMsg);
         } finally {
             setIsReviewing(false);
@@ -250,17 +254,18 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     };
 
     const isInReview = fullItem.status.toLowerCase() === 'in review' || fullItem.status.toLowerCase() === 'submitted';
-    const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') && (fullItem.status.toLowerCase() === 'rework' || !!(fullItem as any).rework_reason);
+    const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') && 
+        (fullItem.status.toLowerCase() === 'rework' || !!(internalType === 'subtask' ? (fullItem as SubTask).rework_reason : null));
     const isReviewer = can('task:view:all') || can('task:update') || can('task:status:review') || currentUser?.role === 'company';
     const canAssign = can('task:assign') || can('task:view:all') || can('project:update') || currentUser?.role === 'company';
 
     // Combine comments and history into a single timeline
     const rawTimeline = [
-        ...(fullItem.comments || []).map(c => ({ ...c, type: 'comment', source: 'current', taskId: type === 'subtask' ? fullItem._id : undefined })),
+        ...(fullItem.comments || []).map(c => ({ ...c, type: 'comment', source: 'current', taskId: internalType === 'subtask' ? fullItem._id : undefined })),
         ...(parentIssue?.comments || []).map(c => ({ ...c, type: 'comment', source: 'story' })),
         ...(childSubTasks.flatMap(st => (st.comments || []).map(c => ({ ...c, type: 'comment', source: 'subtask', taskId: st._id, taskName: st.title })))),
-        ...((fullItem as any).history || []).map((h: any) => ({ ...h, type: 'history', source: 'current', taskId: type === 'subtask' ? fullItem._id : undefined })),
-        ...(parentIssue?.history || []).map((h: any) => ({ ...h, type: 'history', source: 'story' }))
+        ...(fullItem.history || []).map((h) => ({ ...h, type: 'history', source: 'current', taskId: internalType === 'subtask' ? fullItem._id : undefined })),
+        ...(parentIssue?.history || []).map((h) => ({ ...h, type: 'history', source: 'story' }))
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     const timeline = rawTimeline.filter(entry => {
@@ -271,7 +276,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         if (activityFilter === 'this_task') {
             return entry.source === 'current';
         }
-        return (entry as any).taskId === activityFilter;
+        return (entry as { taskId?: string }).taskId === activityFilter;
     });
 
     const drawerContent = (
@@ -300,11 +305,11 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                         </div>
                         <span className="text-[11px] text-gray-400 font-medium">#{fullItem._id.slice(-6)}</span>
                         <div className="flex items-center gap-1.5">
-                            {type === 'subtask' ? (
+                            {internalType === 'subtask' ? (
                                 <span className="text-[9px] font-black text-[#fa8029] bg-[#fff5ef] px-2.5 py-0.5 rounded-full uppercase border border-[#fa8029]/10 flex items-center gap-1">
                                     <Hash size={10} /> Sub-task
                                 </span>
-                            ) : (fullItem as any).subtask_type === 'bug' || (fullItem as any).type === 'bug' ? (
+                            ) : (fullItem as Issue).type === 'bug' ? (
                                 <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-2.5 py-0.5 rounded-full uppercase border border-rose-100 flex items-center gap-1">
                                     <Flag size={10} /> Bug
                                 </span>
@@ -323,10 +328,10 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                     {fullItem.assignee_id && (
                         <div className="flex items-center gap-2 px-3 py-1 bg-[#fff5ef] rounded-full border border-[#fa8029]/10">
                             <div className="w-5 h-5 rounded-full bg-[#fa8029] text-white flex items-center justify-center text-[10px] font-black uppercase">
-                                {(fullItem.assignee_id as any).name?.[0] || 'A'}
+                                {(fullItem.assignee_id as { name?: string }).name?.[0] || 'A'}
                             </div>
                             <span className="text-[11px] font-bold text-[#fa8029]">
-                                {(fullItem.assignee_id as any).name || (fullItem.assignee_id as any).user_id?.name || 'Assignee'}
+                                {(fullItem.assignee_id as { name?: string }).name || (fullItem.assignee_id as { user_id?: { name: string } }).user_id?.name || 'Assignee'}
                             </span>
                         </div>
                     )}
@@ -396,8 +401,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             {type === 'issue' && (fullItem as Issue).type === 'story' ? 'Story Points' : 'Est. Time'}
                                         </span>
                                         <div className="flex items-center gap-2 text-[13px] font-bold text-gray-700">
-                                            {type === 'issue' && (fullItem as Issue).type === 'story' ? <Hash size={14} /> : <Clock size={14} />}
-                                            {type === 'issue' && (fullItem as Issue).type === 'story' ? (fullItem as Issue).story_points : `${(fullItem as any).estimated_hours || 0}h`}
+                                            {internalType === 'issue' && (fullItem as Issue).type === 'story' ? <Hash size={14} /> : <Clock size={14} />}
+                                            {internalType === 'issue' && (fullItem as Issue).type === 'story' ? (fullItem as Issue).story_points : `${(fullItem as SubTask).estimated_hours || 0}h`}
                                         </div>
                                     </div>
                                 </div>
@@ -417,7 +422,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             <div>
                                                 <h3 className="text-[12px] font-bold text-rose-500 uppercase tracking-wider mb-3">Reproduction Steps</h3>
                                                 <div className="bg-rose-50/30 p-4 rounded-xl border border-rose-100 text-[14px] text-gray-700 leading-relaxed">
-                                                    <MentionText text={(fullItem as Issue).reproduction_steps} />
+                                                    <MentionText text={(fullItem as Issue).reproduction_steps || ""} />
                                                 </div>
                                             </div>
                                         )}
@@ -520,14 +525,14 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                     </div>
                                 )}
 
-                                {fullItem.status.toLowerCase() === 'rework' && (fullItem as any).rework_reason && (
+                                {internalType === 'subtask' && (fullItem as SubTask).rework_reason && (
                                     <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-100">
                                         <div className="flex items-center gap-2 mb-2 text-rose-500">
                                             <RotateCcw size={14} />
                                             <h3 className="text-[11px] font-bold uppercase tracking-wider">Rework Required</h3>
                                         </div>
                                         <div className="text-[13px] text-gray-700 italic">
-                                            <MentionText text={(fullItem as any).rework_reason || ""} />
+                                            <MentionText text={(fullItem as SubTask).rework_reason || ""} />
                                         </div>
                                     </div>
                                 )}
@@ -571,7 +576,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                                 <div className="w-5 h-5 rounded-md bg-[#fff5ef] flex items-center justify-center text-[#fa8029]">
                                                                     <UsersIcon size={10} />
                                                                 </div>
-                                                                <span className="text-[11px] font-bold text-gray-500">{(st.team_id as any)?.name || 'General'}</span>
+                                                                <span className="text-[11px] font-bold text-gray-500">{(st.team_id as { name?: string })?.name || 'General'}</span>
                                                             </div>
 
                                                             {/* Creator Info */}
@@ -579,7 +584,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                                 <div className="w-5 h-5 rounded-md bg-gray-50 flex items-center justify-center text-gray-400">
                                                                     <User size={10} />
                                                                 </div>
-                                                                <span className="text-[11px] text-gray-400">By <span className="font-bold text-gray-500">{(st.created_by as any)?.name || 'System'}</span></span>
+                                                                <span className="text-[11px] text-gray-400">By <span className="font-bold text-gray-500">{(st.created_by as { name?: string })?.name || 'System'}</span></span>
                                                             </div>
 
                                                             {/* Assignee Info */}
@@ -588,9 +593,9 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                                 {st.assignee_id ? (
                                                                     <div className="flex items-center gap-1.5">
                                                                         <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-black border border-white shadow-sm">
-                                                                            {(st.assignee_id as any).name?.[0].toUpperCase()}
+                                                                            {(st.assignee_id as { name: string }).name?.[0].toUpperCase()}
                                                                         </div>
-                                                                        <span className="text-[11px] font-bold text-gray-700">{(st.assignee_id as any).name}</span>
+                                                                        <span className="text-[11px] font-bold text-gray-700">{(st.assignee_id as { name: string }).name}</span>
                                                                     </div>
                                                                 ) : (
                                                                     <span className="text-[11px] font-bold text-rose-400 italic">Unassigned</span>
@@ -618,9 +623,9 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                     <span className="text-[10px] font-bold text-gray-400 uppercase block mb-0.5">Assignee</span>
                                                 </div>
                                                 <span className="text-[13px] font-bold text-gray-800 truncate block">
-                                                    {(fullItem as any).assignee_id?.name || 
-                                                     (fullItem as any).assignee_id?.user_id?.name || 
-                                                     (fullItem as any).assign_to?.name || 
+                                                    {(fullItem.assignee_id as { name?: string })?.name || 
+                                                     (fullItem.assignee_id as { user_id?: { name: string } })?.user_id?.name || 
+                                                     (internalType === 'issue' ? (fullItem as Issue).assign_to?.name : null) || 
                                                      'Unassigned'}
                                                 </span>
                                             </div>
@@ -633,12 +638,12 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             <div>
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase block mb-0.5">Reporter</span>
                                                 <span className="text-[13px] font-bold text-gray-800">
-                                                    {(fullItem as any).created_by?.name || 'System'}
+                                                    {(fullItem.created_by as { name?: string })?.name || 'System'}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {(fullItem as any).assigned_by && (
+                                        {internalType === 'issue' && (fullItem as Issue).assigned_by && (
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
                                                     <Flag size={18} />
@@ -646,7 +651,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                 <div>
                                                     <span className="text-[10px] font-bold text-gray-400 uppercase block mb-0.5">Assigned By</span>
                                                     <span className="text-[13px] font-bold text-gray-800">
-                                                        {(fullItem as any).assigned_by.name}
+                                                        {(fullItem as Issue).assigned_by?.name}
                                                     </span>
                                                 </div>
                                             </div>
@@ -751,68 +756,81 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 {/* Timeline Feed */}
                                 <div className="space-y-8 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-[1px] before:bg-gray-100">
                                     {timeline.length > 0 ? (
-                                        timeline.map((entry: any, idx) => (
-                                            <div key={idx} className="relative pl-12">
-                                                {/* Icon Node */}
-                                                <div className={`absolute left-0 top-0 w-[34px] h-[34px] rounded-full border-4 border-[#fcfcfc] flex items-center justify-center z-10 ${
-                                                    entry.type === 'comment' ? 'bg-[#fff5ef] text-[#fa8029]' : 'bg-gray-50 text-gray-400'
-                                                }`}>
-                                                    {entry.type === 'comment' ? <MessageSquare size={14} /> : <History size={14} />}
-                                                </div>
-
-                                                <div className="flex flex-col">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-[13px] font-bold text-gray-800">
-                                                            {entry.user?.name || entry.user?.user_id?.name || (entry.user?._id === currentUser?._id || entry.user === currentUser?._id ? currentUser?.name : 'System')}
-                                                        </span>
-                                                        <span className="text-[11px] text-gray-400">
-                                    {new Date(entry.created_at).toLocaleString()}
-                                                        </span>
-                                                        {entry.source === 'story' && (
-                                                            <span className="text-[8px] font-black text-[#fa8029] bg-[#fff5ef] px-1.5 py-0.5 rounded border border-[#fa8029]/10 uppercase">Story Context</span>
-                                                        )}
+                                        timeline.map((entry, idx) => {
+                                            const e = entry as { 
+                                                type: string; 
+                                                user?: { name?: string; user_id?: { name: string }; _id: string } | string;
+                                                created_at: string;
+                                                source: string;
+                                                text?: string;
+                                                attachments?: { file_url: string; file_name: string }[];
+                                                action?: string;
+                                                from?: string;
+                                                to?: string;
+                                            };
+                                            return (
+                                                <div key={idx} className="relative pl-12">
+                                                    {/* Icon Node */}
+                                                    <div className={`absolute left-0 top-0 w-[34px] h-[34px] rounded-full border-4 border-[#fcfcfc] flex items-center justify-center z-10 ${
+                                                        e.type === 'comment' ? 'bg-[#fff5ef] text-[#fa8029]' : 'bg-gray-50 text-gray-400'
+                                                    }`}>
+                                                        {e.type === 'comment' ? <MessageSquare size={14} /> : <History size={14} />}
                                                     </div>
-                                                    
-                                                    {entry.type === 'comment' ? (
-                                                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                                                            <div className="text-[13px] text-gray-600 leading-relaxed">
-                                                                <MentionText text={entry.text} />
-                                                            </div>
-                                                            {entry.attachments && entry.attachments.length > 0 && (
-                                                                <div className="mt-3 flex flex-wrap gap-2">
-                                                                    {entry.attachments.map((att: any, aIdx: number) => (
-                                                                        <a 
-                                                                            key={aIdx} 
-                                                                            href={att.file_url} 
-                                                                            className="text-[11px] text-[#fa8029] bg-[#fff5ef] px-2 py-1 rounded border border-[#fa8029]/10 flex items-center gap-1"
-                                                                        >
-                                                                            <Paperclip size={10} /> {att.file_name}
-                                                                        </a>
-                                                                    ))}
-                                                                </div>
+
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-[13px] font-bold text-gray-800">
+                                                                {typeof e.user === 'object' ? (e.user?.name || e.user?.user_id?.name || 'System') : (e.user === currentUser?._id ? currentUser?.name : 'System')}
+                                                            </span>
+                                                            <span className="text-[11px] text-gray-400">
+                                                                {new Date(e.created_at).toLocaleString()}
+                                                            </span>
+                                                            {e.source === 'story' && (
+                                                                <span className="text-[8px] font-black text-[#fa8029] bg-[#fff5ef] px-1.5 py-0.5 rounded border border-[#fa8029]/10 uppercase">Story Context</span>
                                                             )}
                                                         </div>
-                                                    ) : (
-                                                        <div className="text-[13px] text-gray-500 italic">
-                                                            Changed <span className="font-bold text-gray-700">{entry.action.replace('_', ' ')}</span>
-                                                            {entry.from && <> from <span className="text-gray-400 line-through">
-                                                                {entry.from === 'previously_assigned' ? 'Previous Assignee' : entry.from}
-                                                            </span></>}
-                                                            {entry.to && <> to <span className="font-bold text-[#fa8029]">
-                                                                {entry.to === 'assigned_new_employee' ? (
-                                                                    (fullItem as any).assignee_id?.name || 
-                                                                    (fullItem as any).assignee_id?.user_id?.name || 
-                                                                    (fullItem as any).assign_to?.name || 
-                                                                    'New Assignee'
-                                                                ) : 
-                                                                 entry.to === 'new_sprint' ? 'New Sprint' : 
-                                                                 entry.to}
-                                                            </span></>}
-                                                        </div>
-                                                    )}
+                                                        
+                                                        {e.type === 'comment' ? (
+                                                            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                                                <div className="text-[13px] text-gray-600 leading-relaxed">
+                                                                    <MentionText text={e.text || ""} />
+                                                                </div>
+                                                                {e.attachments && e.attachments.length > 0 && (
+                                                                    <div className="mt-3 flex flex-wrap gap-2">
+                                                                        {e.attachments.map((att, aIdx) => (
+                                                                            <a 
+                                                                                key={aIdx} 
+                                                                                href={att.file_url} 
+                                                                                className="text-[11px] text-[#fa8029] bg-[#fff5ef] px-2 py-1 rounded border border-[#fa8029]/10 flex items-center gap-1"
+                                                                            >
+                                                                                <Paperclip size={10} /> {att.file_name}
+                                                                            </a>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-[13px] text-gray-500 italic">
+                                                                Changed <span className="font-bold text-gray-700">{(e.action || "").replace('_', ' ')}</span>
+                                                                {e.from && <> from <span className="text-gray-400 line-through">
+                                                                    {e.from === 'previously_assigned' ? 'Previous Assignee' : e.from}
+                                                                </span></>}
+                                                                {e.to && <> to <span className="font-bold text-[#fa8029]">
+                                                                    {e.to === 'assigned_new_employee' ? (
+                                                                        (fullItem.assignee_id as { name?: string })?.name || 
+                                                                        (fullItem.assignee_id as { user_id?: { name: string } })?.user_id?.name || 
+                                                                        (fullItem as unknown as { assign_to?: { name: string } }).assign_to?.name || 
+                                                                        'Assignee'
+                                                                    ) : 
+                                                                     e.to === 'new_sprint' ? 'New Sprint' : 
+                                                                     e.to}
+                                                                </span></>}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     ) : (
                                         <div className="text-center py-12 text-gray-300">
                                             <History size={32} className="mx-auto mb-3 opacity-20" />
@@ -855,7 +873,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                             </div>
                             <MentionTextArea 
                                 value={reworkReason}
-                                onChange={(text, m) => {
+                                onChange={(text) => {
                                     setReworkReason(text);
                                     // Optionally we could track rework mentions too, 
                                     // but for now we'll focus on the text

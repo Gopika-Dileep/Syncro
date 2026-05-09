@@ -22,6 +22,7 @@ export class SprintRouter {
     this.router.post(ENDPOINTS.SPRINTS.ROOT, authMiddleware, checkPermission('sprint:create'), validateRequest(CreateSprintRequestSchema), sprintController.createSprint);
     this.router.get(ENDPOINTS.SPRINTS.ROOT, authMiddleware, checkPermission(['sprint:view:all', 'sprint:create']), validateRequest(GetSprintRequestSchema), sprintController.getSprints);
     this.router.get(ENDPOINTS.SPRINTS.BY_ID, authMiddleware, checkPermission(['sprint:view:all', 'sprint:create']), validateRequest(SprintIdParamSchema), sprintController.getSprintById);
+    this.router.get(ENDPOINTS.SPRINTS.VELOCITY, authMiddleware, checkPermission(['sprint:view:all', 'sprint:create']), validateRequest(SprintIdParamSchema), sprintController.getVelocity);
     this.router.patch(ENDPOINTS.SPRINTS.BY_ID, authMiddleware, checkPermission(['sprint:update', 'sprint:start', 'sprint:complete']), validateRequest(UpdateSprintRequestSchema), sprintController.updateSprint);
     this.router.delete(ENDPOINTS.SPRINTS.BY_ID, authMiddleware, checkPermission('sprint:delete'), validateRequest(SprintIdParamSchema), sprintController.deleteSprint);
   }

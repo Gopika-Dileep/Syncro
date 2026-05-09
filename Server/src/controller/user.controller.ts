@@ -3,11 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 import { IGetProfileService } from '../interfaces/services/user/IGetProfileService';
 import { IChangePasswordService } from '../interfaces/services/user/IChangePasswordService';
 import { IUpdateUserProfileService } from '../interfaces/services/user/IUpdateUserProfileService';
-import { HttpStatus } from '../enums/HttpStatus';
 import { USER_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
-import { success, created } from '../utils/response.utils';
+import { success } from '../utils/response.utils';
 
 @injectable()
 export class UserController {

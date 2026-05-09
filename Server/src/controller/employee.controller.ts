@@ -7,7 +7,6 @@ import { IGetEmployeeDetailsService } from '../interfaces/services/employee/IGet
 import { IUpdateEmployeeDetailsService } from '../interfaces/services/employee/IUpdateEmployeeDetailsService';
 import { IGetUnassignedEmployeesService } from '../interfaces/services/employee/IGetUnassignedEmployeesService';
 import { IAssignTeamToEmployeeService } from '../interfaces/services/employee/IAssignTeamToEmployeeService';
-import { HttpStatus } from '../enums/HttpStatus';
 import { EMPLOYEE_MESSAGES } from '../constants/messages';
 import { GetEmployeesRequestDTO } from '../dto/employee.dto';
 import { TYPES } from '../di/types';

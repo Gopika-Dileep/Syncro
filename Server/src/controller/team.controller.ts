@@ -5,7 +5,6 @@ import { IGetTeamsService } from '../interfaces/services/team/IGetTeamsService';
 import { IUpdateTeamService } from '../interfaces/services/team/IUpdateTeamService';
 import { IDeleteTeamService } from '../interfaces/services/team/IDeleteTeamService';
 import { IGetTeamDirectoryService } from '../interfaces/services/team/IGetTeamDirectoryService';
-import { HttpStatus } from '../enums/HttpStatus';
 import { TEAM_MESSAGES } from '../constants/messages';
 import { GetTeamsRequestDTO, GetTeamDirectoryRequestDTO } from '../dto/team.dto';
 import { TYPES } from '../di/types';

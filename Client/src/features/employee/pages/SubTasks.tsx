@@ -1,27 +1,19 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
-    getAssignedSubTasksApi,
-    getTeamSubTasksApi,
     getAllSubTasksApi,
     updateSubTaskApi,
-    assignSubTaskApi,
     startSubTaskApi,
     submitSubTaskApi,
-    reviewSubTaskApi,
-    type SubTask
+    assignSubTaskApi,
+    reviewSubTaskApi, type SubTask 
 } from "../api/subTaskApi";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
 import {
-    Clock,
-    Search,
-    Users,
-    RotateCcw,
-    X,
-    BookOpen
+    Search, RotateCcw, X, Clock
 } from "lucide-react";
 import type { RootState } from "@/store/store";
 import { usePermission } from "@/features/employee/hooks/usePermission";
@@ -38,7 +30,6 @@ const COLUMNS = ["To Do", "In Progress", "In Review", "Done"];
 
 export default function SubTasks() {
     const [subTasks, setSubTasks] = useState<SubTask[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchTerm = useDebounce(searchQuery, 500);
     const [activeTab, setActiveTab] = useState<'team' | 'assigned'>('team');
@@ -56,19 +47,14 @@ export default function SubTasks() {
     const [reworkReason, setReworkReason] = useState("");
     const [employees, setEmployees] = useState<TeamMember[]>([]);
     const [reworkMentions, setReworkMentions] = useState<string[]>([]);
+    const [fetching, setFetching] = useState(true);
 
     const { can } = usePermission();
 
     const isPM = can('task:view:all');
-    const canViewTeam = can('task:view:team');
     const hasTeam = !!(user?.team?._id || user?.team_id);
 
-    useEffect(() => {
-        fetchSubTasks();
-        fetchEmployees();
-    }, [activeTab, isPM, debouncedSearchTerm]);
-
-    const fetchEmployees = async () => {
+    const fetchEmployees = useCallback(async () => {
         try {
             const res = await getTeamDirectoryApi();
             if (res.success) {
@@ -79,30 +65,28 @@ export default function SubTasks() {
         } catch (err) {
             console.error("Failed to fetch employees", err);
         }
-    };
+    }, []);
 
-    const fetchSubTasks = async (silent = false) => {
-        if (!silent) setLoading(true);
+    const fetchSubTasks = useCallback(async () => {
+        setFetching(true);
         try {
-            let response;
-            if (isPM) {
-                response = await getAllSubTasksApi(debouncedSearchTerm);
-            } else if (canViewTeam && activeTab === 'team') {
-                response = await getTeamSubTasksApi(debouncedSearchTerm);
-            } else {
-                response = await getAssignedSubTasksApi(debouncedSearchTerm);
-            }
+            const response = await getAllSubTasksApi(debouncedSearchTerm);
             if (response.success) {
                 setSubTasks(response.data);
             }
         } catch {
             toast.error("Failed to load sub-tasks");
         } finally {
-            setLoading(false);
+            setFetching(false);
         }
-    };
+    }, [debouncedSearchTerm]);
 
-    const handleStatusChange = async (subTaskId: string, newStatus: string, extraData: any = {}) => {
+    useEffect(() => {
+        fetchSubTasks();
+        fetchEmployees();
+    }, [debouncedSearchTerm, fetchSubTasks, fetchEmployees]);
+
+    const handleStatusChange = async (subTaskId: string, newStatus: string, extraData: { rework_reason?: string; submission_link?: string; description?: string; branch_name?: string; mentions?: string[] } = {}) => {
         try {
             let response;
             if (newStatus === 'In Progress') {
@@ -127,11 +111,12 @@ export default function SubTasks() {
             }
 
             if (response.success) {
-                fetchSubTasks(true);
+                fetchSubTasks();
                 toast.success(`Status updated to ${newStatus}`);
             }
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Status update failed");
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
+            toast.error(err.response?.data?.message || "Status update failed");
         }
     };
 
@@ -184,7 +169,7 @@ export default function SubTasks() {
         }
     };
 
-    const handleSubmissionSubmit = async (data: any) => {
+    const handleSubmissionSubmit = async (data: { submission_link: string; description: string; branch_name: string }) => {
         if (!selectedSubTask) return;
         setIsSubmitting(true);
         try {
@@ -200,7 +185,7 @@ export default function SubTasks() {
         try {
             const response = await assignSubTaskApi(selectedSubTask._id, memberId);
             if (response.success) {
-                fetchSubTasks(true);
+                fetchSubTasks();
                 toast.success("Assigned successfully");
                 setShowAssignModal(false);
             }
@@ -225,19 +210,26 @@ export default function SubTasks() {
         }
     };
 
-    const teamList = isPM ? Array.from(
-        new Map(subTasks.filter(t => t.team_id).map(t => [typeof t.team_id === 'object' ? (t.team_id as any)._id : t.team_id, t.team_id])).values()
-    ) : [];
+    const teamList = useMemo(() => {
+        if (!isPM) return [];
+        const teams = subTasks
+            .filter(t => t.team_id)
+            .map(t => {
+                const team = t.team_id as { _id: string; name: string };
+                return [team._id, team] as const;
+            });
+        return Array.from(new Map(teams).values());
+    }, [isPM, subTasks]);
 
     const filteredSubTasks = useMemo(() => {
         if (selectedTeamFilter === 'all') return subTasks;
         return subTasks.filter(t => {
-            const teamId = typeof t.team_id === 'object' ? (t.team_id as any)?._id : t.team_id;
+            const teamId = (t.team_id as { _id: string })?._id || (t.team_id as unknown as string);
             return teamId === selectedTeamFilter;
         });
     }, [subTasks, selectedTeamFilter]);
 
-    if (loading) {
+    if (fetching) {
         return (
             <div className="h-screen flex items-center justify-center bg-white">
                 <div className="w-10 h-10 border-4 border-[#eee] border-t-[#fa8029] rounded-full animate-spin" />
@@ -281,9 +273,10 @@ export default function SubTasks() {
                                 className="bg-transparent text-[10px] font-bold text-[#666] outline-none cursor-pointer"
                             >
                                 <option value="all">All Teams</option>
-                                {teamList.map((team: any) => (
-                                    <option key={team._id} value={team._id}>{team.name}</option>
-                                ))}
+                                {teamList.map((team) => {
+                                    const t = team as { _id: string; name: string };
+                                    return <option key={t._id} value={t._id}>{t.name}</option>;
+                                })}
                             </select>
                         </div>
                     )}
@@ -337,9 +330,9 @@ export default function SubTasks() {
                                                                             {item.rework_reason && item.status !== 'Done' && (
                                                                                 <span className="text-[8px] font-black text-white bg-rose-500 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 animate-pulse">Rework</span>
                                                                             )}
-                                                                            {item.subtask_type === 'sub-task' && (item as any).parent_issue && (
+                                                                            {item.subtask_type === 'sub-task' && item.parent_issue && (
                                                                                 <span className="text-[8px] font-black text-gray-400 uppercase tracking-wider truncate">
-                                                                                    Story: {(item as any).parent_issue.title}
+                                                                                    Story: {item.parent_issue.title}
                                                                                 </span>
                                                                             )}
                                                                         </div>
@@ -432,7 +425,7 @@ export default function SubTasks() {
                     onClose={() => setShowDetailsDrawer(false)}
                     item={selectedSubTask}
                     type="subtask"
-                    onUpdate={() => fetchSubTasks(true)}
+                    onUpdate={() => fetchSubTasks()}
                     onReassign={() => {
                         setShowDetailsDrawer(false);
                         setShowAssignModal(true);

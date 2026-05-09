@@ -80,3 +80,14 @@ export const deleteSprintApi = async (sprintId: string): Promise<{ success: bool
     const response = await axiosInstance.delete(url);
     return response.data;
 };
+
+export interface VelocityAnalytics {
+    sprintWise: { sprintName: string; committed: number; completed: number }[];
+    multipleTeam: { teamName: string; completed: number }[];
+}
+
+export const getSprintVelocityApi = async (sprintId: string): Promise<{ success: boolean; data: VelocityAnalytics }> => {
+    const url = `${ENDPOINTS.SPRINTS.BASE}/${sprintId}/velocity`;
+    const response = await axiosInstance.get(url);
+    return response.data;
+};

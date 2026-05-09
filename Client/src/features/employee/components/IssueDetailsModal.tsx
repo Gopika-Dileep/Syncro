@@ -1,4 +1,4 @@
-import { X, Flag, Hash, Calendar, CheckCircle2, Users as UsersIcon } from "lucide-react";
+import { X, Flag, Hash, Calendar, CheckCircle2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { type Issue } from "../api/issueApi";
 import MentionText from "@/features/shared/components/MentionText";

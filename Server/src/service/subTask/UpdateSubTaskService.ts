@@ -18,23 +18,24 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
     const oldSubTask = await this._subTaskRepository.findById(subTaskId);
     if (!oldSubTask) throw new Error('Sub-task not found');
 
-    const historyEntry: any = {
+    const historyEntry = {
       user: employee?._id,
       created_at: new Date(),
+      action: 'updated' as string,
+      from: undefined as string | undefined,
+      to: undefined as string | undefined,
     };
 
     if (data.status && data.status !== oldSubTask.status) {
       historyEntry.action = 'status_change';
       historyEntry.from = oldSubTask.status;
       historyEntry.to = data.status;
-    } else {
-      historyEntry.action = 'updated';
     }
 
     const subTask = await this._subTaskRepository.updateById(subTaskId, {
       ...data,
-      $push: { history: historyEntry }
-    } as any);
+      $push: { history: historyEntry },
+    } as unknown as Partial<import('../../models/subTask.model').ISubTask>);
     if (!subTask) throw new Error('Sub-task not found');
     return SubTaskMapper.toResponseDTO(subTask);
   }

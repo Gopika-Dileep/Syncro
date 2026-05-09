@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from "react";
-import { X, Plus, Trash2, Bug, BookOpen, CheckSquare, Users as UsersIcon } from "lucide-react";
+import { X, Plus, Trash2, Bug, BookOpen, CheckSquare } from "lucide-react";
 import { createPortal } from "react-dom";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import MentionTextArea from "@/features/shared/components/MentionTextArea";
@@ -17,7 +17,7 @@ export interface IssueFormData {
     environment?: string;
     status?: string;
     mentions?: string[];
-    assignee_id?: string | any;
+    assignee_id?: string;
 }
 
 interface IssueModalProps {
@@ -67,9 +67,9 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                 setDescription(initialData.description || "");
                 setReproSteps(initialData.reproduction_steps || "");
                 setEnvironment(initialData.environment || "");
-                const initialMentions = ((initialData.mentions || []) as any[]).map(m => typeof m === 'string' ? m : m._id);
+                const initialMentions = (initialData.mentions || []).map(m => typeof m === 'string' ? m : (m as { _id: string })._id);
                 setMentions(initialMentions);
-                setAssigneeId(typeof initialData.assignee_id === 'object' ? initialData.assignee_id?._id : initialData.assignee_id || "");
+                setAssigneeId(typeof initialData.assignee_id === 'object' ? (initialData.assignee_id as { _id: string })?._id : initialData.assignee_id || "");
 
             } else {
                 setTitle("");
@@ -85,7 +85,7 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                 setAssigneeId("");
             }
         }
-    }, [isOpen, initialData, availableTypes.length]);
+    }, [isOpen, initialData, availableTypes]);
 
     if (!isOpen) return null;
 
@@ -108,13 +108,6 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
         });
     };
 
-    const toggleMention = (memberId: string) => {
-        setMentions(prev => 
-            prev.includes(memberId) 
-                ? prev.filter(id => id !== memberId) 
-                : [...prev, memberId]
-        );
-    };
 
     const updateCriterion = (index: number, val: string) => {
         const newC = [...criteria];

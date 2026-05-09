@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Flag, Target, Layout, Calendar, ChevronLeft, Search, Plus, Trash2, Bug, BookOpen, CheckSquare } from "lucide-react";
@@ -47,13 +47,33 @@ export default function SprintPlanning() {
         type: "warning"
     });
 
-    useEffect(() => {
-        if (sprintId) {
-            initPage();
+    const fetchSprintIssues = useCallback(async (currentSprintId: string) => {
+        try {
+            const res = await getIssuesBySprintApi(currentSprintId);
+            setSprintIssues(res.data || []);
+        } catch (err: unknown) {
+            console.error("Failed to fetch sprint issues", err);
         }
-    }, [sprintId]);
+    }, []);
 
-    const initPage = async () => {
+    const fetchBacklogIssues = useCallback(async (projectId: string) => {
+        setBacklogLoading(true);
+        try {
+            const res = await getIssuesByProjectApi(projectId);
+            const allIssues = res.data || [];
+            // Filter items not in any active sprint and in a 'plannable' status
+            setBacklogIssues(allIssues.filter(i => 
+                !i.sprint_id && 
+                (i.status === 'New' || i.status === 'To Do' || i.status === 'Ready')
+            ));
+        } catch {
+            toast.error("Failed to fetch backlog issues");
+        } finally {
+            setBacklogLoading(false);
+        }
+    }, []);
+
+    const initPage = useCallback(async () => {
         setLoading(true);
         try {
             const [sprintRes, projectsRes] = await Promise.all([
@@ -82,34 +102,13 @@ export default function SprintPlanning() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [sprintId, fetchSprintIssues, fetchBacklogIssues]);
 
-    const fetchSprintIssues = async (currentSprintId: string) => {
-        try {
-            const res = await getIssuesBySprintApi(currentSprintId);
-            setSprintIssues(res.data || []);
-        } catch (err: unknown) {
-            console.error("Failed to fetch sprint issues", err);
+    useEffect(() => {
+        if (sprintId) {
+            initPage();
         }
-    };
-
-    const fetchBacklogIssues = async (projectId: string) => {
-        setBacklogLoading(true);
-        try {
-            const res = await getIssuesByProjectApi(projectId);
-            const allIssues = res.data || [];
-            // Filter items not in any active sprint and in a 'plannable' status
-            const plannableStatuses = ['to do', 'new', 'ready'];
-            setBacklogIssues(allIssues.filter(i => 
-                !i.sprint_id && 
-                (i.status === 'New' || i.status === 'To Do' || i.status === 'Ready')
-            ));
-        } catch {
-            toast.error("Failed to fetch backlog issues");
-        } finally {
-            setBacklogLoading(false);
-        }
-    };
+    }, [sprintId, initPage]);
 
     const handleProjectChange = (projectId: string) => {
         setSelectedProjectId(projectId);

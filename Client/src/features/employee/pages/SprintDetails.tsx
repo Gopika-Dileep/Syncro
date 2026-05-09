@@ -1,31 +1,35 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { 
-    ChevronRight, ChevronDown, Clock, Target, 
-    MoreHorizontal, Plus, Calendar, AlertCircle, 
-    GripVertical, Layout, ArrowRight, User, Users,
+import { useParams, Link } from "react-router-dom";
+import {
+    ChevronRight, ChevronDown, Clock, Target,
+    MoreHorizontal, Plus, Calendar, AlertCircle,
+    Layout, Users,
     Pencil, Trash2, UserPlus, Eye,
-    Bug, BookOpen, CheckSquare, X,
-    ListTodo, Package, Flag, CheckCircle2, MessageSquare
+    Bug, BookOpen, CheckSquare, X, Activity,
+    ListTodo, Package, Flag, CheckCircle2, MessageSquare, ArrowRight
 } from "lucide-react";
 import { getSprintByIdApi, updateSprintApi, getSprintsApi, type Sprint, type SprintFormData } from "../api/sprintApi";
-import { 
-    getSubTasksByIssueApi, createSubTaskApi, updateSubTaskApi, 
-    deleteSubTaskApi, assignSubTaskApi, startSubTaskApi, 
-    submitSubTaskApi, reviewSubTaskApi, type SubTask 
+import {
+    getSubTasksByIssueApi, type SubTask,
+    createSubTaskApi, updateSubTaskApi, deleteSubTaskApi, assignSubTaskApi
 } from "../api/subTaskApi";
-import { getIssuesByProjectApi, updateIssueApi, type Issue } from "../api/issueApi";
+import { getIssuesByProjectApi, type Issue, updateIssueApi } from "../api/issueApi";
 import { getProjectsApi, type Project } from "../api/projectApi";
-import { getTeamDirectoryApi, type TeamMember, type TeamDirectory } from "../api/teamApi";
+import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 import { usePermission } from "@/features/employee/hooks/usePermission";
-import SubTaskModal, { type SubTaskFormData } from "../components/SubTaskModal";
-import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
-import CompleteSprintModal from "../components/CompleteSprintModal";
-import ConfirmModal from "@/features/shared/components/ConfirmModal";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { type RootState } from "@/store/store";
+import { getSprintVelocityApi, type VelocityAnalytics } from "../api/sprintApi";
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid,
+    Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
+import SubTaskModal, { type SubTaskFormData } from "../components/SubTaskModal";
+import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
+import CompleteSprintModal from "../components/CompleteSprintModal";
+import ConfirmModal from "@/features/shared/components/ConfirmModal";
 
 const TypeIcon = ({ type, size = 16 }: { type: string; size?: number }) => {
     switch (type.toLowerCase()) {
@@ -46,15 +50,16 @@ const getPriorityColor = (priority: string) => {
 
 export default function SprintDetails() {
     const { sprintId } = useParams<{ sprintId: string }>();
-    const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+    const [activeTab, setActiveTab] = useState<'issues' | 'multiple_team' | 'sprint_wise'>('issues');
     const [sprint, setSprint] = useState<Sprint | null>(null);
     const [issues, setIssues] = useState<Issue[]>([]);
     const [loading, setLoading] = useState(true);
+    const [velocityData, setVelocityData] = useState<VelocityAnalytics | null>(null);
+    const [velocityLoading, setVelocityLoading] = useState(false);
     const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
     const [subTasksByIssue, setSubTasksByIssue] = useState<Record<string, { data: SubTask[], loading: boolean }>>({});
     const { can } = usePermission();
     const user = useSelector((state: RootState) => state.auth.user);
-    const navigate = useNavigate();
 
     // Modal state
     const [isSubTaskModalOpen, setSubTaskModalOpen] = useState(false);
@@ -67,7 +72,7 @@ export default function SprintDetails() {
     const [subTaskToAssign, setSubTaskToAssign] = useState<{ issueId: string, subTask: SubTask } | null>(null);
     const [itemToView, setItemToView] = useState<{ item: Issue | SubTask, type: 'issue' | 'subtask' } | null>(null);
     const [isDetailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-    
+
     // Completion state
     const [isCompleteModalOpen, setCompleteModalOpen] = useState(false);
     const [isSubmittingComplete, setIsSubmittingComplete] = useState(false);
@@ -93,12 +98,12 @@ export default function SprintDetails() {
             moveIssuesTo?: string;
         }
         try {
-            const updateData: SprintUpdateBody = { 
+            const updateData: SprintUpdateBody = {
                 status: 'Completed',
                 moveIssuesTo: moveTarget
             };
             const response = await updateSprintApi(sprintId, updateData);
-            
+
             if (response.success) {
                 toast.success("Sprint completed successfully");
                 setCompleteModalOpen(false);
@@ -111,7 +116,7 @@ export default function SprintDetails() {
             setIsSubmittingComplete(false);
         }
     };
-    
+
     // Add Item state
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [backlogIssues, setBacklogIssues] = useState<Issue[]>([]);
@@ -119,53 +124,71 @@ export default function SprintDetails() {
     const [selectedBacklogProjectId, setSelectedBacklogProjectId] = useState<string>("");
     const [isFetchingBacklog, setIsFetchingBacklog] = useState(false);
     const [isConfirmingScopeChange, setIsConfirmingScopeChange] = useState<Issue | null>(null);
-    const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
-    const [teams, setTeams] = useState<TeamDirectory[]>([]);
 
-    useEffect(() => {
-        if (sprintId) {
-            fetchSprintDetails();
-            fetchTeamMembers();
-            fetchProjects();
-        }
-    }, [sprintId]);
-
-    const fetchSprintDetails = async () => {
+    const fetchSprintDetails = useCallback(async () => {
         if (!sprintId) return;
         try {
             const response = await getSprintByIdApi(sprintId);
             if (response.success) {
                 setSprint(response.data);
                 setIssues(response.data.issues || []);
-                // If board view, pre-fetch subtasks for all issues
-                if (viewMode === 'board') {
-                    (response.data.issues || []).forEach((issue: Issue) => {
-                        fetchSubTasks(issue._id);
-                    });
-                }
             }
-        } catch (error) {
+        } catch {
             toast.error("Failed to load sprint details");
         } finally {
             setLoading(false);
         }
-    };
+    }, [sprintId]);
 
-    const fetchTeamMembers = async () => {
+    const fetchVelocityData = useCallback(async () => {
+        if (!sprintId) return;
+        setVelocityLoading(true);
+        try {
+            const response = await getSprintVelocityApi(sprintId);
+            if (response.success) {
+                setVelocityData(response.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch velocity data", error);
+        } finally {
+            setVelocityLoading(false);
+        }
+    }, [sprintId]);
+
+    const fetchTeamMembers = useCallback(async () => {
         try {
             const response = await getTeamDirectoryApi();
             if (response.success) {
-                setTeams(response.data || []);
+                // setTeams(response.data || []); // teams was unused
                 const allMembers = (response.data || []).flatMap(team => team.members || []);
                 const uniqueMembers = allMembers.filter((v, i, a) => a.findIndex(t => t?._id === v?._id) === i);
                 setMembers(uniqueMembers);
             }
-        } catch (error) {
-            console.error("Failed to load members", error);
+        } catch {
+            console.error("Failed to load members");
         }
-    };
+    }, []);
 
-    const fetchProjects = async () => {
+    const fetchBacklogForProject = useCallback(async (projectId: string) => {
+        setIsFetchingBacklog(true);
+        try {
+            const response = await getIssuesByProjectApi(projectId);
+            if (response.success) {
+                // Filter out issues already in the current sprint and completed issues
+                const available = response.data.filter(issue =>
+                    (!issue.sprint_id || issue.sprint_id !== sprintId) &&
+                    issue.status !== 'Completed'
+                );
+                setBacklogIssues(available);
+            }
+        } catch {
+            toast.error("Failed to load backlog");
+        } finally {
+            setIsFetchingBacklog(false);
+        }
+    }, [sprintId]);
+
+    const fetchProjects = useCallback(async () => {
         try {
             const response = await getProjectsApi();
             if (response.success) {
@@ -175,37 +198,37 @@ export default function SprintDetails() {
                     fetchBacklogForProject(response.data[0]._id);
                 }
             }
-        } catch (err) {
-            console.error("Failed to load projects", err);
+        } catch {
+            console.error("Failed to load projects");
         }
-    };
+    }, [fetchBacklogForProject]);
 
-    const fetchBacklogForProject = async (projectId: string) => {
-        setIsFetchingBacklog(true);
-        try {
-            const response = await getIssuesByProjectApi(projectId);
-            if (response.success) {
-                const available = response.data.filter(issue => !issue.sprint_id || issue.sprint_id !== sprintId);
-                setBacklogIssues(available);
-            }
-        } catch (err) {
-            toast.error("Failed to load backlog");
-        } finally {
-            setIsFetchingBacklog(false);
+    useEffect(() => {
+        if (sprintId) {
+            fetchSprintDetails();
+            fetchTeamMembers();
+            fetchProjects();
         }
-    };
+    }, [sprintId, fetchSprintDetails, fetchTeamMembers, fetchProjects]);
 
-    const fetchSubTasks = async (issueId: string) => {
+    useEffect(() => {
+        if (activeTab !== 'issues' && !velocityData) {
+            fetchVelocityData();
+        }
+    }, [activeTab, velocityData, fetchVelocityData]);
+
+
+    const fetchSubTasks = useCallback(async (issueId: string) => {
         setSubTasksByIssue(prev => ({ ...prev, [issueId]: { data: prev[issueId]?.data || [], loading: true } }));
         try {
             const response = await getSubTasksByIssueApi(issueId);
             if (response.success) {
                 setSubTasksByIssue(prev => ({ ...prev, [issueId]: { data: response.data, loading: false } }));
             }
-        } catch (error) {
+        } catch {
             setSubTasksByIssue(prev => ({ ...prev, [issueId]: { data: [], loading: false } }));
         }
-    };
+    }, []);
 
     const toggleIssue = (issueId: string) => {
         const next = new Set(expandedIssues);
@@ -257,8 +280,9 @@ export default function SprintDetails() {
                     setSubTaskModalOpen(false);
                 }
             }
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.message || (editingSubTask ? "Failed to update" : "Failed to create");
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            const errorMsg = error.response?.data?.message || (editingSubTask ? "Failed to update" : "Failed to create");
             toast.error(errorMsg);
         } finally {
             setIsSubmittingSubTask(false);
@@ -294,8 +318,8 @@ export default function SprintDetails() {
                 fetchSprintDetails();
                 setIssueToAssign(null);
             }
-        } catch (err) {
-            toast.error("Failed to assign employee");
+        } catch {
+            toast.error("Failed to update status");
         }
     };
 
@@ -320,9 +344,9 @@ export default function SprintDetails() {
     const executeAddIssue = async (issue: Issue) => {
         if (!sprintId) return;
         try {
-            const response = await updateIssueApi(issue._id, { 
+            const response = await updateIssueApi(issue._id, {
                 sprint_id: sprintId,
-                status: 'To Do' 
+                status: 'To Do'
             });
             if (response.success) {
                 toast.success(`${issue.type} added to sprint`);
@@ -330,7 +354,7 @@ export default function SprintDetails() {
                 setIsConfirmingScopeChange(null);
                 setBacklogIssues(prev => prev.filter(i => i._id !== issue._id));
             }
-        } catch (err) {
+        } catch {
             toast.error("Failed to add issue to sprint");
         }
     };
@@ -352,7 +376,7 @@ export default function SprintDetails() {
     const handleRemoveFromSprint = async (issue: Issue) => {
         if (!sprintId) return;
         try {
-            const response = await updateIssueApi(issue._id, { 
+            const response = await updateIssueApi(issue._id, {
                 sprint_id: null,
                 status: 'New'
             });
@@ -363,7 +387,7 @@ export default function SprintDetails() {
                     fetchBacklogForProject(selectedBacklogProjectId);
                 }
             }
-        } catch (err) {
+        } catch {
             toast.error("Failed to remove issue");
         }
     };
@@ -375,11 +399,10 @@ export default function SprintDetails() {
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className="flex items-center justify-center shrink-0">
-                        <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${
-                            subTask.status === 'Done' ? 'bg-emerald-500 ring-4 ring-emerald-50' : 
-                            subTask.status === 'In Progress' ? 'bg-[#fa8029] ring-4 ring-orange-50' : 
-                            'bg-indigo-400 ring-4 ring-indigo-50'
-                        }`} />
+                        <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${subTask.status === 'Done' ? 'bg-emerald-500 ring-4 ring-emerald-50' :
+                                subTask.status === 'In Progress' ? 'bg-[#fa8029] ring-4 ring-orange-50' :
+                                    'bg-indigo-400 ring-4 ring-indigo-50'
+                            }`} />
                     </div>
                     <div className="min-w-0 flex-1 flex flex-col justify-center">
                         <h4 className="text-[13px] font-bold text-[#1f2124] group-hover/subTask:text-indigo-600 transition-colors leading-normal truncate">
@@ -401,14 +424,14 @@ export default function SprintDetails() {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 shrink-0">
                     <div className="flex items-center gap-2">
                         {subTask.assignee_id ? (
                             <button
-                                onClick={(e) => { 
+                                onClick={(e) => {
                                     if (can('task:assign')) {
-                                        e.stopPropagation(); 
+                                        e.stopPropagation();
                                         setSubTaskToAssign({ issueId, subTask });
                                     }
                                 }}
@@ -416,9 +439,10 @@ export default function SprintDetails() {
                                 title={subTask.assignee_id.name}
                             >
                                 {(() => {
-                                    const name = (subTask as any).assignee_id?.name || (subTask as any).assignee_id?.user_id?.name || (subTask as any).assign_to?.name;
+                                    const assignee = subTask.assignee_id as { name: string; user_id?: { name: string } } | null;
+                                    const name = assignee?.name || assignee?.user_id?.name;
                                     if (!name) return '??';
-                                    return name.split(' ').length > 1 
+                                    return name.split(' ').length > 1
                                         ? name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
                                         : name.substring(0, 2).toUpperCase();
                                 })()}
@@ -435,9 +459,9 @@ export default function SprintDetails() {
                     </div>
                     <div className="relative overflow-visible">
                         <button
-                            onClick={(e) => { 
-                                e.stopPropagation(); 
-                                setActiveSubTaskDropdown(activeSubTaskDropdown === subTask._id ? null : subTask._id); 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveSubTaskDropdown(activeSubTaskDropdown === subTask._id ? null : subTask._id);
                             }}
                             className="w-9 h-9 flex items-center justify-center hover:bg-gray-100 rounded-xl transition-all text-[#ccc] hover:text-[#555] bg-[#fafafa]/50"
                             title="Actions"
@@ -447,18 +471,18 @@ export default function SprintDetails() {
 
                         {activeSubTaskDropdown === subTask._id && (
                             <>
-                                <div 
-                                    className="fixed inset-0 z-[100]" 
-                                    onClick={(e) => { e.stopPropagation(); setActiveSubTaskDropdown(null); }} 
+                                <div
+                                    className="fixed inset-0 z-[100]"
+                                    onClick={(e) => { e.stopPropagation(); setActiveSubTaskDropdown(null); }}
                                 />
                                 <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-[18px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[110] py-2 animate-in fade-in slide-in-from-top-2 duration-200">
                                     <div className="px-4 pb-2 mb-2 border-b border-gray-50">
                                         <p className="text-[9px] font-black text-[#ccc] uppercase tracking-widest">Action Menu</p>
                                     </div>
                                     <button
-                                        onClick={(e) => { 
-                                            e.stopPropagation(); 
-                                            setItemToView({ item: subTask, type: 'subtask' }); 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setItemToView({ item: subTask, type: 'subtask' });
                                             setDetailsDrawerOpen(true);
                                             setActiveSubTaskDropdown(null);
                                         }}
@@ -467,9 +491,9 @@ export default function SprintDetails() {
                                         <Eye size={15} /> View Details
                                     </button>
                                     <button
-                                        onClick={(e) => { 
-                                            e.stopPropagation(); 
-                                            setItemToView({ item: subTask, type: 'subtask' }); 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setItemToView({ item: subTask, type: 'subtask' });
                                             setDetailsDrawerOpen(true);
                                             setActiveSubTaskDropdown(null);
                                         }}
@@ -477,11 +501,11 @@ export default function SprintDetails() {
                                     >
                                         <MessageSquare size={15} /> Comments
                                     </button>
-                                    
+
                                     {can('task:update') && (
                                         <button
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 handleOpenEditModal(e, issueId, subTask);
                                                 setActiveSubTaskDropdown(null);
                                             }}
@@ -490,11 +514,11 @@ export default function SprintDetails() {
                                             <Pencil size={15} /> Edit Task
                                         </button>
                                     )}
-                                    
+
                                     {can('task:delete') && (
                                         <button
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 handleDeleteSubTask(e, issueId, subTask._id);
                                                 setActiveSubTaskDropdown(null);
                                             }}
@@ -507,10 +531,9 @@ export default function SprintDetails() {
                             </>
                         )}
                     </div>
-                    <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm shrink-0 min-w-[70px] text-center ${
-                        subTask.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                        'bg-blue-50 text-blue-600 border-blue-100'
-                    }`}>
+                    <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm shrink-0 min-w-[70px] text-center ${subTask.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                            'bg-blue-50 text-blue-600 border-blue-100'
+                        }`}>
                         {subTask.status}
                     </div>
                 </div>
@@ -553,11 +576,10 @@ export default function SprintDetails() {
                         <div>
                             <div className="flex items-center gap-4 mb-2">
                                 <h1 className="text-[28px] font-black text-[#1f2124] tracking-tight">{sprint.name}</h1>
-                                <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border ${
-                                    sprint.status?.toLowerCase() === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                    sprint.status?.toLowerCase() === 'completed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                    'bg-gray-50 text-gray-500 border-gray-100'
-                                } shadow-sm`}>
+                                <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border ${sprint.status?.toLowerCase() === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                        sprint.status?.toLowerCase() === 'completed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                            'bg-gray-50 text-gray-500 border-gray-100'
+                                    } shadow-sm`}>
                                     {sprint.status || "Planned"}
                                 </span>
                             </div>
@@ -574,34 +596,15 @@ export default function SprintDetails() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center bg-gray-100 p-1 rounded-xl mr-2">
-                                <button 
-                                    onClick={() => setViewMode('list')}
-                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 ${viewMode === 'list' ? 'bg-white text-[#fa8029] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    <ListTodo size={14} /> List
-                                </button>
-                                <button 
-                                    onClick={() => {
-                                        setViewMode('board');
-                                        issues.forEach(issue => {
-                                            if (!subTasksByIssue[issue._id]) fetchSubTasks(issue._id);
-                                        });
-                                    }}
-                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-2 ${viewMode === 'board' ? 'bg-white text-[#fa8029] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    <Layout size={14} /> Board
-                                </button>
-                            </div>
                             {sprint.status?.toLowerCase() === 'active' && can('sprint:update') && (
-                                <button 
+                                <button
                                     onClick={handleCompleteClick}
                                     className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-[13px] font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/10 active:scale-95"
                                 >
                                     <CheckCircle2 size={18} /> Complete Sprint
                                 </button>
                             )}
-                            <button 
+                            <button
                                 onClick={() => setIsAddItemModalOpen(true)}
                                 className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl text-[13px] font-bold hover:bg-[#fa8029] transition-all shadow-lg shadow-black/5 active:scale-95"
                             >
@@ -633,8 +636,8 @@ export default function SprintDetails() {
                             <p className="text-[11px] font-black text-[#aaa] uppercase tracking-widest mb-1">Progress</p>
                             <div className="flex items-center gap-2 text-[14px] font-bold text-[#1f2124]">
                                 <div className="flex-1 h-1.5 bg-[#eee] rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-[#fa8029]" 
+                                    <div
+                                        className="h-full bg-[#fa8029]"
                                         style={{ width: `${Math.round((issues.filter(i => i.status === 'Done').length / (issues.length || 1)) * 100)}%` }}
                                     />
                                 </div>
@@ -653,34 +656,44 @@ export default function SprintDetails() {
             </div>
 
             <div className="max-w-[1400px] mx-auto px-6 py-8">
-                {viewMode === 'list' ? (
+                <div className="mb-8 border-b border-[#f0f0f0]">
+                    <div className="flex items-center gap-8">
+                        <button
+                            onClick={() => setActiveTab('issues')}
+                            className={`pb-4 text-[14px] font-black uppercase tracking-wider transition-all relative ${activeTab === 'issues' ? 'text-[#fa8029]' : 'text-[#aaa] hover:text-[#555]'}`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <ListTodo size={18} /> Issues
+                            </div>
+                            {activeTab === 'issues' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#fa8029] rounded-t-full" />}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('multiple_team')}
+                            className={`pb-4 text-[14px] font-black uppercase tracking-wider transition-all relative ${activeTab === 'multiple_team' ? 'text-[#fa8029]' : 'text-[#aaa] hover:text-[#555]'}`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Users size={18} /> Velocity - Multiple Team
+                            </div>
+                            {activeTab === 'multiple_team' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#fa8029] rounded-t-full" />}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('sprint_wise')}
+                            className={`pb-4 text-[14px] font-black uppercase tracking-wider transition-all relative ${activeTab === 'sprint_wise' ? 'text-[#fa8029]' : 'text-[#aaa] hover:text-[#555]'}`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <CheckSquare size={18} /> Velocity - Sprint Wise
+                            </div>
+                            {activeTab === 'sprint_wise' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#fa8029] rounded-t-full" />}
+                        </button>
+                    </div>
+                </div>
+
+                {activeTab === 'issues' ? (
                     <>
                         <div className="mb-6 flex items-center justify-between">
                             <h2 className="text-[18px] font-black text-[#1f2124] flex items-center gap-2">
-                                <ListTodo size={20} className="text-[#fa8029]" /> Sprint Backlog
+                                <ListTodo size={20} className="text-[#fa8029]" /> Issues
                             </h2>
-                            
-                            <div className="flex items-center gap-3">
-                                {can('task:view:all') ? (
-                                    <div className="flex items-center gap-2 bg-white border border-[#eee] rounded-xl px-3 py-1.5 shadow-sm">
-                                        <Users size={14} className="text-[#aaa]" />
-                                        <select 
-                                            value={selectedTeamId}
-                                            onChange={(e) => setSelectedTeamId(e.target.value)}
-                                            className="text-[12px] font-bold text-[#555] outline-none bg-transparent"
-                                        >
-                                            <option value="all">All Teams</option>
-                                            {teams.map(t => (
-                                                <option key={t._id} value={t._id}>{t.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                ) : user?.team?._id || user?.team_id ? (
-                                    <div className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[11px] font-bold border border-indigo-100 flex items-center gap-2">
-                                        <Users size={12} /> Team View
-                                    </div>
-                                ) : null}
-                            </div>
                         </div>
 
                         {issues.length === 0 ? (
@@ -727,7 +740,11 @@ export default function SprintDetails() {
                                                                 <>
                                                                     <span className="w-1 h-1 rounded-full bg-[#eee]" />
                                                                     <p className="text-[11px] font-bold text-orange-500/70">
-                                                                        {(issue as any).assignee_id?.name || (issue as any).assignee_id?.user_id?.name || (issue as any).assign_to?.name}
+                                                                        {(() => {
+                                                                            const assignee = issue.assignee_id as { name: string; user_id?: { name: string } } | null;
+                                                                            const assignTo = issue.assign_to;
+                                                                            return assignee?.name || assignee?.user_id?.name || assignTo?.name;
+                                                                        })()}
                                                                     </p>
                                                                 </>
                                                             )}
@@ -739,19 +756,21 @@ export default function SprintDetails() {
                                                     <div className="flex items-center gap-2">
                                                         {issue.assignee_id ? (
                                                             <button
-                                                                onClick={(e) => { 
-                                                                    if (can(`issue:${issue.type}:assign` as any)) {
-                                                                        e.stopPropagation(); 
-                                                                        setIssueToAssign(issue); 
+                                                                onClick={(e) => {
+                                                                    if (can(`issue:${issue.type}:assign` as Parameters<typeof can>[0])) {
+                                                                        e.stopPropagation();
+                                                                        setIssueToAssign(issue);
                                                                     }
                                                                 }}
                                                                 className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
                                                                 title={issue.assignee_id.name}
                                                             >
                                                                 {(() => {
-                                                                    const name = (issue as any).assignee_id?.name || (issue as any).assignee_id?.user_id?.name || (issue as any).assign_to?.name;
+                                                                    const assignee = issue.assignee_id as { name: string; user_id?: { name: string } } | null;
+                                                                    const assignTo = (issue as unknown as { assign_to?: { name: string } }).assign_to;
+                                                                    const name = assignee?.name || assignee?.user_id?.name || assignTo?.name;
                                                                     if (!name) return '??';
-                                                                    return name.split(' ').length > 1 
+                                                                    return name.split(' ').length > 1
                                                                         ? name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
                                                                         : name.substring(0, 2).toUpperCase();
                                                                 })()}
@@ -767,9 +786,9 @@ export default function SprintDetails() {
                                                         )}
                                                     </div>
                                                     <button
-                                                        onClick={(e) => { 
-                                                            e.stopPropagation(); 
-                                                            setItemToView({ item: issue, type: 'issue' }); 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setItemToView({ item: issue, type: 'issue' });
                                                             setDetailsDrawerOpen(true);
                                                         }}
                                                         className="p-2 text-[#aaa] hover:text-[#fa8029] hover:bg-[#fff5ef] rounded-xl transition-all"
@@ -781,13 +800,15 @@ export default function SprintDetails() {
                                                         <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                                                             {issue.status}
                                                         </span>
-                                                        <button 
-                                                            onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
-                                                            className="p-2 bg-[#f9fafb] text-[#aaa] rounded-xl hover:text-[#fa8029] hover:bg-[#fff5ef] transition-all border border-transparent hover:border-[#fa8029]/20"
-                                                            title="Add Sub-task"
-                                                        >
-                                                            <Plus size={18} />
-                                                        </button>
+                                                        {can('task:create') && (
+                                                            <button
+                                                                onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
+                                                                className="p-2 bg-[#f9fafb] text-[#aaa] rounded-xl hover:text-[#fa8029] hover:bg-[#fff5ef] transition-all border border-transparent hover:border-[#fa8029]/20"
+                                                                title="Add Sub-task"
+                                                            >
+                                                                <Plus size={18} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -799,7 +820,7 @@ export default function SprintDetails() {
                                                         <ListTodo size={14} className="text-[#aaa]" />
                                                         <h4 className="text-[12px] font-black text-[#888] uppercase tracking-wider">Sub-Tasks Breakdown</h4>
                                                     </div>
-                                                    
+
                                                     {!subTaskConfig || subTaskConfig.loading ? (
                                                         <div className="py-8 flex flex-col items-center gap-3">
                                                             <div className="w-5 h-5 border-2 border-[#eee] border-t-[#fa8029] rounded-full animate-spin" />
@@ -809,37 +830,34 @@ export default function SprintDetails() {
                                                         <div className="py-12 bg-white rounded-3xl border border-[#f0f0f0] border-dashed text-center flex flex-col items-center">
                                                             <AlertCircle size={24} className="text-[#eee] mb-2" />
                                                             <p className="text-[12px] text-[#aaa] font-medium">No sub-tasks defined yet.</p>
-                                                            <button 
-                                                                onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
-                                                                className="mt-3 text-[11px] font-bold text-[#fa8029] hover:underline"
-                                                            >
-                                                                Create the first one
-                                                            </button>
+                                                            {can('task:create') && (
+                                                                <button
+                                                                    onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
+                                                                    className="mt-3 text-[11px] font-bold text-[#fa8029] hover:underline"
+                                                                >
+                                                                    Create the first one
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     ) : (
                                                         <div className="space-y-4">
                                                             {(() => {
                                                                 const userTeamId = user?.team?._id || user?.team_id;
                                                                 const isPM = can('task:view:all');
-                                                                
-                                                                // Filter subtasks first
+
+                                                                // Filter subtasks
                                                                 const filtered = subTaskConfig.data.filter(st => {
                                                                     const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
-                                                                    
-                                                                    if (isPM) {
-                                                                        if (selectedTeamId === "all") return true;
-                                                                        return stTeamId === selectedTeamId;
-                                                                    }
-                                                                    
-                                                                    if (userTeamId) {
-                                                                        return stTeamId === userTeamId;
-                                                                    }
-                                                                    
-                                                                    return false;
+
+                                                                    // If user is PM or has no team (unassigned), show everything
+                                                                    if (isPM || !userTeamId) return true;
+
+                                                                    // If user has a team, only show their team's subtasks
+                                                                    return stTeamId === userTeamId;
                                                                 });
 
-                                                                // If PM and viewing all teams, group by team
-                                                                if (isPM && selectedTeamId === "all" && filtered.length > 0) {
+                                                                // If PM/Unassigned, group by team
+                                                                if ((isPM || !userTeamId) && filtered.length > 0) {
                                                                     const grouped = filtered.reduce((acc, st) => {
                                                                         const teamName = st.team_id?.name || "Unassigned";
                                                                         if (!acc[teamName]) acc[teamName] = [];
@@ -885,127 +903,95 @@ export default function SprintDetails() {
                             </div>
                         )}
                     </>
-                ) : (
-                    <div className="overflow-x-auto pb-8 custom-scrollbar">
-                        <div className="min-w-[1400px]">
-                            {/* Column Headers */}
-                            <div className="flex gap-6 mb-6">
-                                <div className="w-[300px] shrink-0" /> {/* Spacer for row headers */}
-                                {['To Do', 'In Progress', 'In Review', 'Done'].map(column => (
-                                    <div key={column} className="flex-1">
-                                        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                                            <h3 className="text-[12px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${
-                                                    column === 'Done' ? 'bg-emerald-500' :
-                                                    column === 'In Progress' ? 'bg-[#fa8029]' :
-                                                    column === 'In Review' ? 'bg-indigo-500' : 'bg-gray-400'
-                                                }`} />
-                                                {column}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                ) : null}
 
-                            {/* Swimlanes (User Stories) */}
-                            <div className="space-y-8">
-                                {issues.map(issue => (
-                                    <div key={issue._id} className="flex gap-6 group/swimlane">
-                                        {/* Row Header (Story Details) */}
-                                        <div className="w-[300px] shrink-0">
-                                            <div className="sticky top-24 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm group-hover/swimlane:border-[#fa8029]/30 transition-all">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                                                        issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
-                                                        'bg-emerald-50 text-emerald-500 border-emerald-100'
-                                                    }`}>
-                                                        <TypeIcon type={issue.type} size={14} />
-                                                    </div>
-                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">#{issue._id.slice(-6)}</span>
+                {activeTab === 'multiple_team' && (
+                    <div className="bg-white border border-[#f0f0f0] rounded-[32px] p-10 shadow-sm">
+                        <h3 className="text-[20px] font-black text-[#1f2124] mb-8 flex items-center gap-3">
+                            <Users size={24} className="text-[#fa8029]" /> Team Performance Comparison
+                        </h3>
+                        {velocityLoading ? (
+                            <div className="h-[400px] flex items-center justify-center">
+                                <div className="w-10 h-10 border-4 border-[#eee] border-t-[#fa8029] rounded-full animate-spin" />
+                            </div>
+                        ) : velocityData?.multipleTeam.length === 0 ? (
+                            <div className="h-[400px] flex flex-col items-center justify-center text-center">
+                                <Users size={48} className="text-[#eee] mb-4" />
+                                <p className="text-[#aaa] font-medium">No team velocity data available for this sprint.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-10">
+                                <div className="h-[400px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={velocityData?.multipleTeam} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                            <XAxis dataKey="teamName" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700, fill: '#888' }} dy={10} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700, fill: '#888' }} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                                                cursor={{ fill: '#fafafa' }}
+                                            />
+                                            <Bar dataKey="completed" name="Completed Points" fill="#fa8029" radius={[10, 10, 0, 0]} barSize={60} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {velocityData?.multipleTeam.map((team, idx) => (
+                                        <div key={idx} className="bg-[#fafafa] rounded-2xl p-6 border border-[#f0f0f0] flex items-center justify-between group hover:border-[#fa8029]/30 transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-[#eee] flex items-center justify-center text-[#fa8029] font-black text-xl">
+                                                    {team.teamName.charAt(0)}
                                                 </div>
-                                                <h4 className="text-[13px] font-bold text-gray-800 leading-tight mb-3 line-clamp-2">{issue.title}</h4>
-                                                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                                            {issue.status}
-                                                        </span>
-                                                        <span className="text-[10px] font-bold text-gray-400">{issue.story_points || 0} pts</span>
-                                                    </div>
-                                                    <button 
-                                                        onClick={() => handleOpenSubTaskModal({ stopPropagation: () => {} } as any, issue._id)}
-                                                        className="w-7 h-7 rounded-lg bg-gray-50 text-gray-400 hover:bg-[#fff5ef] hover:text-[#fa8029] flex items-center justify-center transition-all"
-                                                    >
-                                                        <Plus size={14} />
-                                                    </button>
+                                                <div>
+                                                    <h4 className="text-[15px] font-black text-[#1f2124]">{team.teamName}</h4>
+                                                    <p className="text-[11px] text-[#aaa] font-bold uppercase tracking-wider">Team Velocity</p>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        {/* Task Columns */}
-                                        {['To Do', 'In Progress', 'In Review', 'Done'].map(column => (
-                                            <div key={column} className="flex-1 bg-gray-50/30 rounded-2xl border border-dashed border-gray-200/50 p-4 min-h-[150px]">
-                                                <div className="space-y-3">
-                                                    {(() => {
-                                                        const userTeamId = user?.team?._id || user?.team_id;
-                                                        const isPM = can('task:view:all');
-                                                        const allSubTasks = subTasksByIssue[issue._id]?.data || [];
-                                                        
-                                                        const filtered = allSubTasks.filter(st => {
-                                                            const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
-                                                            if (isPM) {
-                                                                if (selectedTeamId === "all") return true;
-                                                                return stTeamId === selectedTeamId;
-                                                            }
-                                                            if (userTeamId) return stTeamId === userTeamId;
-                                                            return false;
-                                                        });
-
-                                                        return filtered
-                                                            .filter(st => st.status === column)
-                                                            .map(st => (
-                                                            <div 
-                                                                key={st._id} 
-                                                                onClick={() => {
-                                                                    setItemToView({ item: st, type: 'subtask' });
-                                                                    setDetailsDrawerOpen(true);
-                                                                }}
-                                                                className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-[#fa8029]/30 cursor-pointer transition-all animate-in fade-in zoom-in-95"
-                                                            >
-                                                                <h4 className="text-[13px] font-bold text-gray-800 mb-3 leading-snug">{st.title}</h4>
-                                                                <div className="flex items-center justify-between">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${getPriorityColor(st.priority)}`}>
-                                                                            {st.priority}
-                                                                        </span>
-                                                                        <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold">
-                                                                            <Clock size={10} /> {st.estimated_hours}h
-                                                                        </div>
-                                                                    </div>
-                                                                    {st.assignee_id && (
-                                                                        <div className="w-6 h-6 rounded-full bg-[#fa8029] text-white text-[9px] font-black flex items-center justify-center uppercase shadow-md ring-2 ring-white" title={(st as any).assignee_id?.name || (st as any).assignee_id?.user_id?.name || (st as any).assign_to?.name}>
-                                                                            {(() => {
-                                                                                const name = (st as any).assignee_id?.name || (st as any).assignee_id?.user_id?.name || (st as any).assign_to?.name;
-                                                                                if (!name) return '??';
-                                                                                return name.substring(0, 2).toUpperCase();
-                                                                            })()}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            ));
-                                                    })()}
-                                                    {subTasksByIssue[issue._id]?.loading && (
-                                                        <div className="flex justify-center py-4">
-                                                            <div className="w-4 h-4 border-2 border-[#fa8029]/20 border-t-[#fa8029] rounded-full animate-spin" />
-                                                        </div>
-                                                    )}
-                                                </div>
+                                            <div className="text-right">
+                                                <span className="text-[24px] font-black text-[#fa8029]">{team.completed}</span>
+                                                <p className="text-[10px] text-[#aaa] font-bold uppercase">Points</p>
                                             </div>
-                                        ))}
-                                    </div>
-                                ))}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'sprint_wise' && (
+                    <div className="bg-white border border-[#f0f0f0] rounded-[32px] p-10 shadow-sm">
+                        <h3 className="text-[20px] font-black text-[#1f2124] mb-8 flex items-center gap-3">
+                            <CheckSquare size={24} className="text-[#fa8029]" /> Team Capacity Trend
+                        </h3>
+                        {velocityLoading ? (
+                            <div className="h-[400px] flex items-center justify-center">
+                                <div className="w-10 h-10 border-4 border-[#eee] border-t-[#fa8029] rounded-full animate-spin" />
+                            </div>
+                        ) : !velocityData || velocityData.sprintWise.length === 0 ? (
+                            <div className="h-[400px] flex flex-col items-center justify-center text-center">
+                                <Activity size={48} className="text-[#eee] mb-4" />
+                                <p className="text-[#aaa] font-medium">No historical velocity data available.</p>
+                            </div>
+                        ) : (
+                            <div className="h-[400px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={velocityData.sprintWise} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                        <XAxis dataKey="sprintName" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700, fill: '#888' }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700, fill: '#888' }} />
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                                            cursor={{ fill: '#fafafa' }}
+                                        />
+                                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                        <Bar dataKey="committed" name="Committed" fill="#ddd" radius={[6, 6, 0, 0]} barSize={40} />
+                                        <Bar dataKey="completed" name="Completed (Velocity)" fill="#fa8029" radius={[6, 6, 0, 0]} barSize={40} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -1073,7 +1059,7 @@ export default function SprintDetails() {
                 onClose={() => setIsConfirmingScopeChange(null)}
                 onConfirm={() => isConfirmingScopeChange && executeAddIssue(isConfirmingScopeChange)}
                 title="Add to Sprint?"
-                message={sprint?.status?.toLowerCase() === 'active' 
+                message={sprint?.status?.toLowerCase() === 'active'
                     ? "This sprint has already started. Adding this issue will change the sprint scope and may affect the sprint goal. Do you want to continue?"
                     : "Are you sure you want to add this issue to the sprint? This will move it from the backlog and set its status to 'To Do'."}
                 confirmText="Confirm"
@@ -1188,7 +1174,7 @@ function AddIssueToSprintModal({ isOpen, onClose, onAdd, issues, loading, projec
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-[#f9fafb] border border-[#eee] rounded-xl">
                             <span className="text-[11px] font-bold text-[#888]">Project:</span>
-                            <select 
+                            <select
                                 value={selectedProjectId}
                                 onChange={(e) => onProjectChange(e.target.value)}
                                 className="bg-transparent text-[11px] font-bold outline-none text-[#fa8029]"
@@ -1203,7 +1189,7 @@ function AddIssueToSprintModal({ isOpen, onClose, onAdd, issues, loading, projec
                         </button>
                     </div>
                 </div>
-                
+
                 <DragDropContext onDragEnd={onDragEnd}>
                     <div className="flex-1 flex overflow-hidden p-6 gap-6 bg-[#fdfdfd]">
                         {/* Backlog Column */}
@@ -1216,7 +1202,7 @@ function AddIssueToSprintModal({ isOpen, onClose, onAdd, issues, loading, projec
                                     {issues.length} Items
                                 </span>
                             </div>
-                            
+
                             <Droppable droppableId="modal-backlog">
                                 {(provided, snapshot) => (
                                     <div
@@ -1244,11 +1230,10 @@ function AddIssueToSprintModal({ isOpen, onClose, onAdd, issues, loading, projec
                                                             className={`bg-white border border-[#eee] p-3 rounded-xl hover:shadow-md transition-all group flex items-start justify-between gap-3 ${snapshot.isDragging ? 'shadow-xl ring-2 ring-[#fa8029]/30 rotate-1' : ''}`}
                                                         >
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${
-                                                                    issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
-                                                                    issue.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
-                                                                    'bg-blue-50 text-blue-500 border-blue-100'
-                                                                }`}>
+                                                                <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
+                                                                        issue.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
+                                                                            'bg-blue-50 text-blue-500 border-blue-100'
+                                                                    }`}>
                                                                     <TypeIcon type={issue.type} size={14} />
                                                                 </div>
                                                                 <div>
@@ -1260,7 +1245,7 @@ function AddIssueToSprintModal({ isOpen, onClose, onAdd, issues, loading, projec
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => onAdd(issue)}
                                                                 className="p-1.5 bg-[#fff5ef] text-[#fa8029] hover:bg-[#fa8029] hover:text-white rounded-lg transition-all"
                                                             >
@@ -1311,11 +1296,10 @@ function AddIssueToSprintModal({ isOpen, onClose, onAdd, issues, loading, projec
                                                             className={`bg-white border border-[#fa8029]/10 p-3 rounded-xl shadow-sm flex items-start justify-between gap-3 border-l-4 border-l-[#fa8029] ${snapshot.isDragging ? 'shadow-xl ring-2 ring-[#fa8029]/30 -rotate-1' : ''}`}
                                                         >
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${
-                                                                    issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
-                                                                    issue.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
-                                                                    'bg-blue-50 text-blue-500 border-blue-100'
-                                                                }`}>
+                                                                <div className={`p-1.5 rounded-lg border flex items-center justify-center shrink-0 ${issue.type === 'bug' ? 'bg-rose-50 text-rose-500 border-rose-100' :
+                                                                        issue.type === 'story' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' :
+                                                                            'bg-blue-50 text-blue-500 border-blue-100'
+                                                                    }`}>
                                                                     <TypeIcon type={issue.type} size={14} />
                                                                 </div>
                                                                 <div>

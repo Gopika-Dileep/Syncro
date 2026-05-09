@@ -15,10 +15,10 @@ export class AddAttachmentToSubTaskService implements IAddAttachmentToSubTaskSer
 
   async execute(subTaskId: string, userId: string, attachments: { file_url: string; file_name: string }[]): Promise<ISubTask> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    const formattedAttachments = attachments.map(att => ({
+    const formattedAttachments = attachments.map((att) => ({
       ...att,
-      uploaded_by: employee?._id as any,
-      uploaded_at: new Date()
+      uploaded_by: employee?._id as unknown as import('mongoose').Types.ObjectId,
+      uploaded_at: new Date(),
     }));
 
     const subTask = await this._subTaskRepository.updateById(subTaskId, {

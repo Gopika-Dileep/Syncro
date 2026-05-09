@@ -1,11 +1,12 @@
 import { useSelector } from 'react-redux';
 import { type RootState } from '@/store/store';
+import type { User } from '../../../store/slices/authSlice';
 
 interface UsePermissionReturn {
     can: (key: string) => boolean;
     hasModuleAccess: (moduleName: string) => boolean;
     permissions: string[];
-    user: any;
+    user: User | null;
 }
 
 export const usePermission = (): UsePermissionReturn => {

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
-    ArrowLeft, Calendar, Clock, CheckCircle2, 
-    BarChart3, Users, Layout, Bug, Target,
-    TrendingUp, Shield, Mail, Phone, ExternalLink
+    ArrowLeft, 
+    Bug, Target, Layout
 } from "lucide-react";
+import { useCallback } from "react";
 import { getProjectInsightsApi, type ProjectInsights } from "../api/projectApi";
 import { toast } from "sonner";
 
@@ -14,11 +14,7 @@ export default function ProjectDetails() {
     const [insights, setInsights] = useState<ProjectInsights | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (projectId) fetchInsights();
-    }, [projectId]);
-
-    const fetchInsights = async () => {
+    const fetchInsights = useCallback(async () => {
         setLoading(true);
         try {
             const res = await getProjectInsightsApi(projectId!);
@@ -30,7 +26,11 @@ export default function ProjectDetails() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [projectId]);
+
+    useEffect(() => {
+        if (projectId) fetchInsights();
+    }, [projectId, fetchInsights]);
 
     if (loading) {
         return (
@@ -43,8 +43,7 @@ export default function ProjectDetails() {
 
     if (!insights) return null;
 
-    const { project, stats, team } = insights;
-    const progress = stats.total_points > 0 ? Math.round((stats.completed_points / stats.total_points) * 100) : 0;
+    const { project } = insights;
 
     return (
         <div className="min-h-screen bg-[#fdfdfd] pb-8">

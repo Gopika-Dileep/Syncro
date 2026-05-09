@@ -56,6 +56,7 @@ export const ENDPOINTS = {
     BASE: '/sprints',
     ROOT: '/',
     BY_ID: '/:sprintId',
+    VELOCITY: '/:sprintId/velocity',
   },
   SUBTASKS: {
     BASE: '/subtasks',

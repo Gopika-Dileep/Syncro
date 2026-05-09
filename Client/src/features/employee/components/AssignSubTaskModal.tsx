@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Sparkles, ChevronDown, Check, Loader2 } from "lucide-react";
 import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 import { toast } from "sonner";
@@ -18,15 +18,7 @@ export default function AssignSubTaskModal({ isOpen, onClose, onAssign, subTaskT
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchMembers();
-            setSelectedMember(null);
-            setIsDropdownOpen(false);
-        }
-    }, [isOpen]);
-
-    const fetchMembers = async () => {
+    const fetchMembers = useCallback(async () => {
         setLoading(true);
         try {
             const response = await getTeamDirectoryApi();
@@ -48,7 +40,15 @@ export default function AssignSubTaskModal({ isOpen, onClose, onAssign, subTaskT
         } finally {
             setLoading(false);
         }
-    };
+    }, [teamId]);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchMembers();
+            setSelectedMember(null);
+            setIsDropdownOpen(false);
+        }
+    }, [isOpen, fetchMembers]);
 
     const handleAssign = async () => {
         if (!selectedMember) return;

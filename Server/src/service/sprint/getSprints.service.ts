@@ -27,7 +27,6 @@ export class GetSprintsService implements IGetSprintsService {
 
     const { sprints, total } = await this._sprintRepository.getSprintsWithPagination(companyId, page, limit, search, status);
 
-
     const sprintIds = sprints.map((s) => s._id.toString());
     const issues = await this._issueRepo.findAllBySprintIds(sprintIds);
 

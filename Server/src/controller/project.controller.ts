@@ -6,7 +6,6 @@ import { IGetProjectByIdService } from '../interfaces/services/project/IGetProje
 import { IUpdateProjectService } from '../interfaces/services/project/IUpdateProjectService';
 import { IDeleteProjectService } from '../interfaces/services/project/IDeleteProjectService';
 import { IGetProjectInsightsService } from '../interfaces/services/project/IGetProjectInsightsService';
-import { HttpStatus } from '../enums/HttpStatus';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';

@@ -30,14 +30,12 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
       ...data,
       status: SubTaskStatus.IN_REVIEW,
       rework_reason: undefined,
-      $push: { history: historyEntry }
-    } as any);
-
+      $push: { history: historyEntry },
+    } as unknown as Record<string, unknown>);
 
     if (subTask) {
       return SubTaskMapper.toResponseDTO(subTask);
     }
-
 
     const issue = await this._issueRepository.updateById(subTaskId, {
       ...data,

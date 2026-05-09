@@ -3,7 +3,6 @@ import {
     X, 
     Clock, 
     Calendar, 
-    User, 
     CheckCircle2, 
     RotateCcw, 
     ExternalLink, 
@@ -21,7 +20,7 @@ interface SubTaskDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
     subTask: SubTask;
-    onStatusChange: (subTaskId: string, newStatus: string, extraData?: Record<string, any>) => Promise<void>;
+    onStatusChange: (subTaskId: string, newStatus: string, extraData?: Record<string, string | number | boolean>) => Promise<void>;
     onReassign: (subTaskId: string) => void;
     onCommentAdded?: () => void;
     onSubmitRequest?: () => void;
@@ -247,7 +246,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                     )}
 
                                     {/* Placeholder for future real comments data */}
-                                    {!(subTask as any).comments?.length && !subTask.rework_reason && (
+                                    {!(subTask as unknown as { comments?: unknown[] }).comments?.length && !subTask.rework_reason && (
                                         <div className="py-8 text-center">
                                             <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-2 text-gray-300">
                                                 <MessageSquare size={20} />
@@ -256,12 +255,12 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                         </div>
                                     )}
                                     
-                                    {(subTask as any).comments?.map((c: any, index: number) => (
+                                    {((subTask as unknown as { comments?: { user?: { name: string }; created_at?: string; time?: string; text: string }[] }).comments || []).map((c, index) => (
                                         <div key={index} className="flex gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
                                             <div className="w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase flex-shrink-0 shadow-sm">
                                                 {c.user?.name ? (
                                                     c.user.name.split(' ').length > 1 
-                                                    ? c.user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
+                                                    ? c.user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
                                                     : c.user.name.substring(0, 2).toUpperCase()
                                                 ) : 'U'}
                                             </div>
@@ -269,7 +268,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                                 <div className="flex items-center justify-between mb-1">
                                                     <span className="text-[11px] font-bold text-[#1f2124]">{c.user?.name || 'User'}</span>
                                                     <span className="text-[9px] text-gray-400">
-                                                        {new Date(c.created_at || c.time).toLocaleDateString()}
+                                                        {new Date(c.created_at || c.time || Date.now()).toLocaleDateString()}
                                                     </span>
                                                 </div>
                                                 <p className="text-[12px] text-[#555] leading-relaxed">{c.text}</p>

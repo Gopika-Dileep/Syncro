@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { FolderKanban, Edit2, Trash2, MoreHorizontal, Layout, Calendar, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -64,9 +64,7 @@ export default function Projects() {
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
     const limit = 8;
 
-    useEffect(() => { fetchProjects(); }, [page, debouncedSearchTerm]);
-
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         setFetching(true);
         setError(""); 
         try {
@@ -90,7 +88,9 @@ export default function Projects() {
         } finally {
             setFetching(false);
         }
-    };
+    }, [page, limit, debouncedSearchTerm]);
+
+    useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
     const confirmDelete = async () => {
         if (!projectToDelete) return;

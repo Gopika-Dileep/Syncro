@@ -6,7 +6,11 @@ function extractEmployee(ref: unknown): { _id: string; name: string; designation
 
   // If it's a populated employee object
   if (typeof ref === 'object' && ref !== null) {
-    const obj = ref as any;
+    const obj = ref as {
+      _id?: unknown;
+      user_id?: { name?: string; avatar?: string };
+      designation?: string;
+    };
     if (obj._id) {
       const userId = obj.user_id;
       if (typeof userId === 'object' && userId !== null) {
@@ -26,7 +30,7 @@ function extractEmployee(ref: unknown): { _id: string; name: string; designation
   }
 
   // If it's just an ID
-  if (typeof ref === 'string' || (typeof ref === 'object' && ref !== null && (ref as any).toString)) {
+  if (typeof ref === 'string' || (typeof ref === 'object' && ref !== null && typeof (ref as { toString?: () => string }).toString === 'function')) {
     return {
       _id: String(ref),
       name: '',
@@ -125,10 +129,12 @@ export class IssueMapper {
   }
 }
 
-function safeDate(date: any): string {
+function safeDate(date: unknown): string {
   if (!date) return new Date().toISOString();
   if (typeof date === 'string') return date;
   if (date instanceof Date) return date.toISOString();
-  if (typeof date.toISOString === 'function') return date.toISOString();
-  return new Date(date).toISOString();
+  if (date && typeof (date as { toISOString?: () => string }).toISOString === 'function') {
+    return (date as { toISOString: () => string }).toISOString();
+  }
+  return new Date(date as string | number | Date).toISOString();
 }

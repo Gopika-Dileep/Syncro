@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { X, Calendar, Flag, Target } from "lucide-react";
 import { createPortal } from "react-dom";
 import { type SprintFormData, type Sprint } from "../api/sprintApi";
-import { getProjectsApi, type Project } from "../api/projectApi";
 
 interface AddSprintModalProps {
     isOpen: boolean;
@@ -22,56 +21,35 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [projectsLoading, setProjectsLoading] = useState(false);
+    // const [projects, setProjects] = useState<Project[]>([]);
+    // const [projectsLoading, setProjectsLoading] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
-            fetchProjects();
-            try {
-                if (initialData) {
-                    setName(initialData.name || "");
-                    setProjectId(initialData.project_id || "");
-                    setSprintNumber(initialData.sprint_number || 1);
-                    setGoal(initialData.goal || "");
-                    setTotalPoints(initialData.total_points || 0);
-                    
-                    if (initialData.start_date) {
-                        setStartDate(new Date(initialData.start_date).toISOString().split('T')[0]);
-                    }
-                    if (initialData.end_date) {
-                        setEndDate(new Date(initialData.end_date).toISOString().split('T')[0]);
-                    }
-                } else {
-                    setName("");
-                    setProjectId("");
-                    setSprintNumber(1);
-                    setGoal("");
-                    setTotalPoints(40);
-                    setStartDate("");
-                    setEndDate("");
+            if (initialData) {
+                setName(initialData.name || "");
+                setProjectId(initialData.project_id || "");
+                setSprintNumber(initialData.sprint_number || 1);
+                setGoal(initialData.goal || "");
+                setTotalPoints(initialData.total_points || 0);
+                
+                if (initialData.start_date) {
+                    setStartDate(new Date(initialData.start_date).toISOString().split('T')[0]);
                 }
-            } catch (err) {
-                console.error("Error hydrating sprint modal:", err);
+                if (initialData.end_date) {
+                    setEndDate(new Date(initialData.end_date).toISOString().split('T')[0]);
+                }
+            } else {
+                setName("");
+                setProjectId("");
+                setSprintNumber(1);
+                setGoal("");
+                setTotalPoints(40);
+                setStartDate("");
+                setEndDate("");
             }
         }
     }, [isOpen, initialData]);
-
-    const fetchProjects = async () => {
-        setProjectsLoading(true);
-        try {
-            const res = await getProjectsApi();
-            setProjects(res.data || []);
-            // Set first project as default if creating new
-            if (!initialData && res.data && res.data.length > 0) {
-                setProjectId(res.data[0]._id);
-            }
-        } catch (err) {
-            console.error("Failed to fetch projects");
-        } finally {
-            setProjectsLoading(false);
-        }
-    };
 
     if (!isOpen) return null;
 

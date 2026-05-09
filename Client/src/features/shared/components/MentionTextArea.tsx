@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+ 
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Users } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -19,6 +20,7 @@ interface MentionTextAreaProps {
     placeholder?: string;
     users: MentionUser[];
     className?: string;
+    autoFocus?: boolean;
 }
 
 const MentionTextArea: React.FC<MentionTextAreaProps> = ({
@@ -26,12 +28,12 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
     onChange,
     placeholder,
     users,
-    className
+    className,
+    autoFocus
 }) => {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [query, setQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const [suggestions, setSuggestions] = useState<MentionUser[]>([]);
     const [coords, setCoords] = useState({ top: 0, left: 0 });
     
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -67,6 +69,7 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
                 if (!textAfterAt.includes(' ')) {
                     setQuery(textAfterAt);
                     setShowSuggestions(true);
+                    setSelectedIndex(0);
                     updateCoords();
                 } else {
                     setShowSuggestions(false);
@@ -100,6 +103,13 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
             left: Math.min(lastLineLength * 8, 150)
         });
     };
+
+    const suggestions = useMemo(() => {
+        if (!showSuggestions) return [];
+        return users.filter(u => 
+            u.name.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, 5);
+    }, [users, query, showSuggestions]);
 
     const handleSelectUser = (user: MentionUser) => {
         if (!textareaRef.current) return;
@@ -175,16 +185,6 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
         }
     };
 
-    useEffect(() => {
-        if (showSuggestions) {
-            const filtered = users.filter(u => 
-                u.name.toLowerCase().includes(query.toLowerCase())
-            ).slice(0, 5);
-            setSuggestions(filtered);
-            setSelectedIndex(0);
-            if (filtered.length === 0) setShowSuggestions(false);
-        }
-    }, [query, showSuggestions, users]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -255,6 +255,7 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
                 onKeyDown={handleKeyDown}
                 onScroll={handleScroll}
                 placeholder={placeholder}
+                autoFocus={autoFocus}
                 className="w-full min-h-[100px] p-4 bg-transparent text-[14px] leading-relaxed outline-none transition-all resize-none custom-scrollbar relative z-10 caret-[#fa8029]"
                 style={{ WebkitTextFillColor: 'transparent' }}
             />

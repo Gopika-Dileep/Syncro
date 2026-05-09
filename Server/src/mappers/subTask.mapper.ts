@@ -8,7 +8,13 @@ function extractRef(ref: unknown): SubTaskPersonRef | null {
 
   // If it's a populated employee object
   if (typeof ref === 'object' && ref !== null) {
-    const obj = ref as any;
+    const obj = ref as {
+      _id?: unknown;
+      user_id?: { name?: string; avatar?: string };
+      designation?: string;
+      team_id?: { name?: string };
+      name?: string;
+    };
     if (obj._id) {
       const userId = obj.user_id;
       if (typeof userId === 'object' && userId !== null) {
@@ -29,11 +35,18 @@ function extractRef(ref: unknown): SubTaskPersonRef | null {
   }
 
   // If it's just an ID or has a name
-  const obj = ref as any;
+  const obj = ref as { _id?: { toString(): string }; name?: string };
   return {
     _id: obj._id?.toString() ?? String(ref),
     name: obj.name ? String(obj.name) : '',
   };
+}
+
+interface IPopulatedIssue {
+  _id: string;
+  title: string;
+  type: string;
+  status: string;
 }
 
 export class SubTaskMapper {
@@ -41,7 +54,7 @@ export class SubTaskMapper {
     const t = subTask as unknown as Record<string, unknown>;
     return {
       _id: subTask._id.toString(),
-      issue_id: typeof t.issue_id === 'object' && t.issue_id !== null ? String((t.issue_id as any)._id) : String(t.issue_id),
+      issue_id: typeof t.issue_id === 'object' && t.issue_id !== null ? String((t.issue_id as IPopulatedIssue)._id) : String(t.issue_id),
       sprint_id: subTask.sprint_id.toString(),
       company_id: subTask.company_id?.toString() ?? '',
       team_id: extractRef(t.team_id),
@@ -59,12 +72,15 @@ export class SubTaskMapper {
       branch_name: subTask.branch_name,
       submission_link: subTask.submission_link,
       submission_description: subTask.submission_description,
-      parent_issue: t.issue_id && typeof t.issue_id === 'object' ? {
-        _id: String((t.issue_id as any)._id),
-        title: String((t.issue_id as any).title),
-        type: String((t.issue_id as any).type),
-        status: String((t.issue_id as any).status),
-      } : null,
+      parent_issue:
+        t.issue_id && typeof t.issue_id === 'object'
+          ? {
+              _id: String((t.issue_id as IPopulatedIssue)._id),
+              title: String((t.issue_id as IPopulatedIssue).title),
+              type: String((t.issue_id as IPopulatedIssue).type),
+              status: String((t.issue_id as IPopulatedIssue).status),
+            }
+          : null,
       comments: (subTask.comments || []).map((c) => ({
         user: extractRef(c.user),
         text: c.text || '',
@@ -143,10 +159,12 @@ export class SubTaskMapper {
   }
 }
 
-function safeDate(date: any): string {
+function safeDate(date: unknown): string {
   if (!date) return new Date().toISOString();
   if (typeof date === 'string') return date;
   if (date instanceof Date) return date.toISOString();
-  if (typeof date.toISOString === 'function') return date.toISOString();
-  return new Date(date).toISOString();
+  if (date && typeof (date as { toISOString?: () => string }).toISOString === 'function') {
+    return (date as { toISOString: () => string }).toISOString();
+  }
+  return new Date(date as string | number | Date).toISOString();
 }

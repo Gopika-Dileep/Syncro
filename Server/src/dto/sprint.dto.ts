@@ -72,3 +72,19 @@ export interface PaginatedSprintResponseDTO {
   sprints: SprintResponseDTO[];
   total: number;
 }
+
+export interface VelocityDataPoint {
+  sprintName: string;
+  committed: number;
+  completed: number;
+}
+
+export interface TeamVelocity {
+  teamName: string;
+  completed: number;
+}
+
+export interface VelocityAnalyticsResponse {
+  sprintWise: VelocityDataPoint[];
+  multipleTeam: TeamVelocity[];
+}

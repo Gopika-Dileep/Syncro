@@ -37,8 +37,8 @@ export class GetTeamSubTasksService implements IGetTeamSubTasksService {
 
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      mappedSubTasks = mappedSubTasks.filter(t => searchRegex.test(t.title));
-      mappedIssues = mappedIssues.filter(t => searchRegex.test(t.title));
+      mappedSubTasks = mappedSubTasks.filter((t) => searchRegex.test(t.title));
+      mappedIssues = mappedIssues.filter((t) => searchRegex.test(t.title));
     }
 
     return [...mappedSubTasks, ...mappedIssues];

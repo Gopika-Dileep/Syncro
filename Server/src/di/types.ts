@@ -58,6 +58,7 @@ export const TYPES = {
   IUpdateSprintService: Symbol.for('IUpdateSprintService'),
   IDeleteSprintService: Symbol.for('IDeleteSprintService'),
   IGetSprintByIdService: Symbol.for('IGetSprintByIdService'),
+  IVelocityService: Symbol.for('IVelocityService'),
   SprintController: Symbol.for('SprintController'),
   ISubTaskRepository: Symbol.for('ISubTaskRepository'),
   ICreateSubTaskService: Symbol.for('ICreateSubTaskService'),

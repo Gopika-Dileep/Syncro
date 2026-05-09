@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Search, UserPlus, Info } from "lucide-react";
 import { toast } from "sonner";
 import { getUnassignedEmployeesApi, assignTeamToEmployeeApi, type UserProfile } from "@/features/company/api/companyApi";
@@ -27,7 +27,7 @@ export default function AssignMemberModal({ teamId, teamName, onClose, onSuccess
         try {
             const response = await getUnassignedEmployeesApi(search);
             setEmployees(response.data);
-        } catch (error) {
+        } catch {
             toast.error("Failed to fetch unassigned employees");
         } finally {
             setLoading(false);
@@ -49,7 +49,8 @@ export default function AssignMemberModal({ teamId, teamName, onClose, onSuccess
             await assignTeamToEmployeeApi(employee._id, teamId);
             toast.success(`Assigned ${employee.user_id.name} to ${teamName}`);
             onSuccess();
-        } catch (error: any) {
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
             toast.error(error.response?.data?.message || "Failed to assign employee");
         } finally {
             setAssigning(null);
@@ -92,7 +93,7 @@ export default function AssignMemberModal({ teamId, teamName, onClose, onSuccess
                             </div>
                         ) : employees.length > 0 ? (
                             employees.map((emp) => (
-                                <div 
+                                <div
                                     key={emp._id}
                                     className="flex items-center justify-between p-3 rounded-xl border border-[#f5f5f5] hover:border-[#fa8029]/20 hover:bg-[#fa8029]/[0.02] transition-all group"
                                 >

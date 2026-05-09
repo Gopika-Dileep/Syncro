@@ -1,12 +1,12 @@
 import { X, Flag, Hash, Calendar, CheckCircle2 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { type UserStory } from "../api/userStoryApi";
+import { type Issue } from "../api/issueApi";
 import MentionText from "@/features/shared/components/MentionText";
 
 interface UserStoryDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    story: UserStory | null;
+    story: Issue | null;
 }
 
 export default function UserStoryDetailsModal({ isOpen, onClose, story }: UserStoryDetailsModalProps) {
@@ -89,7 +89,7 @@ export default function UserStoryDetailsModal({ isOpen, onClose, story }: UserSt
                             </h3>
                             {story.criteria && story.criteria.length > 0 ? (
                                 <ul className="space-y-2 lg:pl-6 pl-2">
-                                    {story.criteria.map((crit, idx) => (
+                                    {story.criteria.map((crit: string, idx: number) => (
                                         <li key={idx} className="text-[13px] text-[#555] leading-relaxed flex items-start gap-3">
                                             <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029] shrink-0 mt-2" />
                                             <MentionText text={crit} />

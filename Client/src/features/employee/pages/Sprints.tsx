@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
     Plus, Target, Calendar,
-    ArrowRight, Eye, Play, CheckCircle2, MoreHorizontal,
+    ArrowRight, Eye, Play, CheckCircle2,
     TrendingUp, Rocket, Package, Search
 } from "lucide-react";
 import { toast } from "sonner";
@@ -55,7 +55,7 @@ export default function Sprints() {
             const res = await updateSprintApi(sprintToComplete._id, { 
                 status: 'Completed',
                 moveIssuesTo: moveTarget 
-            } as any);
+            } as unknown as Parameters<typeof updateSprintApi>[1]);
             if (res.success) {
                 toast.success("Sprint completed successfully");
                 setCompleteModalOpen(false);
@@ -70,11 +70,7 @@ export default function Sprints() {
         }
     };
 
-    useEffect(() => {
-        fetchSprints();
-    }, [debouncedSearchTerm]);
-
-    const fetchSprints = async () => {
+    const fetchSprints = useCallback(async () => {
         setFetching(true);
         try {
             const res = await getSprintsApi({ search: debouncedSearchTerm });
@@ -85,7 +81,11 @@ export default function Sprints() {
         } finally {
             setFetching(false);
         }
-    };
+    }, [debouncedSearchTerm]);
+
+    useEffect(() => {
+        fetchSprints();
+    }, [debouncedSearchTerm, fetchSprints]);
 
     const handleStatusUpdate = async (sprintId: string, newStatus: string) => {
         try {

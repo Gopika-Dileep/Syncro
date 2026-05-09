@@ -14,13 +14,17 @@ export class UploadController {
       }
 
       const fileUrl = `${env.BACKEND_URL}/uploads/${req.file.filename}`;
-      
-      success(res, {
-        file_url: fileUrl,
-        file_name: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-      }, 'File uploaded successfully');
+
+      success(
+        res,
+        {
+          file_url: fileUrl,
+          file_name: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.size,
+        },
+        'File uploaded successfully',
+      );
     } catch (error) {
       console.error('Upload error:', error);
       handleAsyncError(error, next);
@@ -34,11 +38,11 @@ export class UploadController {
         throw new Error('No files uploaded');
       }
 
-      const uploadedFiles = files.map(file => ({
+      const uploadedFiles = files.map((file) => ({
         file_url: `${env.BACKEND_URL}/uploads/${file.filename}`,
         file_name: file.originalname,
         mimetype: file.mimetype,
-        size: file.size
+        size: file.size,
       }));
 
       success(res, uploadedFiles, 'Files uploaded successfully');

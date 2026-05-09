@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Users, Edit2, Trash2, MoreHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
@@ -79,9 +79,7 @@ export default function Teams() {
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
     const limit = 8;
 
-    useEffect(() => { fetchTeams(); }, [page, debouncedSearchTerm]);
-
-    const fetchTeams = async () => {
+    const fetchTeams = useCallback(async () => {
         setFetching(true);
         try {
             const response = await getTeamsApi(page, limit, debouncedSearchTerm);
@@ -93,7 +91,11 @@ export default function Teams() {
         } finally {
             setFetching(false);
         }
-    };
+    }, [page, debouncedSearchTerm]);
+
+    useEffect(() => {
+        fetchTeams();
+    }, [page, debouncedSearchTerm, fetchTeams]);
 
     const handleSaveTeam = async (e: React.FormEvent) => {
         e.preventDefault();

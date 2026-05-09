@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { getProjectsApi, type Project } from "@/features/employee/api/projectApi
 import { getIssuesByProjectApi, createIssueApi, updateIssueApi, deleteIssueApi, type Issue } from "@/features/employee/api/issueApi";
 import IssueModal, { type IssueFormData as ModalIssueFormData } from "../components/IssueModal";
 import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
+import { getTeamDirectoryApi } from "../api/teamApi";
 
 const TypeIcon = ({ type, size = 12 }: { type: string; size?: number }) => {
     switch (type?.toLowerCase()) {
@@ -100,12 +101,7 @@ export default function Backlogs() {
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-    useEffect(() => {
-        fetchProjects();
-        fetchMembers();
-    }, []);
-
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         setFetchingProjects(true);
         try {
             const res = await getProjectsApi();
@@ -116,21 +112,22 @@ export default function Backlogs() {
         } finally {
             setFetchingProjects(false);
         }
-    };
+    }, []);
 
-    const fetchMembers = async () => {
+    const fetchMembers = useCallback(async () => {
         try {
-            const { getTeamDirectoryApi } = await import("../api/teamApi");
             const res = await getTeamDirectoryApi();
-            const allMembers = res.data.flatMap(t => t.members);
-            const unique = allMembers.filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
-            setMembers(unique);
+            if (res.success) {
+                const allMembers = res.data.flatMap(t => t.members);
+                const unique = allMembers.filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
+                setMembers(unique);
+            }
         } catch (err) {
             console.error("Failed to fetch members", err);
         }
-    };
+    }, []);
 
-    const fetchIssuesForProject = async (projectId: string) => {
+    const fetchIssuesForProject = useCallback(async (projectId: string) => {
         setIssuesConfig(prev => ({ ...prev, [projectId]: { data: prev[projectId]?.data || [], loading: true } }));
         try {
             const res = await getIssuesByProjectApi(projectId);
@@ -139,7 +136,12 @@ export default function Backlogs() {
             toast.error("Failed to load issues");
             setIssuesConfig(prev => ({ ...prev, [projectId]: { data: [], loading: false } }));
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchProjects();
+        fetchMembers();
+    }, [fetchProjects, fetchMembers]);
 
     const toggleProject = (projectId: string) => {
         if (expandedProjectId === projectId) {
@@ -263,7 +265,7 @@ export default function Backlogs() {
             <div className="p-3 bg-[#fdfdfd] border-t border-[#f0f0f0]">
                 <div className="space-y-2">
                     {config.data.map((issue) => {
-                        const isOwner = (issue.created_by as any)?._id === user?._id || user?.role === 'company';
+                        const isOwner = issue.created_by?._id === user?._id || user?.role === 'company';
                         const canEditIssue = can(`issue:${issue.type.toLowerCase()}:update`) || isOwner;
                         const canDeleteIssue = can(`issue:${issue.type.toLowerCase()}:delete`) || isOwner;
 
