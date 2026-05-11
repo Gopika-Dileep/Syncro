@@ -18,7 +18,7 @@ export class GetTeamSubTasksService implements IGetTeamSubTasksService {
 
   async execute(userId: string, search: string): Promise<SubTaskResponseDTO[]> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    if (!employee || !employee.team_id) throw new Error('Employee or Team not found');
+    if (!employee || !employee.team_id) return [];
 
     const subTasks = await this._subTaskRepository.findAllByTeamId(employee.team_id.toString());
 

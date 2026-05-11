@@ -8,7 +8,6 @@ export class SprintMapper {
     return {
       _id: (sprint._id as Types.ObjectId).toString(),
       company_id: sprint.company_id.toString(),
-      project_id: sprint.project_id ? sprint.project_id.toString() : '',
       name: sprint.name,
       sprint_number: sprint.sprint_number,
       goal: sprint.goal,
@@ -32,7 +31,6 @@ export class SprintMapper {
   static toCreate(data: CreateSprintRequestDTO, companyId: string): Partial<ISprint> {
     return {
       company_id: new Types.ObjectId(companyId),
-      project_id: new Types.ObjectId(data.project_id),
       name: data.name,
       sprint_number: data.sprint_number,
       goal: data.goal,

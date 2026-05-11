@@ -16,6 +16,7 @@ export interface ISubTask extends Document {
   estimated_hours: number;
   actual_hours: number;
   rework_reason?: string;
+  blocked_reason?: string;
   branch_name?: string;
   submission_link?: string;
   submission_description?: string;
@@ -116,6 +117,10 @@ const subTaskSchema = new Schema<ISubTask>(
       default: 0,
     },
     rework_reason: {
+      type: String,
+      required: false,
+    },
+    blocked_reason: {
       type: String,
       required: false,
     },

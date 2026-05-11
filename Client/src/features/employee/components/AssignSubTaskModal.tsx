@@ -23,14 +23,14 @@ export default function AssignSubTaskModal({ isOpen, onClose, onAssign, subTaskT
         try {
             const response = await getTeamDirectoryApi();
             if (response.success) {
-                // If teamId is provided, only show members of that team
+
                 if (teamId) {
                     const team = response.data.find(t => t._id === teamId);
                     setMembers(team ? team.members : []);
                 } else {
-                    // Otherwise show all members from all teams (flattened)
+
                     const allMembers = response.data.flatMap(t => t.members);
-                    // Remove duplicates
+
                     const uniqueMembers = Array.from(new Map(allMembers.map(m => [m._id, m])).values());
                     setMembers(uniqueMembers);
                 }

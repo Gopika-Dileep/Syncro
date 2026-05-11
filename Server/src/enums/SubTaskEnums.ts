@@ -3,6 +3,7 @@ export enum SubTaskStatus {
   IN_PROGRESS = 'In Progress',
   IN_REVIEW = 'In Review',
   DONE = 'Done',
+  BLOCKED = 'Blocked',
 }
 
 export enum SubTaskPriority {

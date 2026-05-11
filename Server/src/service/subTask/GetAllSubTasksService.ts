@@ -5,6 +5,7 @@ import { IGetAllSubTasksService } from '../../interfaces/services/subTask/IGetAl
 import { SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { IssueType } from '../../enums/IssueEnums';
 
@@ -13,17 +14,26 @@ export class GetAllSubTasksService implements IGetAllSubTasksService {
   constructor(
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepository: ICompanyRepository,
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
   ) {}
 
   async execute(userId: string, search: string): Promise<SubTaskResponseDTO[]> {
+    let companyId: string;
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    if (!employee) throw new Error('Employee not found');
 
-    const subTasks = await this._subTaskRepository.findAllByCompanyId(employee.company_id.toString());
+    if (employee) {
+      companyId = employee.company_id.toString();
+    } else {
+      const company = await this._companyRepository.findOne({ user_id: userId });
+      if (!company) throw new Error('User not found as employee or company admin');
+      companyId = company._id.toString();
+    }
+
+    const subTasks = await this._subTaskRepository.findAllByCompanyId(companyId);
 
     const issues = await this._issueRepository.findPopulated({
-      company_id: employee.company_id,
+      company_id: companyId,
       type: { $in: [IssueType.TASK, IssueType.BUG, IssueType.STORY] },
       status: { $ne: 'Backlog' },
     });

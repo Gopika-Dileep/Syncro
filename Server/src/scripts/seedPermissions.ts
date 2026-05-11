@@ -21,6 +21,7 @@ const permissions = [
   { module: 'issue', action: 'story', scope: 'comment', permission_key: 'issue:story:comment' },
   { module: 'issue', action: 'story', scope: 'status:work', permission_key: 'issue:story:status:work' },
   { module: 'issue', action: 'story', scope: 'status:review', permission_key: 'issue:story:status:review' },
+  { module: 'issue', action: 'story', scope: 'block', permission_key: 'issue:story:block' },
 
   // TASK
   { module: 'issue', action: 'task', scope: 'create', permission_key: 'issue:task:create' },
@@ -31,6 +32,7 @@ const permissions = [
   { module: 'issue', action: 'task', scope: 'assign_to_sprint', permission_key: 'issue:task:assign_to_sprint' },
   { module: 'issue', action: 'task', scope: 'status:work', permission_key: 'issue:task:status:work' },
   { module: 'issue', action: 'task', scope: 'status:review', permission_key: 'issue:task:status:review' },
+  { module: 'issue', action: 'task', scope: 'block', permission_key: 'issue:task:block' },
 
   // BUG
   { module: 'issue', action: 'bug', scope: 'create', permission_key: 'issue:bug:create' },
@@ -41,6 +43,7 @@ const permissions = [
   { module: 'issue', action: 'bug', scope: 'assign_to_sprint', permission_key: 'issue:bug:assign_to_sprint' },
   { module: 'issue', action: 'bug', scope: 'status:work', permission_key: 'issue:bug:status:work' },
   { module: 'issue', action: 'bug', scope: 'status:review', permission_key: 'issue:bug:status:review' },
+  { module: 'issue', action: 'bug', scope: 'block', permission_key: 'issue:bug:block' },
 
   // MODULE: sprint
   { module: 'sprint', action: 'create', scope: 'any', permission_key: 'sprint:create' },
@@ -61,6 +64,7 @@ const permissions = [
   { module: 'task', action: 'delete', scope: 'any', permission_key: 'task:delete' },
   { module: 'task', action: 'status:work', scope: 'any', permission_key: 'task:status:work' },
   { module: 'task', action: 'status:review', scope: 'any', permission_key: 'task:status:review' },
+  { module: 'task', action: 'block', scope: 'any', permission_key: 'task:block' },
 
   // MODULE: team
   { module: 'team', action: 'view', scope: 'team', permission_key: 'team:view:team' },

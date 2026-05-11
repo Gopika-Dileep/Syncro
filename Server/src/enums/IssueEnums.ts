@@ -5,6 +5,7 @@ export enum IssueStatus {
   DONE = 'Done',
   READY = 'Ready',
   NEW = 'New',
+  BLOCKED = 'Blocked',
 }
 
 export enum IssuePriority {

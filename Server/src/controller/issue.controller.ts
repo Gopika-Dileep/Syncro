@@ -8,8 +8,6 @@ import { IUpdateIssueService } from '../interfaces/services/issue/IUpdateIssueSe
 import { IDeleteIssueService } from '../interfaces/services/issue/IDeleteIssueService';
 import { IAssignIssueService } from '../interfaces/services/issue/IAssignIssueService';
 import { IAddCommentToIssueService } from '../interfaces/services/issue/IAddCommentToIssueService';
-import { IGetAssignedIssuesService } from '../interfaces/services/issue/IGetAssignedIssuesService';
-import { IGetTeamIssuesService } from '../interfaces/services/issue/IGetTeamIssuesService';
 import { IAddAttachmentToIssueService } from '../interfaces/services/issue/IAddAttachmentToIssueService';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
@@ -28,8 +26,6 @@ export class IssueController {
     @inject(TYPES.IDeleteIssueService) private _deleteIssueService: IDeleteIssueService,
     @inject(TYPES.IAssignIssueService) private _assignIssueService: IAssignIssueService,
     @inject(TYPES.IAddCommentToIssueService) private _addCommentToIssueService: IAddCommentToIssueService,
-    @inject(TYPES.IGetAssignedIssuesService) private _getAssignedIssuesService: IGetAssignedIssuesService,
-    @inject(TYPES.IGetTeamIssuesService) private _getTeamIssuesService: IGetTeamIssuesService,
     @inject(TYPES.IAddAttachmentToIssueService) private _addAttachmentToIssueService: IAddAttachmentToIssueService,
   ) {}
 
@@ -127,26 +123,6 @@ export class IssueController {
       const issue = await this._addAttachmentToIssueService.execute(issueId as string, userId, attachments);
       const mapped = IssueMapper.toResponseDTO(issue);
       success(res, mapped, 'Attachments added successfully');
-    } catch (error) {
-      handleAsyncError(error, next);
-    }
-  };
-
-  getAssignedIssues = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.userId!;
-      const issues = await this._getAssignedIssuesService.execute(userId);
-      success(res, issues);
-    } catch (error) {
-      handleAsyncError(error, next);
-    }
-  };
-
-  getTeamIssues = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.userId!;
-      const issues = await this._getTeamIssuesService.execute(userId);
-      success(res, issues);
     } catch (error) {
       handleAsyncError(error, next);
     }

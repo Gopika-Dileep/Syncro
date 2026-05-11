@@ -1,17 +1,17 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    Search, 
-    Calendar, 
-    Clock, 
-    CheckCircle2, 
+import {
+    Search,
+    Calendar,
+    Clock,
+    CheckCircle2,
     Circle,
     ArrowLeft,
     ArrowRight,
     FolderKanban
 } from "lucide-react";
-import { 
-    getProjectsApi, 
+import {
+    getProjectsApi,
     type Project
 } from "@/features/company/api/projectApi";
 import { toast } from "sonner";
@@ -29,8 +29,7 @@ export default function Projects() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
-    
-    // Pagination
+
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
     const limit = 50;
@@ -84,13 +83,13 @@ export default function Projects() {
                         </div>
                         <p className="text-[12px] text-[#888] font-medium ml-11">Strategic overview of organizational initiatives</p>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#aaa]" size={16} />
-                            <input 
-                                type="text" 
-                                placeholder="Search projects..." 
+                            <input
+                                type="text"
+                                placeholder="Search projects..."
                                 className="pl-10 pr-4 py-2.5 bg-white border border-[#eee] rounded-full text-[13px] outline-none focus:border-[#fa8029] w-64 shadow-sm transition-all"
                                 value={searchTerm}
                                 onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
@@ -125,7 +124,7 @@ export default function Projects() {
 
                                 <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 pr-1">
                                     {groupedProjects[column.id].map((project) => (
-                                        <div 
+                                        <div
                                             key={project._id}
                                             onClick={() => navigate(`/company/projects/${project._id}`)}
                                             className="group bg-white border border-[#f0f0f0] hover:border-[#fa8029]/30 hover:shadow-xl hover:shadow-[#fa8029]/5 rounded-2xl p-4 transition-all duration-300 cursor-pointer relative overflow-hidden"
@@ -178,7 +177,7 @@ export default function Projects() {
             {/* Pagination */}
             {total > limit && (
                 <div className="px-8 py-4 border-t border-[#f0f0f0] bg-white flex items-center justify-center gap-6">
-                    <button 
+                    <button
                         disabled={page === 1}
                         onClick={() => setPage(p => p - 1)}
                         className="p-2.5 border border-[#eee] rounded-xl hover:bg-[#f9fafb] disabled:opacity-30 transition-all shadow-sm"
@@ -188,7 +187,7 @@ export default function Projects() {
                     <span className="text-[13px] font-black text-[#1f2124]">
                         Page <span className="text-[#fa8029]">{page}</span> of {Math.ceil(total / limit)}
                     </span>
-                    <button 
+                    <button
                         disabled={page * limit >= total}
                         onClick={() => setPage(p => p + 1)}
                         className="p-2.5 border border-[#eee] rounded-xl hover:bg-[#f9fafb] disabled:opacity-30 transition-all shadow-sm"

@@ -78,25 +78,20 @@ export default function Backlogs() {
     const [fetchingProjects, setFetchingProjects] = useState(true);
     const [members, setMembers] = useState<{ _id: string; name: string; designation?: string }[]>([]);
 
-    // key: projectId, value: array of issues
     const [issuesConfig, setIssuesConfig] = useState<Record<string, { data: Issue[], loading: boolean }>>({});
     const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
 
-    // Modals state
     const [isFormModalOpen, setFormModalOpen] = useState(false);
     const [isDetailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
 
-    // Selected states
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Confirmation states
     const [issueToMarkReady, setIssueToMarkReady] = useState<Issue | null>(null);
     const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
 
-    // Dropdown state
     const [openMenuIssueId, setOpenMenuIssueId] = useState<string | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -236,6 +231,7 @@ export default function Backlogs() {
             case 'new': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'ready': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
             case 'to do': return 'bg-purple-50 text-purple-600 border-purple-100';
+            case 'blocked': return 'bg-amber-50 text-amber-600 border-amber-100';
             case 'done': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
             default: return 'bg-slate-50 text-slate-600 border-slate-100';
         }
@@ -271,67 +267,72 @@ export default function Backlogs() {
 
                         return (
                             <div key={issue._id} className="flex items-center justify-between p-3 bg-white border border-[#eaeaea] rounded-xl hover:shadow-sm transition-all group">
-                            <div className="flex items-center gap-3">
-                                <GripVertical size={16} className="text-[#ddd] cursor-move" />
-                                <div className="p-1.5 bg-gray-50 rounded border border-gray-100">
-                                    <TypeIcon type={issue.type} size={14} />
-                                </div>
-                                <div>
-                                    <h4 className="text-[13px] font-bold text-[#1f2124]">{issue.title}</h4>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className={`px-2 py-[1px] rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusStyle(issue.status)}`}>
-                                            {issue.status}
-                                        </span>
-                                        {issue.type === 'story' && (
-                                            <span className="text-[10px] uppercase font-bold text-[#888] bg-[#f5f5f5] px-1.5 py-0.5 rounded">
-                                                {issue.story_points} points
+                                <div className="flex items-center gap-3">
+                                    <GripVertical size={16} className="text-[#ddd] cursor-move" />
+                                    <div className="p-1.5 bg-gray-50 rounded border border-gray-100">
+                                        <TypeIcon type={issue.type} size={14} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-[13px] font-bold text-[#1f2124]">{issue.title}</h4>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className={`px-2 py-[1px] rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusStyle(issue.status)}`}>
+                                                {issue.status}
                                             </span>
+                                            {issue.status === 'Blocked' && issue.blocked_reason && (
+                                                <span className="text-[10px] text-amber-600 font-bold italic truncate max-w-[200px]" title={issue.blocked_reason}>
+                                                    - {issue.blocked_reason}
+                                                </span>
+                                            )}
+                                            {issue.type === 'story' && (
+                                                <span className="text-[10px] uppercase font-bold text-[#888] bg-[#f5f5f5] px-1.5 py-0.5 rounded">
+                                                    {issue.story_points} points
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    {issue.status.toLowerCase() === 'new' && canEditIssue && (
+                                        <button
+                                            onClick={() => setIssueToMarkReady(issue)}
+                                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <CheckCircle size={12} /> Mark Ready
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleOpenDetails(issue)}
+                                        className="p-1.5 text-[#bbb] hover:bg-[#fff5ef] hover:text-[#fa8029] rounded-lg transition-colors"
+                                        title="Comments & Details"
+                                    >
+                                        <MessageSquare size={15} />
+                                    </button>
+                                    <div className="relative">
+                                        <button
+                                            ref={(el) => { btnRefs.current[issue._id] = el; }}
+                                            onClick={() => openMenu(issue._id)}
+                                            className="p-1.5 text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#555] rounded-lg transition-colors"
+                                        >
+                                            <MoreHorizontal size={15} />
+                                        </button>
+
+                                        {openMenuIssueId === issue._id && (
+                                            <IssueMenu
+                                                pos={dropPos}
+                                                onClose={() => setOpenMenuIssueId(null)}
+                                                onView={() => handleOpenDetails(issue)}
+                                                onEdit={() => handleOpenEditModal(issue)}
+                                                onDelete={() => setIssueToDelete(issue)}
+                                                canEdit={canEditIssue}
+                                                canDelete={canDeleteIssue}
+                                            />
                                         )}
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-2">
-                                {issue.status.toLowerCase() === 'new' && canEditIssue && (
-                                    <button
-                                        onClick={() => setIssueToMarkReady(issue)}
-                                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                    >
-                                        <CheckCircle size={12} /> Mark Ready
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => handleOpenDetails(issue)}
-                                    className="p-1.5 text-[#bbb] hover:bg-[#fff5ef] hover:text-[#fa8029] rounded-lg transition-colors"
-                                    title="Comments & Details"
-                                >
-                                    <MessageSquare size={15} />
-                                </button>
-                                <div className="relative">
-                                    <button
-                                        ref={(el) => { btnRefs.current[issue._id] = el; }}
-                                        onClick={() => openMenu(issue._id)}
-                                        className="p-1.5 text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#555] rounded-lg transition-colors"
-                                    >
-                                        <MoreHorizontal size={15} />
-                                    </button>
-
-                                    {openMenuIssueId === issue._id && (
-                                        <IssueMenu
-                                            pos={dropPos}
-                                            onClose={() => setOpenMenuIssueId(null)}
-                                            onView={() => handleOpenDetails(issue)}
-                                            onEdit={() => handleOpenEditModal(issue)}
-                                            onDelete={() => setIssueToDelete(issue)}
-                                            canEdit={canEditIssue}
-                                            canDelete={canDeleteIssue}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
 
 
                 </div>

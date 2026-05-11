@@ -1,4 +1,0 @@
-2026-05-09 08:00:51:051 http: OPTIONS /api/auth/refresh 204 0 - 11.601 ms
-2026-05-09 08:00:51:051 http: OPTIONS /api/auth/refresh 204 0 - 0.126 ms
-2026-05-09 08:00:52:052 http: POST /api/auth/refresh 200 1622 - 298.523 ms
-2026-05-09 08:00:52:052 http: POST /api/auth/refresh 200 1622 - 160.714 ms

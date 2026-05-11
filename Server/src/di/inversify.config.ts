@@ -82,10 +82,6 @@ import { AssignIssueService } from '../service/issue/AssignIssueService';
 import { IAddCommentToIssueService } from '../interfaces/services/issue/IAddCommentToIssueService';
 import { AddCommentToIssueService } from '../service/issue/AddCommentToIssueService';
 
-import { IGetAssignedIssuesService } from '../interfaces/services/issue/IGetAssignedIssuesService';
-import { IGetTeamIssuesService } from '../interfaces/services/issue/IGetTeamIssuesService';
-import { GetAssignedIssuesService } from '../service/issue/GetAssignedIssuesService';
-import { GetTeamIssuesService } from '../service/issue/GetTeamIssuesService';
 import { IAddAttachmentToIssueService } from '../interfaces/services/issue/IAddAttachmentToIssueService';
 import { AddAttachmentToIssueService } from '../service/issue/AddAttachmentToIssueService';
 
@@ -199,8 +195,6 @@ container.bind<IUpdateIssueService>(TYPES.IUpdateIssueService).to(UpdateIssueSer
 container.bind<IDeleteIssueService>(TYPES.IDeleteIssueService).to(DeleteIssueService);
 container.bind<IAssignIssueService>(TYPES.IAssignIssueService).to(AssignIssueService);
 container.bind<IAddCommentToIssueService>(TYPES.IAddCommentToIssueService).to(AddCommentToIssueService);
-container.bind<IGetAssignedIssuesService>(TYPES.IGetAssignedIssuesService).to(GetAssignedIssuesService);
-container.bind<IGetTeamIssuesService>(TYPES.IGetTeamIssuesService).to(GetTeamIssuesService);
 container.bind<IAddAttachmentToIssueService>(TYPES.IAddAttachmentToIssueService).to(AddAttachmentToIssueService);
 
 container.bind<ICreateSprintService>(TYPES.ICreateSprintService).to(CreateSprintService);

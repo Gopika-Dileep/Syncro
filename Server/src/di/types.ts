@@ -33,8 +33,6 @@ export const TYPES = {
   IDeleteIssueService: Symbol.for('IDeleteIssueService'),
   IGetIssuesBySprintService: Symbol.for('IGetIssuesBySprintService'),
   IAddCommentToIssueService: Symbol.for('IAddCommentToIssueService'),
-  IGetAssignedIssuesService: Symbol.for('IGetAssignedIssuesService'),
-  IGetTeamIssuesService: Symbol.for('IGetTeamIssuesService'),
   IAddAttachmentToIssueService: Symbol.for('IAddAttachmentToIssueService'),
   IssueController: Symbol.for('IssueController'),
   IRegisterService: Symbol.for('IRegisterService'),

@@ -15,6 +15,7 @@ export const EmployeePermissionsSchema = z.object({
     delete: z.boolean(),
     status_work: z.boolean(),
     status_review: z.boolean(),
+    block: z.boolean(),
   }),
   sprint: z.object({
     create: z.boolean(),
@@ -35,26 +36,29 @@ export const EmployeePermissionsSchema = z.object({
       comment: z.boolean(),
       status_work: z.boolean(),
       status_review: z.boolean(),
+      block: z.boolean(),
     }),
     task: z.object({
       create: z.boolean(),
       view: z.boolean(),
       update: z.boolean(),
       delete: z.boolean(),
-      assign: z.boolean(), // Assign to employee
+      assign: z.boolean(),
       assign_to_sprint: z.boolean(),
       status_work: z.boolean(),
       status_review: z.boolean(),
+      block: z.boolean(),
     }),
     bug: z.object({
       create: z.boolean(),
       view: z.boolean(),
       update: z.boolean(),
       delete: z.boolean(),
-      assign: z.boolean(), // Assign to employee
+      assign: z.boolean(),
       assign_to_sprint: z.boolean(),
       status_work: z.boolean(),
       status_review: z.boolean(),
+      block: z.boolean(),
     }),
   }),
   team: z.object({

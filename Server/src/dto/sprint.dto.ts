@@ -3,7 +3,6 @@ import { SprintStatus } from '../enums/SprintEnums';
 import { IssueResponseDTO } from './issue.dto';
 
 export const SprintBaseSchema = z.object({
-  project_id: z.string().min(1, 'Project ID is required'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   sprint_number: z.number().min(1, 'Sprint number must be at least 1'),
   goal: z.string().min(2, 'Goal must be at least 2 characters'),
@@ -52,7 +51,6 @@ export type UpdateSprintRequestDTO = z.infer<typeof UpdateSprintRequestSchema>['
 export interface SprintResponseDTO {
   _id: string;
   company_id: string;
-  project_id: string;
   name: string;
   sprint_number: number;
   goal: string;
@@ -84,6 +82,10 @@ export interface TeamVelocity {
   completed: number;
 }
 
+export interface VelocityAnalyticsResponse {
+  sprintWise: VelocityDataPoint[];
+  multipleTeam: TeamVelocity[];
+}
 export interface VelocityAnalyticsResponse {
   sprintWise: VelocityDataPoint[];
   multipleTeam: TeamVelocity[];

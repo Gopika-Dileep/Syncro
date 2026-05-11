@@ -6,7 +6,7 @@ import {
     Layout, Users,
     Pencil, Trash2, UserPlus, Eye,
     Bug, BookOpen, CheckSquare, X, Activity,
-    ListTodo, Package, Flag, CheckCircle2, MessageSquare, ArrowRight
+    ListTodo, Package, Flag, CheckCircle2, MessageSquare, ArrowRight, Play
 } from "lucide-react";
 import { getSprintByIdApi, updateSprintApi, getSprintsApi, type Sprint, type SprintFormData } from "../api/sprintApi";
 import {
@@ -30,6 +30,7 @@ import SubTaskModal, { type SubTaskFormData } from "../components/SubTaskModal";
 import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
 import CompleteSprintModal from "../components/CompleteSprintModal";
 import ConfirmModal from "@/features/shared/components/ConfirmModal";
+import MentionText from "@/features/shared/components/MentionText";
 
 const TypeIcon = ({ type, size = 16 }: { type: string; size?: number }) => {
     switch (type.toLowerCase()) {
@@ -83,7 +84,7 @@ export default function SprintDetails() {
         try {
             const res = await getSprintsApi({ status: 'Planned' });
             if (res.success) {
-                setAvailableSprints(res.data.sprints.filter(s => s.project_id === sprint.project_id));
+                setAvailableSprints(res.data.sprints);
                 setCompleteModalOpen(true);
             }
         } catch {
@@ -401,7 +402,8 @@ export default function SprintDetails() {
                     <div className="flex items-center justify-center shrink-0">
                         <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${subTask.status === 'Done' ? 'bg-emerald-500 ring-4 ring-emerald-50' :
                                 subTask.status === 'In Progress' ? 'bg-[#fa8029] ring-4 ring-orange-50' :
-                                    'bg-indigo-400 ring-4 ring-indigo-50'
+                                    subTask.status === 'Blocked' ? 'bg-amber-500 ring-4 ring-amber-50' :
+                                        'bg-indigo-400 ring-4 ring-indigo-50'
                             }`} />
                     </div>
                     <div className="min-w-0 flex-1 flex flex-col justify-center">
@@ -421,7 +423,17 @@ export default function SprintDetails() {
                                     <span className="text-[9px] font-black uppercase tracking-wider">{subTask.team_id.name}</span>
                                 </div>
                             )}
+                            {subTask.status === 'Blocked' && (
+                                <span className="text-[9px] font-black text-white bg-amber-500 px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">Blocked</span>
+                            )}
                         </div>
+                        {subTask.status === 'Blocked' && subTask.blocked_reason && (
+                            <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-100/50">
+                                <p className="text-[10px] text-amber-700 font-bold leading-relaxed italic">
+                                    <MentionText text={subTask.blocked_reason || ""} />
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -515,6 +527,47 @@ export default function SprintDetails() {
                                         </button>
                                     )}
 
+                                    {subTask.status === 'In Progress' && (
+                                        subTask.subtask_type === 'sub-task' ? can('task:block') :
+                                        subTask.subtask_type === 'bug' ? can('issue:bug:block' as any) :
+                                        subTask.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                        can('task:block')
+                                    ) && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setItemToView({ item: subTask, type: 'subtask' });
+                                                setDetailsDrawerOpen(true);
+                                                setActiveSubTaskDropdown(null);
+                                            }}
+                                            className="w-full px-4 py-2.5 text-left text-[12px] font-bold text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <Clock size={15} /> Block Task
+                                        </button>
+                                    )}
+
+                                    {subTask.status === 'Blocked' && (
+                                        subTask.subtask_type === 'sub-task' ? can('task:block') :
+                                        subTask.subtask_type === 'bug' ? can('issue:bug:block' as any) :
+                                        subTask.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                        can('task:block')
+                                    ) && (
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                const res = await updateSubTaskApi(subTask._id, { status: 'In Progress' });
+                                                if (res.success) {
+                                                    toast.success("Task unblocked");
+                                                    fetchSprintDetails();
+                                                }
+                                                setActiveSubTaskDropdown(null);
+                                            }}
+                                            className="w-full px-4 py-2.5 text-left text-[12px] font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
+                                        >
+                                            <Play size={15} /> Unblock / Resume
+                                        </button>
+                                    )}
+
                                     {can('task:delete') && (
                                         <button
                                             onClick={(e) => {
@@ -532,7 +585,8 @@ export default function SprintDetails() {
                         )}
                     </div>
                     <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm shrink-0 min-w-[70px] text-center ${subTask.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                            'bg-blue-50 text-blue-600 border-blue-100'
+                            subTask.status === 'Blocked' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                'bg-blue-50 text-blue-600 border-blue-100'
                         }`}>
                         {subTask.status}
                     </div>
@@ -797,9 +851,19 @@ export default function SprintDetails() {
                                                         <MessageSquare size={18} />
                                                     </button>
                                                     <div className="flex items-center gap-2 ml-4">
-                                                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                                            {issue.status}
-                                                        </span>
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${
+                                                                issue.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                                                issue.status === 'Blocked' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                                'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                                                                {issue.status}
+                                                            </span>
+                                                            {issue.status === 'Blocked' && issue.blocked_reason && (
+                                                                <p className="text-[9px] text-amber-600 font-bold italic max-w-[150px] truncate" title={issue.blocked_reason}>
+                                                                    {issue.blocked_reason}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                         {can('task:create') && (
                                                             <button
                                                                 onClick={(e) => handleOpenSubTaskModal(e, issue._id)}

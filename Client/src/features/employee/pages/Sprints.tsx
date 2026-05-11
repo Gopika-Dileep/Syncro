@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { 
+import {
     Plus, Target, Calendar,
     ArrowRight, Eye, Play, CheckCircle2,
     TrendingUp, Rocket, Package, Search
@@ -20,11 +20,11 @@ export default function Sprints() {
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [fetching, setFetching] = useState(true);
     const [activeTab, setActiveTab] = useState<"All" | "Planned" | "Active" | "Completed">("All");
-    
+
     const [isModalOpen, setModalOpen] = useState(false);
     const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -52,9 +52,9 @@ export default function Sprints() {
         if (!sprintToComplete) return;
         setIsSubmitting(true);
         try {
-            const res = await updateSprintApi(sprintToComplete._id, { 
+            const res = await updateSprintApi(sprintToComplete._id, {
                 status: 'Completed',
-                moveIssuesTo: moveTarget 
+                moveIssuesTo: moveTarget
             } as unknown as Parameters<typeof updateSprintApi>[1]);
             if (res.success) {
                 toast.success("Sprint completed successfully");
@@ -107,8 +107,8 @@ export default function Sprints() {
 
     const completedSprints = sprints.filter(s => s.status.toLowerCase() === 'completed');
     const totalCompletedPoints = completedSprints.reduce((acc, s) => acc + (s.completed_points || 0), 0);
-    const avgVelocity = completedSprints.length > 0 
-        ? Math.round(totalCompletedPoints / completedSprints.length) 
+    const avgVelocity = completedSprints.length > 0
+        ? Math.round(totalCompletedPoints / completedSprints.length)
         : 0;
 
     const stats = {
@@ -162,7 +162,7 @@ export default function Sprints() {
 
             <div className="p-5 md:p-6 flex-1 overflow-y-auto custom-scrollbar">
                 <div className="max-w-7xl mx-auto space-y-8">
-                    
+
                     {/* Highlight: Active Sprint */}
                     {activeSprint && (
                         <div className="bg-white border-2 border-[#fa8029]/10 rounded-3xl p-5 shadow-xl shadow-[#fa8029]/5 relative overflow-hidden group">
@@ -193,14 +193,14 @@ export default function Sprints() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2.5">
-                                    <button 
+                                    <button
                                         onClick={() => navigate(`/employee/sprints/${activeSprint._id}`)}
                                         className="flex items-center gap-2 px-5 py-2.5 bg-[#fdfdfd] border border-[#eee] text-[#555] rounded-xl font-bold text-[12px] hover:bg-white hover:shadow-sm transition-all shadow-sm"
                                     >
                                         <Eye size={15} /> View Details
                                     </button>
                                     {can('sprint:update') && (
-                                        <button 
+                                        <button
                                             disabled={isFetchingCompleteData}
                                             onClick={() => handleCompleteClick(activeSprint)}
                                             className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl font-bold text-[12px] hover:bg-black transition-all shadow-lg active:scale-95 disabled:opacity-50"
@@ -225,9 +225,8 @@ export default function Sprints() {
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab as "All" | "Planned" | "Active" | "Completed")}
-                                        className={`px-3.5 py-1.5 text-[11px] font-bold rounded-lg transition-all ${
-                                            activeTab === tab ? "bg-white text-[#1f2124] shadow-sm" : "text-[#888] hover:text-[#555]"
-                                        }`}
+                                        className={`px-3.5 py-1.5 text-[11px] font-bold rounded-lg transition-all ${activeTab === tab ? "bg-white text-[#1f2124] shadow-sm" : "text-[#888] hover:text-[#555]"
+                                            }`}
                                     >
                                         {tab} {tab !== 'All' && `(${sprints.filter(s => s.status.toLowerCase() === tab.toLowerCase()).length})`}
                                     </button>
@@ -235,9 +234,9 @@ export default function Sprints() {
                             </div>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#aaa]" size={16} />
-                                <input 
-                                    type="text" 
-                                    placeholder="Search sprints..." 
+                                <input
+                                    type="text"
+                                    placeholder="Search sprints..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="pl-10 pr-4 py-2.5 bg-white border border-[#eee] rounded-xl text-[13px] outline-none focus:border-[#fa8029] w-64 shadow-sm"
@@ -285,19 +284,19 @@ export default function Sprints() {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-2 justify-end">
                                             {sprint.status.toLowerCase() === 'planned' && can('sprint:create') && (
                                                 <>
                                                     {(sprint.item_count ?? 0) > 0 && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleStatusUpdate(sprint._id, 'Active')}
                                                             className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl font-bold text-[12px] hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                                                         >
                                                             <Play size={14} fill="currentColor" /> Start Sprint
                                                         </button>
                                                     )}
-                                                    <button 
+                                                    <button
                                                         onClick={() => navigate(`/employee/sprints/plan/${sprint._id}`)}
                                                         className="flex items-center gap-2 px-4 py-2 bg-[#f9fafb] border border-[#eee] text-[#555] rounded-xl font-bold text-[12px] hover:bg-[#fff5ef] hover:text-[#fa8029] hover:border-[#fa8029]/30 transition-all font-inter"
                                                     >
@@ -305,7 +304,7 @@ export default function Sprints() {
                                                     </button>
                                                 </>
                                             )}
-                                            <button 
+                                            <button
                                                 onClick={() => navigate(`/employee/sprints/${sprint._id}`)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-white border border-[#eee] text-[#555] rounded-xl font-bold text-[12px] hover:bg-[#fcfcfc] transition-all"
                                             >
@@ -345,16 +344,16 @@ export default function Sprints() {
                         } else {
                             response = await createSprintApi(data);
                         }
-                        
+
                         if (response.success) {
                             toast.success(editingSprint ? "Sprint updated" : "Sprint created!");
                             setModalOpen(false);
                             setEditingSprint(null);
                             await fetchSprints();
                         }
-                    } catch (err: unknown) { 
+                    } catch (err: unknown) {
                         const error = err as { response?: { data?: { message?: string } } };
-                        toast.error(error.response?.data?.message || "Operation failed."); 
+                        toast.error(error.response?.data?.message || "Operation failed.");
                     }
                     finally { setIsSubmitting(false); }
                 }}
@@ -366,10 +365,9 @@ export default function Sprints() {
                 isOpen={isCompleteModalOpen}
                 onClose={() => setCompleteModalOpen(false)}
                 incompleteCount={sprintToComplete?.issues?.filter(i => i.status !== 'Done').length || 0}
-                availableSprints={sprints.filter(s => 
-                    s._id !== sprintToComplete?._id && 
-                    s.status.toLowerCase() === 'planned' && 
-                    s.project_id === sprintToComplete?.project_id
+                availableSprints={sprints.filter(s =>
+                    s._id !== sprintToComplete?._id &&
+                    s.status.toLowerCase() === 'planned'
                 )}
                 onConfirm={handleConfirmComplete}
                 isSubmitting={isSubmitting}

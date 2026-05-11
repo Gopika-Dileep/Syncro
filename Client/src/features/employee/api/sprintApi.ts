@@ -5,7 +5,6 @@ import { type Issue } from "./issueApi";
 export interface Sprint {
     _id: string;
     company_id: string;
-    project_id?: string;
     name: string;
     sprint_number: number;
     goal: string;
@@ -22,7 +21,6 @@ export interface Sprint {
 }
 
 export interface SprintFormData {
-    project_id: string;
     name: string;
     sprint_number: number;
     goal: string;

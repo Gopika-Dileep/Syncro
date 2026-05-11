@@ -31,6 +31,9 @@ export class UpdateIssueService implements IUpdateIssueService {
     };
 
     if (data.status && data.status !== oldIssue.status) {
+      if (data.status === IssueStatus.BLOCKED && !data.blocked_reason) {
+        throw new Error('Blocked reason is required when blocking an issue');
+      }
       historyEntry.action = 'status_change';
       historyEntry.from = oldIssue.status;
       historyEntry.to = data.status;

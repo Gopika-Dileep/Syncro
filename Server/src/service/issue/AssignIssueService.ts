@@ -12,7 +12,7 @@ export class AssignIssueService implements IAssignIssueService {
   constructor(
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
-  ) {}
+  ) { }
 
   async execute(data: AssignIssueRequestDTO, userId: string): Promise<IssueResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
@@ -61,7 +61,7 @@ export class AssignIssueService implements IAssignIssueService {
     }
 
     if (data.sprint_id && String(data.sprint_id) !== String(issueToUpdate.sprint_id)) {
-      // In a real app we'd fetch sprint names here too
+
       historyEntries.push({
         action: 'sprint_change',
         from: issueToUpdate.sprint_id ? 'Previous Sprint' : 'Backlog',

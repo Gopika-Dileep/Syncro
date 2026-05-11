@@ -19,8 +19,8 @@ export class SubTaskRouter {
   }
 
   private _initializeRoutes(): void {
-    this.router.get(ENDPOINTS.SUBTASKS.ASSIGNED, authMiddleware, checkPermission(['task:view:assigned', 'task:view:team']), subTaskController.getAssignedSubTasks);
-    this.router.get(ENDPOINTS.SUBTASKS.TEAM, authMiddleware, checkPermission('task:view:team'), subTaskController.getTeamSubTasks);
+    this.router.get(ENDPOINTS.SUBTASKS.ASSIGNED, authMiddleware, checkPermission(['task:view:assigned', 'task:view:team', 'task:view:all']), subTaskController.getAssignedSubTasks);
+    this.router.get(ENDPOINTS.SUBTASKS.TEAM, authMiddleware, checkPermission(['task:view:team', 'task:view:all']), subTaskController.getTeamSubTasks);
     this.router.get(ENDPOINTS.SUBTASKS.ALL, authMiddleware, checkPermission('task:view:all'), subTaskController.getAllSubTasks);
     this.router.get(ENDPOINTS.SUBTASKS.BY_ISSUE, authMiddleware, checkPermission(['task:view:all', 'task:view:team', 'task:view:assigned', 'task:create']), subTaskController.getSubTasksByIssue);
     this.router.get(ENDPOINTS.SUBTASKS.BY_ID, authMiddleware, checkPermission(['task:view:all', 'task:view:team', 'task:view:assigned']), subTaskController.getSubTaskById);

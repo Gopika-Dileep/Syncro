@@ -42,6 +42,7 @@ export interface Issue {
     priority: string;
     status: string;
     type: string;
+    blocked_reason?: string;
     comments?: {
         user: { _id: string; name: string; avatar?: string };
         text: string;
@@ -82,6 +83,7 @@ export interface IssueFormData {
     priority: string;
     status?: string;
     type: string;
+    blocked_reason?: string;
     mentions?: string[];
 }
 

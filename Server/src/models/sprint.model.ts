@@ -3,7 +3,6 @@ import { SprintStatus } from '../enums/SprintEnums';
 
 export interface ISprint extends Document {
   company_id: mongoose.Types.ObjectId;
-  project_id: mongoose.Types.ObjectId;
   name: string;
   sprint_number: number;
   goal: string;
@@ -20,11 +19,6 @@ const sprintSchema = new Schema<ISprint>(
     company_id: {
       type: Schema.Types.ObjectId,
       ref: 'Company',
-      required: true,
-    },
-    project_id: {
-      type: Schema.Types.ObjectId,
-      ref: 'Project',
       required: true,
     },
     name: {

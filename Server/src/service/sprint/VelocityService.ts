@@ -13,19 +13,17 @@ export class VelocityService implements IVelocityService {
     @inject(TYPES.ISprintRepository) private _sprintRepository: ISprintRepository,
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.ITeamRepository) private _teamRepository: ITeamRepository,
-  ) {}
+  ) { }
 
   async getVelocityAnalytics(sprintId: string): Promise<VelocityAnalyticsResponse> {
     const currentSprint = await this._sprintRepository.findById(sprintId);
     if (!currentSprint) throw new Error('Sprint not found');
 
-    // 1. Sprint Wise Velocity (Current sprint + its predecessors)
+
     const allSprints = await this._sprintRepository.find({
-      project_id: currentSprint.project_id,
+      company_id: currentSprint.company_id,
     });
 
-    // Filter to only include sprints that ended on or before the current sprint's end date
-    // and sort by date
     const relevantSprints = allSprints.filter((s) => new Date(s.end_date).getTime() <= new Date(currentSprint.end_date).getTime()).sort((a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime());
 
     const sprintWise: VelocityDataPoint[] = [];
@@ -43,26 +41,24 @@ export class VelocityService implements IVelocityService {
       });
     }
 
-    // 2. Multiple Team Velocity (Based on subtasks of completed issues)
+
     const teamMap = new Map<string, number>();
     const currentIssues = await this._issueRepository.findPopulated({ sprint_id: sprintId });
     const doneIssues = currentIssues.filter((i) => i.status === 'Done');
 
     for (const issue of doneIssues) {
-      // Get subtasks for this issue to find which teams were involved
+
       const subTasks = await this._subTaskRepository.find({ issue_id: issue._id });
       const teamsInvolved = new Set<string>();
 
       for (const st of subTasks) {
         if (st.team_id) {
-          // Populate team name if possible, or use a placeholder
-          // For now, we'll use the repository to get the team
+
           const team = await this._teamRepository.findById(st.team_id.toString());
           if (team) teamsInvolved.add(team.name);
         }
       }
 
-      // If no teams found via subtasks, fall back to assignee's team
       if (teamsInvolved.size === 0) {
         const assignee = issue.assignee_id as unknown as { team_id?: { name: string } };
         if (assignee && assignee.team_id) {
@@ -70,8 +66,6 @@ export class VelocityService implements IVelocityService {
         }
       }
 
-      // Credit the story points to each involved team
-      // If multiple teams worked on it, they all get credit for the completion
       teamsInvolved.forEach((teamName) => {
         teamMap.set(teamName, (teamMap.get(teamName) || 0) + (issue.story_points || 0));
       });
@@ -83,7 +77,7 @@ export class VelocityService implements IVelocityService {
     }));
 
     return {
-      sprintWise: sprintWise.slice(-6), // Last 6 sprints
+      sprintWise: sprintWise.slice(-6),
       multipleTeam,
     };
   }

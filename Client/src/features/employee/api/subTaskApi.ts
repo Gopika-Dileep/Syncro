@@ -25,6 +25,7 @@ export interface SubTask {
     estimated_hours: number;
     actual_hours: number;
     rework_reason?: string;
+    blocked_reason?: string;
     branch_name?: string;
     submission_link?: string;
     submission_description?: string;
@@ -70,6 +71,7 @@ export interface SubTaskFormData {
     estimated_hours?: number;
     actual_hours?: number;
     rework_reason?: string;
+    blocked_reason?: string;
     branch_name?: string;
     submission_link?: string;
     submission_description?: string;

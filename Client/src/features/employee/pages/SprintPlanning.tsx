@@ -88,10 +88,7 @@ export default function SprintPlanning() {
             // Fetch sprint issues once and backlog for initial project
             if (sprintId) fetchSprintIssues(sprintId);
             
-            if (currentSprint.project_id) {
-                setSelectedProjectId(currentSprint.project_id);
-                fetchBacklogIssues(currentSprint.project_id);
-            } else if (projectsRes.data?.length > 0) {
+            if (projectsRes.data?.length > 0) {
                 const firstProjectId = projectsRes.data[0]._id;
                 setSelectedProjectId(firstProjectId);
                 fetchBacklogIssues(firstProjectId);

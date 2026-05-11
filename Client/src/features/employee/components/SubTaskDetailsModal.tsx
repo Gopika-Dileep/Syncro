@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { 
-    X, 
-    Clock, 
-    Calendar, 
-    CheckCircle2, 
-    RotateCcw, 
-    ExternalLink, 
+import {
+    X,
+    Clock,
+    Calendar,
+    CheckCircle2,
+    RotateCcw,
+    ExternalLink,
     MessageSquare,
     MoreHorizontal,
     UserPlus,
@@ -40,7 +40,6 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
     const isReview = subTask.status === "In Review";
     const isDone = subTask.status === "Done";
 
-    // Determine module prefix for permission check
     const type = subTask.subtask_type?.toLowerCase() || 'task';
     const prefix = type === 'sub-task' ? 'task' : `issue:${type}`;
 
@@ -124,7 +123,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                         <History size={16} className="text-[#fa8029]" />
                                         <h3 className="text-[14px] font-bold text-[#1f2124]">Work Submission</h3>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Branch</p>
@@ -135,9 +134,9 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                         <div>
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Repository</p>
                                             {subTask.submission_link ? (
-                                                <a 
-                                                    href={subTask.submission_link} 
-                                                    target="_blank" 
+                                                <a
+                                                    href={subTask.submission_link}
+                                                    target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-[12px] text-blue-600 hover:underline flex items-center gap-1 font-medium"
                                                 >
@@ -167,7 +166,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                 <h3 className="text-[14px] font-bold text-[#1f2124] mb-4">Actions</h3>
                                 <div className="flex flex-wrap gap-3">
                                     {isTodo && canWork && (
-                                        <button 
+                                        <button
                                             onClick={() => onStatusChange(subTask._id, "In Progress")}
                                             className="flex items-center gap-2 px-4 py-2 bg-[#fa8029] text-white text-[12px] font-bold rounded-xl hover:bg-orange-600 transition-all shadow-md shadow-orange-200"
                                         >
@@ -176,7 +175,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                     )}
 
                                     {isInProgress && canWork && (
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 onClose();
                                                 onSubmitRequest?.();
@@ -189,7 +188,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
 
                                     {isReview && canReview && (
                                         <>
-                                            <button 
+                                            <button
                                                 onClick={async () => {
                                                     await onStatusChange(subTask._id, "Done");
                                                     onClose();
@@ -198,7 +197,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                             >
                                                 <CheckCircle2 size={16} /> Approve & Complete
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => setIsReworkModalOpen(true)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-rose-500 text-white text-[12px] font-bold rounded-xl hover:bg-rose-600 transition-all shadow-md shadow-rose-200"
                                             >
@@ -254,14 +253,14 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                             <p className="text-[11px] text-gray-400">No comments or feedback yet.</p>
                                         </div>
                                     )}
-                                    
+
                                     {((subTask as unknown as { comments?: { user?: { name: string }; created_at?: string; time?: string; text: string }[] }).comments || []).map((c, index) => (
                                         <div key={index} className="flex gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
                                             <div className="w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase flex-shrink-0 shadow-sm">
                                                 {c.user?.name ? (
-                                                    c.user.name.split(' ').length > 1 
-                                                    ? c.user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
-                                                    : c.user.name.substring(0, 2).toUpperCase()
+                                                    c.user.name.split(' ').length > 1
+                                                        ? c.user.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
+                                                        : c.user.name.substring(0, 2).toUpperCase()
                                                 ) : 'U'}
                                             </div>
                                             <div className="flex-1 bg-white rounded-2xl p-3 border border-gray-100 shadow-sm relative group">
@@ -278,14 +277,14 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                 </div>
 
                                 <div className="space-y-3 pt-2">
-                                    <textarea 
+                                    <textarea
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
                                         placeholder="Add a comment or provide feedback..."
                                         className="w-full h-24 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-[12px] focus:outline-none focus:ring-2 focus:ring-[#fa8029]/10 focus:border-[#fa8029]/30 transition-all resize-none font-medium"
                                     />
                                     <div className="flex justify-end">
-                                        <button 
+                                        <button
                                             onClick={handleAddComment}
                                             disabled={!comment.trim() || isAddingComment}
                                             className="px-6 py-2.5 bg-[#fa8029] text-white text-[11px] font-bold rounded-xl hover:bg-orange-600 transition-all uppercase tracking-wider disabled:bg-gray-200 shadow-lg shadow-orange-900/10 active:scale-95"
@@ -301,7 +300,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                         <div className="w-full lg:w-[280px] space-y-4">
                             <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                                 <h3 className="text-[14px] font-bold text-[#1f2124] mb-4">Details</h3>
-                                
+
                                 <div className="space-y-5">
                                     <div>
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Status</p>
@@ -381,7 +380,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
 
                             {/* Reassign Button */}
                             {canAssign && (
-                                <button 
+                                <button
                                     onClick={() => onReassign(subTask._id)}
                                     className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-gray-100 text-[#555] text-[12px] font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-sm"
                                 >
@@ -409,7 +408,7 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                             <p className="text-[12px] text-gray-500 leading-relaxed">
                                 Please specify what needs to be fixed or improved before this task can be approved.
                             </p>
-                            <textarea 
+                            <textarea
                                 autoFocus
                                 value={reworkReason}
                                 onChange={(e) => setReworkReason(e.target.value)}
@@ -417,13 +416,13 @@ export default function SubTaskDetailsModal({ isOpen, onClose, subTask, onStatus
                                 className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-[13px] focus:outline-none focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500/30 transition-all resize-none font-medium"
                             />
                             <div className="flex gap-3 pt-2">
-                                <button 
+                                <button
                                     onClick={() => setIsReworkModalOpen(false)}
                                     className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 text-[12px] font-bold rounded-xl hover:bg-gray-200 transition-all"
                                 >
                                     Cancel
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => {
                                         if (reworkReason.trim()) {
                                             onStatusChange(subTask._id, "To Do", { rework_reason: reworkReason });

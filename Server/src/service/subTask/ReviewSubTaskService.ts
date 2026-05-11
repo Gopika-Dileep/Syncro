@@ -22,12 +22,11 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
-  ) {}
+  ) { }
 
   async execute(subTaskId: string, data: ReviewSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
 
-    // Fallback to userId if employee profile is not found (for Owners/Admins)
     const actorId = employee?._id ? String(employee._id) : userId;
 
     const status = data.action === 'approve' ? SubTaskStatus.DONE : SubTaskStatus.IN_PROGRESS;

@@ -18,10 +18,8 @@ export class GetAssignedSubTasksService implements IGetAssignedSubTasksService {
 
   async execute(userId: string, search: string): Promise<SubTaskResponseDTO[]> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    if (!employee) throw new Error('Employee not found');
-
+    if (!employee) return [];
     const subTasks = await this._subTaskRepository.findAllByAssigneeId(employee._id.toString());
-
     const issues = await this._issueRepository.findPopulated({
       company_id: employee.company_id,
       assignee_id: employee._id,

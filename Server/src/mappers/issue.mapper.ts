@@ -4,7 +4,6 @@ import { IssueResponseDTO } from '../dto/issue.dto';
 function extractEmployee(ref: unknown): { _id: string; name: string; designation: string; avatar?: string } | undefined {
   if (!ref) return undefined;
 
-  // If it's a populated employee object
   if (typeof ref === 'object' && ref !== null) {
     const obj = ref as {
       _id?: unknown;
@@ -29,7 +28,6 @@ function extractEmployee(ref: unknown): { _id: string; name: string; designation
     }
   }
 
-  // If it's just an ID
   if (typeof ref === 'string' || (typeof ref === 'object' && ref !== null && typeof (ref as { toString?: () => string }).toString === 'function')) {
     return {
       _id: String(ref),
@@ -57,9 +55,9 @@ function mapAssignee(ref: unknown): IssueResponseDTO['assignee_id'] {
       designation: String(obj.designation || ''),
       team_id: teamIdObj
         ? {
-            _id: String(teamIdObj._id),
-            name: String(teamIdObj.name || ''),
-          }
+          _id: String(teamIdObj._id),
+          name: String(teamIdObj.name || ''),
+        }
         : obj.team_id
           ? String(obj.team_id)
           : undefined,
@@ -85,9 +83,9 @@ export class IssueMapper {
       assigned_by: extractEmployee(s.assigned_by),
       team: teamId
         ? {
-            _id: String(teamId._id),
-            name: String(teamId.name || ''),
-          }
+          _id: String(teamId._id),
+          name: String(teamId.name || ''),
+        }
         : undefined,
       title: issue.title,
       description: issue.description,
@@ -99,6 +97,8 @@ export class IssueMapper {
       priority: issue.priority,
       status: issue.status,
       type: issue.type,
+      rework_reason: issue.rework_reason,
+      blocked_reason: issue.blocked_reason,
       mentions: issue.mentions?.map((m) => m.toString()) || [],
       comments: (issue.comments || []).map((c) => ({
         user: extractEmployee(c.user) || null,

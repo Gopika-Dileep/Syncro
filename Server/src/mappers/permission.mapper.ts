@@ -22,6 +22,7 @@ export class PermissionMapper {
       if (p.task.delete) keys.push('task:delete');
       if (p.task.status_work) keys.push('task:status:work');
       if (p.task.status_review) keys.push('task:status:review');
+      if (p.task.block) keys.push('task:block');
     }
 
     if (p.sprint) {
@@ -43,6 +44,7 @@ export class PermissionMapper {
       if (p.issue.story.comment) keys.push('issue:story:comment');
       if (p.issue.story.status_work) keys.push('issue:story:status:work');
       if (p.issue.story.status_review) keys.push('issue:story:status:review');
+      if (p.issue.story.block) keys.push('issue:story:block');
 
       if (p.issue.task.create) keys.push('issue:task:create');
       if (p.issue.task.view) keys.push('issue:task:view');
@@ -52,6 +54,7 @@ export class PermissionMapper {
       if (p.issue.task.assign_to_sprint) keys.push('issue:task:assign_to_sprint');
       if (p.issue.task.status_work) keys.push('issue:task:status:work');
       if (p.issue.task.status_review) keys.push('issue:task:status:review');
+      if (p.issue.task.block) keys.push('issue:task:block');
 
       if (p.issue.bug.create) keys.push('issue:bug:create');
       if (p.issue.bug.view) keys.push('issue:bug:view');
@@ -61,6 +64,7 @@ export class PermissionMapper {
       if (p.issue.bug.assign_to_sprint) keys.push('issue:bug:assign_to_sprint');
       if (p.issue.bug.status_work) keys.push('issue:bug:status:work');
       if (p.issue.bug.status_review) keys.push('issue:bug:status:review');
+      if (p.issue.bug.block) keys.push('issue:bug:block');
     }
 
     if (p.team) {
@@ -74,12 +78,12 @@ export class PermissionMapper {
   static toStructured(keys: string[]): EmployeePermissionsDTO {
     const p: EmployeePermissionsDTO = {
       project: { create: false, view: { all: false, assigned: false }, update: false, delete: false },
-      task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, status_work: false, status_review: false },
+      task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, status_work: false, status_review: false, block: false },
       sprint: { create: false, view: { all: false }, update: false, delete: false, addStory: false, start: false, complete: false },
       issue: {
-        story: { create: false, view: false, update: false, delete: false, assign_to_sprint: false, comment: false, status_work: false, status_review: false },
-        task: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false },
-        bug: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false },
+        story: { create: false, view: false, update: false, delete: false, assign_to_sprint: false, comment: false, status_work: false, status_review: false, block: false },
+        task: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
+        bug: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
       },
       team: { view: { team: false, all: false } },
     };
@@ -105,6 +109,7 @@ export class PermissionMapper {
         if (parts[1] === 'assign') p.task.assign = true;
         if (parts[1] === 'update') p.task.update = true;
         if (parts[1] === 'delete') p.task.delete = true;
+        if (parts[1] === 'block') p.task.block = true;
         if (parts[1] === 'view') {
           if (parts[2] === 'assigned') p.task.view.assigned = true;
           if (parts[2] === 'team') p.task.view.team = true;
@@ -135,6 +140,7 @@ export class PermissionMapper {
         if (action === 'view') p.issue[sub].view = true;
         if (action === 'update') p.issue[sub].update = true;
         if (action === 'delete') p.issue[sub].delete = true;
+        if (action === 'block') p.issue[sub].block = true;
         if (action === 'assign') {
           if (sub === 'story') p.issue[sub].assign_to_sprint = true;
           else p.issue[sub].assign = true;

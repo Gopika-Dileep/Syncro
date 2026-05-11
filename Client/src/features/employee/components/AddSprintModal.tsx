@@ -14,7 +14,6 @@ interface AddSprintModalProps {
 
 export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting = false, initialData = null }: AddSprintModalProps) {
     const [name, setName] = useState("");
-    const [projectId, setProjectId] = useState("");
     const [sprintNumber, setSprintNumber] = useState<number>(1);
     const [goal, setGoal] = useState("");
     const [totalPoints, setTotalPoints] = useState<number>(40);
@@ -28,7 +27,6 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
         if (isOpen) {
             if (initialData) {
                 setName(initialData.name || "");
-                setProjectId(initialData.project_id || "");
                 setSprintNumber(initialData.sprint_number || 1);
                 setGoal(initialData.goal || "");
                 setTotalPoints(initialData.total_points || 0);
@@ -41,7 +39,6 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
                 }
             } else {
                 setName("");
-                setProjectId("");
                 setSprintNumber(1);
                 setGoal("");
                 setTotalPoints(40);
@@ -67,7 +64,6 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
         e.preventDefault();
         
         const payload: SprintFormData = {
-            project_id: projectId,
             name: name.trim(),
             sprint_number: Number(sprintNumber),
             goal: goal.trim(),
@@ -83,7 +79,7 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
         }
     };
 
-    const isFormValid = name.trim().length >= 2 && goal.trim().length >= 2 && projectId && startDate;
+    const isFormValid = name.trim().length >= 2 && goal.trim().length >= 2 && startDate;
 
     return createPortal(
         <div className="fixed inset-0 z-[1050] flex items-center justify-center p-4">

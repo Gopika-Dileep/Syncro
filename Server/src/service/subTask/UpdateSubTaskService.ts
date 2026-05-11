@@ -27,6 +27,9 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
     };
 
     if (data.status && data.status !== oldSubTask.status) {
+      if (data.status === 'Blocked' && !data.blocked_reason) {
+        throw new Error('Blocked reason is required when blocking a task');
+      }
       historyEntry.action = 'status_change';
       historyEntry.from = oldSubTask.status;
       historyEntry.to = data.status;

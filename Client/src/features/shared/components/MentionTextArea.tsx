@@ -1,4 +1,4 @@
- 
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Users } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -35,17 +35,16 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
     const [query, setQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [coords, setCoords] = useState({ top: 0, left: 0 });
-    
+
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
 
     const extractMentions = (text: string): string[] => {
-        // STRICT REGEX: Must be exactly 24 hex characters in brackets followed by (name)
         const mentionRegex = /@\[([a-f\d]{24})\]\(([^)]+)\)/g;
         const mentions: string[] = [];
         let match;
-        
+
         while ((match = mentionRegex.exec(text)) !== null) {
             mentions.push(match[1]);
         }
@@ -55,13 +54,9 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
         const cursorPos = e.target.selectionStart;
-        
-        // --- PREVENT ID CORRUPTION ---
-        // If the user managed to type inside a @[...] block, it would break the 24-char count
-        // The regex in extractMentions will naturally ignore broken IDs.
-        
+
         const lastAtIndex = newValue.lastIndexOf('@', cursorPos - 1);
-        
+
         if (lastAtIndex !== -1) {
             const charBeforeAt = lastAtIndex > 0 ? newValue[lastAtIndex - 1] : ' ';
             if (charBeforeAt === ' ' || charBeforeAt === '\n') {
@@ -80,22 +75,22 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
         } else {
             setShowSuggestions(false);
         }
-        
+
         onChange(newValue, extractMentions(newValue));
     };
 
     const updateCoords = () => {
         if (!textareaRef.current) return;
-        
+
         const { selectionStart } = textareaRef.current;
         const textBeforeCursor = textareaRef.current.value.substring(0, selectionStart);
         const lines = textBeforeCursor.split('\n');
         const lineCount = lines.length;
         const lastLineLength = lines[lineCount - 1].length;
-        
+
         const textareaHeight = textareaRef.current.offsetHeight;
-        const currentLineTop = lineCount * 22; 
-        
+        const currentLineTop = lineCount * 22;
+
         const showAbove = currentLineTop > textareaHeight - 80;
 
         setCoords({
@@ -106,28 +101,28 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
 
     const suggestions = useMemo(() => {
         if (!showSuggestions) return [];
-        return users.filter(u => 
+        return users.filter(u =>
             u.name.toLowerCase().includes(query.toLowerCase())
         ).slice(0, 5);
     }, [users, query, showSuggestions]);
 
     const handleSelectUser = (user: MentionUser) => {
         if (!textareaRef.current) return;
-        
+
         const cursorPos = textareaRef.current.selectionStart;
         const lastAtIndex = value.lastIndexOf('@', cursorPos - 1);
-        
+
         const before = value.substring(0, lastAtIndex);
         const after = value.substring(cursorPos);
-        
+
         // Ensure only ONE space at the end
         const mentionText = `@[${user._id}](${user.name}) `;
         const newValue = (before + mentionText + after.trimStart());
-        
+
         onChange(newValue, extractMentions(newValue));
         setShowSuggestions(false);
         setQuery('');
-        
+
         setTimeout(() => {
             if (textareaRef.current) {
                 textareaRef.current.focus();
@@ -163,18 +158,18 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
         if (e.key === 'Backspace' && textareaRef.current) {
             const pos = textareaRef.current.selectionStart;
             const text = value;
-            
+
             // Check if we are right after a mention: @[id](name) 
             if (text[pos - 1] === ' ' && text[pos - 2] === ')') {
                 const lastOpenParen = text.lastIndexOf('(', pos - 2);
                 const lastCloseBracket = text.lastIndexOf(']', lastOpenParen);
                 const lastOpenBracket = text.lastIndexOf('@[', lastCloseBracket);
-                
+
                 if (lastOpenBracket !== -1 && lastOpenBracket < lastOpenParen) {
                     e.preventDefault();
                     const newValue = text.substring(0, lastOpenBracket) + text.substring(pos);
                     onChange(newValue, extractMentions(newValue));
-                    
+
                     setTimeout(() => {
                         if (textareaRef.current) {
                             textareaRef.current.setSelectionRange(lastOpenBracket, lastOpenBracket);
@@ -217,7 +212,7 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
 
             const userName = match[2];
             parts.push(
-                <span 
+                <span
                     key={`mention-${match.index}`}
                     className="inline-block px-1.5 py-0 bg-[#fa8029]/15 text-[#fa8029] font-bold rounded border border-[#fa8029]/30"
                 >
@@ -237,10 +232,10 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
 
     return (
         <div className={cn(
-            "relative w-full group rounded-2xl border border-gray-200 bg-white transition-all focus-within:border-[#fa8029]/30 focus-within:ring-2 focus-within:ring-[#fa8029]/5", 
+            "relative w-full group rounded-2xl border border-gray-200 bg-white transition-all focus-within:border-[#fa8029]/30 focus-within:ring-2 focus-within:ring-[#fa8029]/5",
             className
         )}>
-            <div 
+            <div
                 ref={backdropRef}
                 className="absolute inset-0 p-4 text-[14px] leading-relaxed whitespace-pre-wrap break-words pointer-events-none border border-transparent select-none overflow-hidden text-gray-700"
                 style={{ fontFamily: 'inherit' }}
@@ -259,14 +254,14 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
                 className="w-full min-h-[100px] p-4 bg-transparent text-[14px] leading-relaxed outline-none transition-all resize-none custom-scrollbar relative z-10 caret-[#fa8029]"
                 style={{ WebkitTextFillColor: 'transparent' }}
             />
-            
+
             {showSuggestions && suggestions.length > 0 && (
-                <div 
+                <div
                     ref={suggestionsRef}
                     className="absolute z-[5000] w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200"
-                    style={{ 
-                        top: `${coords.top}px`, 
-                        left: `${coords.left}px` 
+                    style={{
+                        top: `${coords.top}px`,
+                        left: `${coords.left}px`
                     }}
                 >
                     <div className="p-3 border-b border-gray-50 bg-[#fff9f5] flex items-center gap-2">

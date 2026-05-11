@@ -19,6 +19,7 @@ export interface IIssue extends Document {
   status: IssueStatus;
   type: IssueType;
   rework_reason?: string;
+  blocked_reason?: string;
   branch_name?: string;
   submission_link?: string;
   submission_description?: string;
@@ -130,6 +131,10 @@ const issueSchema = new Schema<IIssue>(
       default: IssueType.STORY,
     },
     rework_reason: {
+      type: String,
+      required: false,
+    },
+    blocked_reason: {
       type: String,
       required: false,
     },

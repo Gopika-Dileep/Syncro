@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { ITeamRepository } from '../../interfaces/repositories/ITeamRepository';
+import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { IGetTeamsService } from '../../interfaces/services/team/IGetTeamsService';
 import { GetTeamsRequestDTO, PaginatedTeamResponseDTO } from '../../dto/team.dto';
 import { TeamMapper } from '../../mappers/team.mapper';
@@ -13,13 +14,24 @@ export class GetTeamsService implements IGetTeamsService {
   constructor(
     @inject(TYPES.ITeamRepository) private _teamRepo: ITeamRepository,
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
   ) {}
 
   async execute(userId: string, query: GetTeamsRequestDTO): Promise<PaginatedTeamResponseDTO> {
-    const company = await this._companyRepo.findOne({ user_id: userId });
-    if (!company) throw new NotFoundError(TEAM_MESSAGES.COMPANY_NOT_FOUND);
+    let companyId: string;
 
-    const { teams, total } = await this._teamRepo.getTeamsWithPagination(company._id.toString(), query.page, query.limit, query.search);
+    // Check if user is a company
+    const company = await this._companyRepo.findOne({ user_id: userId });
+    if (company) {
+      companyId = company._id.toString();
+    } else {
+      // Check if user is an employee
+      const employee = await this._employeeRepo.findOne({ user_id: userId });
+      if (!employee) throw new NotFoundError(TEAM_MESSAGES.COMPANY_NOT_FOUND);
+      companyId = employee.company_id.toString();
+    }
+
+    const { teams, total } = await this._teamRepo.getTeamsWithPagination(companyId, query.page, query.limit, query.search);
     return {
       teams: TeamMapper.toResponseList(teams),
       total,

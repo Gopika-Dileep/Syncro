@@ -252,6 +252,7 @@ function getStoryPermissions(p: EmployeePermissions['issue']['story'] | undefine
     if (p.comment) res.push("Comment");
     if (p.status_work) res.push("Status (Work)");
     if (p.status_review) res.push("Status (Review)");
+    if (p.block) res.push("Block");
     return res;
 }
 function getIssueTaskPermissions(p: EmployeePermissions['issue']['task'] | undefined) {
@@ -265,6 +266,7 @@ function getIssueTaskPermissions(p: EmployeePermissions['issue']['task'] | undef
     if (p.assign_to_sprint) res.push("Assign to Sprint");
     if (p.status_work) res.push("Status (Work)");
     if (p.status_review) res.push("Status (Review)");
+    if (p.block) res.push("Block");
     return res;
 }
 function getIssueBugPermissions(p: EmployeePermissions['issue']['bug'] | undefined) {
@@ -278,6 +280,7 @@ function getIssueBugPermissions(p: EmployeePermissions['issue']['bug'] | undefin
     if (p.assign_to_sprint) res.push("Assign to Sprint");
     if (p.status_work) res.push("Status (Work)");
     if (p.status_review) res.push("Status (Review)");
+    if (p.block) res.push("Block");
     return res;
 }
 function getSprintPermissions(p: EmployeePermissions['sprint'] | undefined) {
@@ -304,6 +307,7 @@ function getTaskPermissions(p: EmployeePermissions['task'] | undefined) {
     if (p.delete) res.push("Delete");
     if (p.status_work) res.push("Status (Work)");
     if (p.status_review) res.push("Status (Review)");
+    if (p.block) res.push("Block");
     return res;
 }
 function getTeamPermissions(p: EmployeePermissions['team'] | undefined) {

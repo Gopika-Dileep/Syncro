@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Flag, Hash, Users as UsersIcon, User, Send, Paperclip, Clock, MessageSquare, History, CheckCircle, ExternalLink, BookOpen, GitBranch, Check, RotateCcw } from "lucide-react";
+import { X, Flag, Hash, Users as UsersIcon, User, Send, Paperclip, Clock, MessageSquare, History, CheckCircle, ExternalLink, BookOpen, GitBranch, Check, RotateCcw, Play } from "lucide-react";
 import { createPortal } from "react-dom";
-import { type Issue, getIssueByIdApi, addCommentToIssueApi, addIssueAttachmentApi } from "../api/issueApi";
-import { type SubTask, getSubTaskByIdApi, addCommentToSubTaskApi, addAttachmentToSubTaskApi, getSubTasksByIssueApi, reviewSubTaskApi } from "../api/subTaskApi";
+import { type Issue, getIssueByIdApi, addCommentToIssueApi, addIssueAttachmentApi, updateIssueApi } from "../api/issueApi";
+import { type SubTask, getSubTaskByIdApi, addCommentToSubTaskApi, addAttachmentToSubTaskApi, getSubTasksByIssueApi, reviewSubTaskApi, updateSubTaskApi } from "../api/subTaskApi";
 import { uploadFileApi } from "../api/fileApi";
 import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     const [isReviewing, setIsReviewing] = useState(false);
     const [reworkReason, setReworkReason] = useState("");
     const [showReworkInput, setShowReworkInput] = useState(false);
+    const [blockReason, setBlockReason] = useState("");
+    const [showBlockInput, setShowBlockInput] = useState(false);
     const [employees, setEmployees] = useState<TeamMember[]>([]);
     const [mentions, setMentions] = useState<string[]>([]);
     const { can, user: currentUser } = usePermission();
@@ -44,10 +46,10 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         const activeType = targetType || internalType;
         if (!activeId) return;
         try {
-            const res = activeType === 'issue' 
+            const res = activeType === 'issue'
                 ? await getIssueByIdApi(activeId)
                 : await getSubTaskByIdApi(activeId);
-            
+
             if (res.success) {
                 setFullItem(res.data);
             }
@@ -78,9 +80,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         try {
             const res = await getTeamDirectoryApi();
             if (res.success) {
-                // Flatten members from all teams
                 const allMembers = res.data.flatMap(team => team.members);
-                // Remove duplicates by ID
                 const uniqueMembers = Array.from(new Map(allMembers.map(m => [m._id, m])).values());
                 setEmployees(uniqueMembers);
             }
@@ -107,7 +107,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             setChildSubTasks([]);
             setFullItem(null);
         }
-    }, [isOpen, item, item?._id, item?.status, type, fetchFullDetails, fetchParentInfo, fetchChildSubTasks, fetchEmployees]); // Added type and status to trigger refresh if it changes in parent
+    }, [isOpen, item, item?._id, item?.status, type, fetchFullDetails, fetchParentInfo, fetchChildSubTasks, fetchEmployees]);
 
     if (!fullItem) return null;
 
@@ -115,8 +115,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         if (!comment.trim() && pendingAttachments.length === 0) return;
         setIsSubmitting(true);
         try {
-            const commentData = { 
-                text: comment, 
+            const commentData = {
+                text: comment,
                 attachments: pendingAttachments,
                 mentions: mentions
             };
@@ -184,7 +184,6 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            // Restore focus to comment box if in comment mode
             if (uploadMode === 'comment') {
                 const textarea = document.querySelector('textarea[placeholder*="comment"]') as HTMLTextAreaElement;
                 textarea?.focus();
@@ -202,6 +201,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             case 'new': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'ready': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
             case 'to do': return 'bg-purple-50 text-purple-600 border-purple-100';
+            case 'blocked': return 'bg-amber-50 text-amber-600 border-amber-100';
             case 'done': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
             default: return 'bg-slate-50 text-slate-600 border-slate-100';
         }
@@ -231,8 +231,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             });
             if (res.success) {
                 toast.success(action === 'approve' ? "Task approved and completed!" : "Task sent back for rework");
-                
-                // If reject, add the reason as a comment automatically if the API didn't
+
                 if (action === 'reject') {
                     await addCommentToSubTaskApi(fullItem._id, {
                         text: `🔄 REWORK REQUIRED: ${reworkReason}`
@@ -253,13 +252,43 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         }
     };
 
+    const handleBlock = async (action: 'block' | 'unblock') => {
+        if (action === 'block' && !blockReason.trim()) {
+            setShowBlockInput(true);
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const data = action === 'block' 
+                ? { status: 'Blocked', blocked_reason: blockReason }
+                : { status: 'In Progress' };
+
+            const res = internalType === 'issue'
+                ? await updateIssueApi(fullItem._id, data)
+                : await updateSubTaskApi(fullItem._id, data);
+
+            if (res.success) {
+                toast.success(action === 'block' ? "Item blocked" : "Item unblocked / resumed");
+                setBlockReason("");
+                setShowBlockInput(false);
+                onUpdate?.();
+                fetchFullDetails();
+            }
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { message?: string } } };
+            toast.error(e.response?.data?.message || "Failed to update status");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const isInReview = fullItem.status.toLowerCase() === 'in review' || fullItem.status.toLowerCase() === 'submitted';
-    const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') && 
+    const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') &&
         (fullItem.status.toLowerCase() === 'rework' || !!(internalType === 'subtask' ? (fullItem as SubTask).rework_reason : null));
     const isReviewer = can('task:view:all') || can('task:update') || can('task:status:review') || currentUser?.role === 'company';
     const canAssign = can('task:assign') || can('task:view:all') || can('project:update') || currentUser?.role === 'company';
 
-    // Combine comments and history into a single timeline
     const rawTimeline = [
         ...(fullItem.comments || []).map(c => ({ ...c, type: 'comment', source: 'current', taskId: internalType === 'subtask' ? fullItem._id : undefined })),
         ...(parentIssue?.comments || []).map(c => ({ ...c, type: 'comment', source: 'story' })),
@@ -282,14 +311,14 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     const drawerContent = (
         <div className={`fixed inset-0 z-[1050] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
-            
+
             <div className={`absolute top-0 right-0 h-full w-full max-w-[550px] bg-white shadow-2xl transition-transform duration-300 ease-out transform flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                
+
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-100 shrink-0 bg-white z-10">
                     <div className="flex items-center gap-3">
                         {internalType === 'subtask' && type === 'issue' && (
-                            <button 
+                            <button
                                 onClick={() => {
                                     setFullItem(item);
                                     setInternalType('issue');
@@ -356,7 +385,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 {fullItem.title}
                             </h2>
                             {onReassign && canAssign && (
-                                <button 
+                                <button
                                     onClick={onReassign}
                                     className="px-4 py-1.5 bg-white border border-[#eee] rounded-xl text-[11px] font-black text-gray-400 hover:text-[#fa8029] hover:border-[#fa8029]/30 transition-all flex items-center gap-2 shadow-sm shrink-0"
                                 >
@@ -368,14 +397,14 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                         {/* Tabs */}
                         <div className="flex items-center gap-6 border-b border-gray-100 mb-6">
-                            <button 
+                            <button
                                 onClick={() => setActiveTab('details')}
                                 className={`pb-3 text-[13px] font-bold transition-all relative ${activeTab === 'details' ? 'text-[#fa8029]' : 'text-gray-400 hover:text-gray-600'}`}
                             >
                                 Details
                                 {activeTab === 'details' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#fa8029] rounded-full" />}
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setActiveTab('activity')}
                                 className={`pb-3 text-[13px] font-bold transition-all relative flex items-center gap-2 ${activeTab === 'activity' ? 'text-[#fa8029]' : 'text-gray-400 hover:text-gray-600'}`}
                             >
@@ -415,7 +444,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                     </div>
                                 </div>
 
-                                 {/* Bug Specifics */}
+                                {/* Bug Specifics */}
                                 {type === 'issue' && (fullItem as Issue).type === 'bug' && (
                                     <>
                                         {(fullItem as Issue).reproduction_steps && (
@@ -457,7 +486,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {/* Parent Context for Sub-tasks */}
                                 {type === 'subtask' && parentIssue && (
                                     <div className="p-4 rounded-2xl bg-[#fff5ef]/50 border border-[#fa8029]/10 space-y-3">
@@ -466,7 +495,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             <h3 className="text-[11px] font-bold uppercase tracking-wider">Parent Story</h3>
                                         </div>
                                         <h4 className="text-[14px] font-bold text-gray-800 leading-snug">{parentIssue.title}</h4>
-                                        
+
                                         {parentIssue.criteria && parentIssue.criteria.length > 0 && (
                                             <div className="pt-3 border-t border-[#fa8029]/10 space-y-2">
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Goal Criteria</span>
@@ -482,7 +511,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                         )}
                                     </div>
                                 )}
-                                
+
                                 {/* SubTask Specifics */}
                                 {(fullItem as SubTask).submission_link && (
                                     <div className="p-4 rounded-2xl bg-[#f9f9f9] border border-gray-100 space-y-4">
@@ -490,7 +519,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Submission Details</h3>
                                             <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase">Submitted</span>
                                         </div>
-                                        
+
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500">
@@ -504,9 +533,9 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                                             <div>
                                                 <span className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Live Link</span>
-                                                <a 
-                                                    href={(fullItem as SubTask).submission_link} 
-                                                    target="_blank" 
+                                                <a
+                                                    href={(fullItem as SubTask).submission_link}
+                                                    target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-[13px] font-bold text-blue-500 hover:underline flex items-center gap-1.5 bg-white p-2 rounded-lg border border-gray-100 shadow-sm inline-flex"
                                                 >
@@ -536,8 +565,20 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                         </div>
                                     </div>
                                 )}
-                                
-                                 {/* Child Sub-tasks Section for Stories */}
+
+                                {fullItem.status === 'Blocked' && fullItem.blocked_reason && (
+                                    <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100">
+                                        <div className="flex items-center gap-2 mb-2 text-amber-500">
+                                            <Clock size={14} />
+                                            <h3 className="text-[11px] font-bold uppercase tracking-wider">Blocking Reason</h3>
+                                        </div>
+                                        <div className="text-[13px] text-gray-700 italic">
+                                            <MentionText text={fullItem.blocked_reason || ""} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Child Sub-tasks Section for Stories */}
                                 {type === 'issue' && (fullItem as Issue).type === 'story' && childSubTasks.length > 0 && (
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
@@ -545,8 +586,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                         </div>
                                         <div className="grid grid-cols-1 gap-3">
                                             {childSubTasks.map((st) => (
-                                                <div 
-                                                    key={st._id} 
+                                                <div
+                                                    key={st._id}
                                                     onClick={() => {
                                                         setFullItem(st);
                                                         setInternalType('subtask');
@@ -560,12 +601,11 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                                 <div className={`w-2 h-2 rounded-full shrink-0 ${st.status === 'Done' ? 'bg-emerald-500' : st.status === 'In Progress' ? 'bg-blue-500' : 'bg-gray-300'}`} />
                                                                 <span className="text-[14px] font-bold text-gray-800 truncate leading-tight">{st.title}</span>
                                                             </div>
-                                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shrink-0 ${
-                                                                st.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                                st.status === 'In Progress' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                                                st.status === 'In Review' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                                                                'bg-gray-50 text-gray-400 border-gray-100'
-                                                            }`}>
+                                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shrink-0 ${st.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                                    st.status === 'In Progress' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                                        st.status === 'In Review' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                                                            'bg-gray-50 text-gray-400 border-gray-100'
+                                                                }`}>
                                                                 {st.status}
                                                             </span>
                                                         </div>
@@ -612,7 +652,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 {/* People Section */}
                                 <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm space-y-4">
                                     <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-2">People</h3>
-                                    
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="flex items-center gap-3 group/assignee">
                                             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
@@ -623,10 +663,10 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                     <span className="text-[10px] font-bold text-gray-400 uppercase block mb-0.5">Assignee</span>
                                                 </div>
                                                 <span className="text-[13px] font-bold text-gray-800 truncate block">
-                                                    {(fullItem.assignee_id as { name?: string })?.name || 
-                                                     (fullItem.assignee_id as { user_id?: { name: string } })?.user_id?.name || 
-                                                     (internalType === 'issue' ? (fullItem as Issue).assign_to?.name : null) || 
-                                                     'Unassigned'}
+                                                    {(fullItem.assignee_id as { name?: string })?.name ||
+                                                        (fullItem.assignee_id as { user_id?: { name: string } })?.user_id?.name ||
+                                                        (internalType === 'issue' ? (fullItem as Issue).assign_to?.name : null) ||
+                                                        'Unassigned'}
                                                 </span>
                                             </div>
                                         </div>
@@ -663,7 +703,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Attachments</h3>
-                                        <button 
+                                        <button
                                             onClick={() => triggerFileUpload('item')}
                                             disabled={isUploading}
                                             className="text-[11px] font-bold text-[#fa8029] hover:underline flex items-center gap-1 disabled:opacity-50"
@@ -675,10 +715,10 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                     <div className="grid grid-cols-2 gap-3">
                                         {(fullItem.attachments && fullItem.attachments.length > 0) ? (
                                             fullItem.attachments.map((file, idx) => (
-                                                <a 
-                                                    key={idx} 
-                                                    href={file.file_url} 
-                                                    target="_blank" 
+                                                <a
+                                                    key={idx}
+                                                    href={file.file_url}
+                                                    target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center gap-3 p-2 bg-white border border-gray-100 rounded-lg hover:border-[#fa8029]/30 transition-colors group"
                                                 >
@@ -705,24 +745,24 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 {/* Activity Filter Bar */}
                                 {(childSubTasks.length > 0 || parentIssue) && (
                                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-                                        <button 
+                                        <button
                                             onClick={() => setActivityFilter('all')}
                                             className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${activityFilter === 'all' ? 'bg-[#fa8029] text-white shadow-md shadow-orange-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                                         >
                                             All Activity
                                         </button>
-                                        
+
                                         {/* For Stories: Show "Story Only" and each Sub-task */}
                                         {type === 'issue' && (
                                             <>
-                                                <button 
+                                                <button
                                                     onClick={() => setActivityFilter('story')}
                                                     className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${activityFilter === 'story' ? 'bg-[#fa8029] text-white shadow-md shadow-orange-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                                                 >
                                                     Story Only
                                                 </button>
                                                 {childSubTasks.map(st => (
-                                                    <button 
+                                                    <button
                                                         key={st._id}
                                                         onClick={() => setActivityFilter(st._id)}
                                                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${activityFilter === st._id ? 'bg-[#fa8029] text-white shadow-md shadow-orange-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
@@ -736,13 +776,13 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                         {/* For Sub-tasks: Show "This Task" and "Parent Story" */}
                                         {type === 'subtask' && parentIssue && (
                                             <>
-                                                <button 
+                                                <button
                                                     onClick={() => setActivityFilter('this_task')}
                                                     className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${activityFilter === 'this_task' ? 'bg-[#fa8029] text-white shadow-md shadow-orange-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                                                 >
                                                     This Task
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => setActivityFilter('story')}
                                                     className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 ${activityFilter === 'story' ? 'bg-[#fa8029] text-white shadow-md shadow-orange-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                                                 >
@@ -752,13 +792,13 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                         )}
                                     </div>
                                 )}
-                                
+
                                 {/* Timeline Feed */}
                                 <div className="space-y-8 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-[1px] before:bg-gray-100">
                                     {timeline.length > 0 ? (
                                         timeline.map((entry, idx) => {
-                                            const e = entry as { 
-                                                type: string; 
+                                            const e = entry as {
+                                                type: string;
                                                 user?: { name?: string; user_id?: { name: string }; _id: string } | string;
                                                 created_at: string;
                                                 source: string;
@@ -771,9 +811,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                             return (
                                                 <div key={idx} className="relative pl-12">
                                                     {/* Icon Node */}
-                                                    <div className={`absolute left-0 top-0 w-[34px] h-[34px] rounded-full border-4 border-[#fcfcfc] flex items-center justify-center z-10 ${
-                                                        e.type === 'comment' ? 'bg-[#fff5ef] text-[#fa8029]' : 'bg-gray-50 text-gray-400'
-                                                    }`}>
+                                                    <div className={`absolute left-0 top-0 w-[34px] h-[34px] rounded-full border-4 border-[#fcfcfc] flex items-center justify-center z-10 ${e.type === 'comment' ? 'bg-[#fff5ef] text-[#fa8029]' : 'bg-gray-50 text-gray-400'
+                                                        }`}>
                                                         {e.type === 'comment' ? <MessageSquare size={14} /> : <History size={14} />}
                                                     </div>
 
@@ -789,7 +828,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                                 <span className="text-[8px] font-black text-[#fa8029] bg-[#fff5ef] px-1.5 py-0.5 rounded border border-[#fa8029]/10 uppercase">Story Context</span>
                                                             )}
                                                         </div>
-                                                        
+
                                                         {e.type === 'comment' ? (
                                                             <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                                                 <div className="text-[13px] text-gray-600 leading-relaxed">
@@ -798,9 +837,9 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                                 {e.attachments && e.attachments.length > 0 && (
                                                                     <div className="mt-3 flex flex-wrap gap-2">
                                                                         {e.attachments.map((att, aIdx) => (
-                                                                            <a 
-                                                                                key={aIdx} 
-                                                                                href={att.file_url} 
+                                                                            <a
+                                                                                key={aIdx}
+                                                                                href={att.file_url}
                                                                                 className="text-[11px] text-[#fa8029] bg-[#fff5ef] px-2 py-1 rounded border border-[#fa8029]/10 flex items-center gap-1"
                                                                             >
                                                                                 <Paperclip size={10} /> {att.file_name}
@@ -817,13 +856,13 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                                                 </span></>}
                                                                 {e.to && <> to <span className="font-bold text-[#fa8029]">
                                                                     {e.to === 'assigned_new_employee' ? (
-                                                                        (fullItem.assignee_id as { name?: string })?.name || 
-                                                                        (fullItem.assignee_id as { user_id?: { name: string } })?.user_id?.name || 
-                                                                        (fullItem as unknown as { assign_to?: { name: string } }).assign_to?.name || 
+                                                                        (fullItem.assignee_id as { name?: string })?.name ||
+                                                                        (fullItem.assignee_id as { user_id?: { name: string } })?.user_id?.name ||
+                                                                        (fullItem as unknown as { assign_to?: { name: string } }).assign_to?.name ||
                                                                         'Assignee'
-                                                                    ) : 
-                                                                     e.to === 'new_sprint' ? 'New Sprint' : 
-                                                                     e.to}
+                                                                    ) :
+                                                                        e.to === 'new_sprint' ? 'New Sprint' :
+                                                                            e.to}
                                                                 </span></>}
                                                             </div>
                                                         )}
@@ -847,19 +886,86 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                     {/* Review Actions Bar */}
                     {isInReview && isReviewer && !showReworkInput && (
                         <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
-                            <button 
+                            <button
                                 onClick={() => handleReview('approve')}
                                 disabled={isReviewing}
                                 className="flex-1 bg-emerald-500 text-white py-3 rounded-2xl text-[13px] font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                             >
                                 <Check size={18} /> Approve & Complete
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setShowReworkInput(true)}
                                 disabled={isReviewing}
                                 className="flex-1 bg-rose-500 text-white py-3 rounded-2xl text-[13px] font-bold shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all flex items-center justify-center gap-2"
                             >
                                 <RotateCcw size={18} /> Rework
+                            </button>
+                        </div>
+                    )}
+
+                    {fullItem.status === 'In Progress' && (
+                        internalType === 'issue' ? (
+                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block' as any) :
+                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block' as any) :
+                            can('issue:task:block' as any)
+                        ) : (
+                            (fullItem as SubTask).subtask_type === 'sub-task' ? can('task:block') :
+                            (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block' as any) :
+                            can('issue:task:block' as any)
+                        )
+                    ) && !showBlockInput && (
+                        <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
+                            <button
+                                onClick={() => setShowBlockInput(true)}
+                                disabled={isSubmitting}
+                                className="flex-1 bg-amber-500 text-white py-3 rounded-2xl text-[13px] font-bold shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Clock size={18} /> Block {internalType === 'issue' ? 'Issue' : 'Task'}
+                            </button>
+                        </div>
+                    )}
+
+                    {fullItem.status === 'Blocked' && (
+                        internalType === 'issue' ? (
+                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block' as any) :
+                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block' as any) :
+                            can('issue:task:block' as any)
+                        ) : (
+                            (fullItem as SubTask).subtask_type === 'sub-task' ? can('task:block') :
+                            (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block' as any) :
+                            can('issue:task:block' as any)
+                        )
+                    ) && !showBlockInput && (
+                        <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
+                            <button
+                                onClick={() => handleBlock('unblock')}
+                                disabled={isSubmitting}
+                                className="flex-1 bg-blue-500 text-white py-3 rounded-2xl text-[13px] font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Play size={18} /> Unblock / Resume Work
+                            </button>
+                        </div>
+                    )}
+
+                    {showBlockInput && (
+                        <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-300">
+                            <div className="flex items-center justify-between px-1">
+                                <span className="text-[11px] font-bold text-amber-500 uppercase tracking-wider">Blocking Reason</span>
+                                <button onClick={() => setShowBlockInput(false)} className="text-[10px] font-bold text-gray-400 hover:text-gray-600">Cancel</button>
+                            </div>
+                            <MentionTextArea
+                                value={blockReason}
+                                onChange={(text) => setBlockReason(text)}
+                                placeholder="Explain why this item is blocked..."
+                                users={employees}
+                                className="bg-amber-50/30 border border-amber-100 min-h-[100px]"
+                            />
+                            <button
+                                onClick={() => handleBlock('block')}
+                                disabled={isSubmitting || !blockReason.trim()}
+                                className="w-full bg-amber-500 text-white py-3 rounded-2xl text-[13px] font-bold shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all"
+                            >
+                                {isSubmitting ? 'Blocking...' : 'Confirm Block'}
                             </button>
                         </div>
                     )}
@@ -871,18 +977,17 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">Rework Reason</span>
                                 <button onClick={() => setShowReworkInput(false)} className="text-[10px] font-bold text-gray-400 hover:text-gray-600">Cancel</button>
                             </div>
-                            <MentionTextArea 
+                            <MentionTextArea
                                 value={reworkReason}
                                 onChange={(text) => {
                                     setReworkReason(text);
-                                    // Optionally we could track rework mentions too, 
-                                    // but for now we'll focus on the text
+
                                 }}
                                 placeholder="Explain what needs to be fixed... (Type @ to mention)"
                                 users={employees}
                                 className="bg-rose-50/30 border border-rose-100 min-h-[100px]"
                             />
-                            <button 
+                            <button
                                 onClick={() => handleReview('reject')}
                                 disabled={isReviewing || !reworkReason.trim()}
                                 className="w-full bg-rose-500 text-white py-3 rounded-2xl text-[13px] font-bold shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all"
@@ -898,7 +1003,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 <div key={idx} className="flex items-center gap-2 bg-[#fff5ef] px-3 py-1.5 rounded-lg border border-[#fa8029]/10 group animate-in zoom-in-95 duration-200">
                                     <Paperclip size={12} className="text-[#fa8029]" />
                                     <span className="text-[11px] font-bold text-[#fa8029] max-w-[150px] truncate">{att.file_name}</span>
-                                    <button 
+                                    <button
                                         onClick={() => setPendingAttachments(prev => prev.filter((_, i) => i !== idx))}
                                         className="text-gray-400 hover:text-rose-500 transition-colors"
                                     >
@@ -920,20 +1025,20 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                             className="bg-gray-50 border border-gray-100 pr-12 min-h-[100px]"
                         />
                         <div className="absolute bottom-4 right-4 flex items-center gap-2 z-20">
-                            <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                onChange={handleFileChange} 
-                                className="hidden" 
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
                             />
-                            <button 
+                            <button
                                 onClick={() => triggerFileUpload('comment')}
                                 disabled={isUploading}
                                 className={`p-2 transition-colors rounded-lg disabled:opacity-50 ${isUploading && uploadMode === 'comment' ? 'text-[#fa8029] animate-pulse' : 'text-gray-400 hover:text-[#fa8029]'}`}
                             >
                                 <Paperclip size={18} />
                             </button>
-                            <button 
+                            <button
                                 onClick={handleAddComment}
                                 disabled={isSubmitting || !comment.trim()}
                                 className="p-2 bg-[#fa8029] text-white rounded-xl shadow-lg shadow-[#fa8029]/20 hover:bg-[#e67324] disabled:opacity-50 disabled:shadow-none transition-all"

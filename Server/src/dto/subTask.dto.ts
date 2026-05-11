@@ -32,6 +32,7 @@ export const SubTaskBaseSchema = z.object({
   estimated_hours: z.number().min(0, 'Estimated hours must be non-negative').optional(),
   actual_hours: z.number().min(0, 'Actual hours must be non-negative').optional(),
   rework_reason: z.string().optional(),
+  blocked_reason: z.string().optional(),
   branch_name: z.string().optional(),
   submission_link: z.string().url('Invalid submission link').optional().or(z.literal('')),
   submission_description: z.string().optional(),
@@ -115,6 +116,7 @@ export interface SubTaskResponseDTO {
   estimated_hours: number;
   actual_hours: number;
   rework_reason?: string;
+  blocked_reason?: string;
   branch_name?: string;
   submission_link?: string;
   submission_description?: string;

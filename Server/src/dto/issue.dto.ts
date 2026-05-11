@@ -37,6 +37,7 @@ export const IssueBaseSchema = z.object({
   status: z.nativeEnum(IssueStatus).optional(),
   type: z.nativeEnum(IssueType).optional(),
   rework_reason: z.string().optional(),
+  blocked_reason: z.string().optional(),
   branch_name: z.string().optional(),
   submission_link: z.string().optional(),
   submission_description: z.string().optional(),
@@ -118,6 +119,7 @@ export interface IssueResponseDTO {
   status: IssueStatus;
   type: IssueType;
   rework_reason?: string;
+  blocked_reason?: string;
   branch_name?: string;
   submission_link?: string;
   submission_description?: string;

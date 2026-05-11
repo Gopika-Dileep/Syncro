@@ -23,6 +23,7 @@ export interface EmployeePermissions {
         delete: boolean;
         status_work: boolean;
         status_review: boolean;
+        block: boolean;
     };
     sprint: {
         create: boolean;
@@ -34,9 +35,9 @@ export interface EmployeePermissions {
         complete: boolean;
     };
     issue: {
-        story: { create: boolean; view: boolean; update: boolean; delete: boolean; assign_to_sprint: boolean; comment: boolean; status_work: boolean; status_review: boolean };
-        task: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean };
-        bug: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean };
+        story: { create: boolean; view: boolean; update: boolean; delete: boolean; assign_to_sprint: boolean; comment: boolean; status_work: boolean; status_review: boolean; block: boolean };
+        task: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean; block: boolean };
+        bug: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean; block: boolean };
     };
     team: {
         view: { team: boolean; all: boolean };
@@ -119,7 +120,7 @@ export const createTeamApi = async (name: string): Promise<{ success: boolean; d
     return response.data
 };
 
-export const getTeamsApi = async (page: number = 1, limit: number = 10, search: string = ""): Promise<{ success: boolean; data: Team[]; total: number }> => {
+export const getTeamsApi = async (page: number = 1, limit: number = 10, search: string = ""): Promise<{ success: boolean; data: Team[]; total: number; message?: string }> => {
     const response = await axiosInstance.get(`${ENDPOINTS.COMPANY.TEAMS}?page=${page}&limit=${limit}&search=${search}`);
     const resData = response.data;
     return {

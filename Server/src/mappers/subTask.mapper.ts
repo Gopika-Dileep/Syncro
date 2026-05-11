@@ -6,7 +6,6 @@ import { SubTaskStatus, SubTaskPriority } from '../enums/SubTaskEnums';
 function extractRef(ref: unknown): SubTaskPersonRef | null {
   if (!ref) return null;
 
-  // If it's a populated employee object
   if (typeof ref === 'object' && ref !== null) {
     const obj = ref as {
       _id?: unknown;
@@ -34,7 +33,6 @@ function extractRef(ref: unknown): SubTaskPersonRef | null {
     }
   }
 
-  // If it's just an ID or has a name
   const obj = ref as { _id?: { toString(): string }; name?: string };
   return {
     _id: obj._id?.toString() ?? String(ref),
@@ -69,17 +67,18 @@ export class SubTaskMapper {
       estimated_hours: subTask.estimated_hours,
       actual_hours: subTask.actual_hours,
       rework_reason: subTask.rework_reason,
+      blocked_reason: subTask.blocked_reason,
       branch_name: subTask.branch_name,
       submission_link: subTask.submission_link,
       submission_description: subTask.submission_description,
       parent_issue:
         t.issue_id && typeof t.issue_id === 'object'
           ? {
-              _id: String((t.issue_id as IPopulatedIssue)._id),
-              title: String((t.issue_id as IPopulatedIssue).title),
-              type: String((t.issue_id as IPopulatedIssue).type),
-              status: String((t.issue_id as IPopulatedIssue).status),
-            }
+            _id: String((t.issue_id as IPopulatedIssue)._id),
+            title: String((t.issue_id as IPopulatedIssue).title),
+            type: String((t.issue_id as IPopulatedIssue).type),
+            status: String((t.issue_id as IPopulatedIssue).status),
+          }
           : null,
       comments: (subTask.comments || []).map((c) => ({
         user: extractRef(c.user),
@@ -127,6 +126,7 @@ export class SubTaskMapper {
       estimated_hours: issue.type === 'story' ? issue.story_points || 0 : issue.estimated_hours || 0,
       actual_hours: 0,
       rework_reason: issue.rework_reason,
+      blocked_reason: issue.blocked_reason,
       branch_name: issue.branch_name,
       submission_link: issue.submission_link,
       submission_description: issue.submission_description,

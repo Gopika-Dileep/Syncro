@@ -23,8 +23,6 @@ export class IssueRouter {
     this.router.get(ENDPOINTS.ISSUES.BY_SPRINT, authMiddleware, checkPermission(['issue:story:view', 'issue:task:view', 'issue:bug:view']), issueController.getIssuesBySprint);
     this.router.post(ENDPOINTS.ISSUES.ROOT, authMiddleware, checkPermission(['issue:story:create', 'issue:task:create', 'issue:bug:create']), validateRequest(CreateIssueRequestSchema), issueController.createIssue);
     this.router.get(ENDPOINTS.ISSUES.BY_ISSUE_ID, authMiddleware, checkPermission(['issue:story:view', 'issue:task:view', 'issue:bug:view']), issueController.getIssueById);
-    this.router.get(ENDPOINTS.ISSUES.ASSIGNED, authMiddleware, issueController.getAssignedIssues);
-    this.router.get(ENDPOINTS.ISSUES.TEAM, authMiddleware, issueController.getTeamIssues);
     this.router.put(ENDPOINTS.ISSUES.BY_ISSUE_ID, authMiddleware, checkPermission(['issue:story:update', 'issue:task:update', 'issue:bug:update']), validateRequest(UpdateIssueRequestSchema), issueController.updateIssue);
     this.router.patch(
       ENDPOINTS.ISSUES.ASSIGN,
