@@ -21,7 +21,7 @@ export interface EmployeeDashboardData {
   recentActivity: any[];
 }
 
-export const getEmployeeDashboardApi = async (): Promise<{ success: boolean; data: EmployeeDashboardData }> => {
-  const response = await axiosInstance.get('/dashboard/employee');
+export const getEmployeeDashboardApi = async (filters?: any): Promise<{ success: boolean; data: any }> => {
+  const response = await axiosInstance.get('/dashboard/employee', { params: filters });
   return response.data;
 };

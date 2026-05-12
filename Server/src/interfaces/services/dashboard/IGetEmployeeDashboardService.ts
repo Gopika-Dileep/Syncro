@@ -1,5 +1,5 @@
-import { EmployeeDashboardDTO } from '../../../dto/dashboard.dto';
+import { EmployeeDashboardDTO, DashboardFilter } from '../../../dto/dashboard.dto';
 
 export interface IGetEmployeeDashboardService {
-  execute(userId: string, permissions: string[]): Promise<EmployeeDashboardDTO>;
+  execute(userId: string, permissions: string[], filter?: DashboardFilter): Promise<EmployeeDashboardDTO>;
 }

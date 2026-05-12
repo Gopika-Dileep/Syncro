@@ -5,7 +5,7 @@ import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskReposi
 import { ITeamRepository } from '../../interfaces/repositories/ITeamRepository';
 import { ISprintRepository } from '../../interfaces/repositories/ISprintRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
-import { EmployeeDashboardDTO } from '../../dto/dashboard.dto';
+import { EmployeeDashboardDTO, DashboardFilter } from '../../dto/dashboard.dto';
 import { TYPES } from '../../di/types';
 import { NotFoundError } from '../../errors/AppError';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
@@ -25,7 +25,7 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
     @inject(TYPES.IProjectRepository) private _projectRepo: IProjectRepository,
   ) {}
 
-  async execute(userId: string, permissions: string[]): Promise<EmployeeDashboardDTO> {
+  async execute(userId: string, permissions: string[], filter?: DashboardFilter): Promise<EmployeeDashboardDTO> {
     const objUserId = new mongoose.Types.ObjectId(userId);
     const employee = await this._employeeRepo.findOne({ user_id: objUserId });
     if (!employee) throw new NotFoundError('Employee profile not found');
@@ -46,16 +46,77 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
     );
     const hasAllScope = permissions.some(p => p.includes(':all'));
 
+    // ROLE DETECTION
+    const designation = (employee.designation || '').toLowerCase();
+    const isManager = designation.includes('manager') || hasAllScope;
+    const isLead = !isManager && !!teamId && (designation.includes('lead') || designation.includes('leader') || hasLeadPermissions);
+
+    // Contextual Available Filters
+    let availableProjects: any[] = [];
+    let availableSprints: any[] = [];
+    let availableTeams: any[] = [];
+
+    if (isManager) {
+      const [projects, sprints, teams] = await Promise.all([
+        this._projectRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) }),
+        this._sprintRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) }),
+        this._teamRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) })
+      ]);
+      availableProjects = projects;
+      availableSprints = sprints;
+      availableTeams = teams;
+    } else {
+      // For Developers and Leads, find what they are involved in
+      const [involvedIssues, involvedSubTasks] = await Promise.all([
+        this._issueRepo.find({ $or: [{ assignee_id: empIdObj }, { assignee_id: userIdObj }] }),
+        this._subTaskRepo.find({ $or: [{ assignee_id: empIdObj }, { assignee_id: userIdObj }] })
+      ]);
+      
+      const stIssueIds = [...new Set(involvedSubTasks.map(s => s.issue_id.toString()))];
+      const stParentIssues = await this._issueRepo.find({ _id: { $in: stIssueIds.map(id => new mongoose.Types.ObjectId(id)) } });
+
+      const pIds = new Set([
+        ...involvedIssues.map(i => i.project_id?.toString()), 
+        ...stParentIssues.map(i => i.project_id?.toString())
+      ].filter(Boolean));
+      
+      const sIds = new Set([
+        ...involvedIssues.map(i => i.sprint_id?.toString()), 
+        ...involvedSubTasks.map(s => s.sprint_id?.toString())
+      ].filter(Boolean));
+      
+      [availableProjects, availableSprints] = await Promise.all([
+        this._projectRepo.find({ _id: { $in: Array.from(pIds).map(id => new mongoose.Types.ObjectId(id)) } }),
+        this._sprintRepo.find({ _id: { $in: Array.from(sIds).map(id => new mongoose.Types.ObjectId(id)) } })
+      ]);
+    }
+
+    const baseFilter: any = {};
+    const subTaskFilter: any = {};
+    if (filter?.projectId) {
+        const pId = new mongoose.Types.ObjectId(filter.projectId);
+        baseFilter.project_id = pId;
+        const projectIssues = await this._issueRepo.find({ project_id: pId });
+        subTaskFilter.issue_id = { $in: projectIssues.map(i => i._id) };
+    }
+    if (filter?.sprintId) {
+        const sId = new mongoose.Types.ObjectId(filter.sprintId);
+        baseFilter.sprint_id = sId;
+        subTaskFilter.sprint_id = sId;
+    }
+
     const [issueStats, subTaskStats, team, typeStats, upcomingTasks] = await Promise.all([
       this._issueRepo.find({ 
-        $or: [{ assignee_id: empIdObj }, { assignee_id: userIdObj }] 
+        $or: [{ assignee_id: empIdObj }, { assignee_id: userIdObj }],
+        ...baseFilter
       }),
       this._subTaskRepo.find({ 
-        $or: [{ assignee_id: empIdObj }, { assignee_id: userIdObj }] 
+        $or: [{ assignee_id: empIdObj }, { assignee_id: userIdObj }],
+        ...subTaskFilter
       }),
       teamId ? this._teamRepo.findById(teamId.toString()) : Promise.resolve(null),
-      this.getEmployeeTypeStats(empIdObj),
-      this.getUpcomingTasks(empIdObj)
+      this.getEmployeeTypeStats(empIdObj, baseFilter, subTaskFilter),
+      this.getUpcomingTasks(empIdObj, baseFilter, subTaskFilter)
     ]);
 
     const matchStatus = (item: any, target: string) => 
@@ -85,21 +146,6 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
       dailyProgress: totalDoneToday > 0 ? Math.min(100, (totalDoneToday / 5) * 100) : 0, // Aim for 5 tasks/day
     };
 
-    // Handle Team/Company Aggregation for Leads and Managers
-    // STRICT ROLE SEPARATION:
-    // 1. Manager: Has :all scope AND NO assigned team (Top Level)
-    // 2. Lead: Has coordination permissions AND has an assigned team
-    // 3. Developer: Default view
-    // Handle Team/Company Aggregation for Leads and Managers
-    // ROLE DETECTION BASED ON DESIGNATION
-    const designation = (employee.designation || '').toLowerCase();
-    
-    // 1. Manager: Unassigned to a team AND has high-level designation or scope
-    const isManager = !teamId && (designation.includes('manager') || hasAllScope);
-    
-    // 2. Lead: Assigned to a team AND has lead designation or permissions
-    const isLead = !!teamId && (designation.includes('lead') || designation.includes('leader') || hasLeadPermissions);
-
     console.log(`[DASHBOARD DEBUG] UserID: ${userId}, Designation: ${employee.designation}, Role: ${isManager ? 'MANAGER' : isLead ? 'LEAD' : 'DEVELOPER'}, TeamID: ${teamId}`);
 
     if (isManager || isLead) {
@@ -110,12 +156,29 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
       let recentBlockedItems: any[] = [];
 
       // 1. FETCH BASE DATA
-      if (isManager && !teamId) {
-        // Pure Manager: Global Scope
-        const [companyIssues, companySubTasks, companyEmployees, companySprints] = await Promise.all([
-          this._issueRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) }),
-          this._subTaskRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) }),
-          this._employeeRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) }, { populate: 'user_id' }),
+      if (isManager) {
+        // Manager View: Company Scope (Can filter by Team)
+        const companyEmployees = await this._employeeRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) }, { populate: 'user_id' });
+        companyEmployeesList = companyEmployees;
+
+        const companyQuery: any = { company_id: new mongoose.Types.ObjectId(companyId.toString()) };
+        const subTaskQuery: any = { company_id: new mongoose.Types.ObjectId(companyId.toString()) };
+
+        if (filter?.projectId) {
+          const pId = new mongoose.Types.ObjectId(filter.projectId);
+          companyQuery.project_id = pId;
+          const pIssues = await this._issueRepo.find({ project_id: pId });
+          subTaskQuery.issue_id = { $in: pIssues.map(i => i._id) };
+        }
+        if (filter?.sprintId) {
+          const sId = new mongoose.Types.ObjectId(filter.sprintId);
+          companyQuery.sprint_id = sId;
+          subTaskQuery.sprint_id = sId;
+        }
+
+        const [companyIssues, companySubTasks, companySprints] = await Promise.all([
+          this._issueRepo.find(companyQuery),
+          this._subTaskRepo.find(subTaskQuery),
           this._sprintRepo.find({ company_id: new mongoose.Types.ObjectId(companyId.toString()) })
         ]);
         allTeamItems = [...companyIssues, ...companySubTasks];
@@ -138,7 +201,11 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
             incompleteTasks: sprintItems.filter(i => !matchStatus(i, 'Done')).length
           };
         }
-        recentBlockedItems = await this.getRecentBlockedItems({ company_id: new mongoose.Types.ObjectId(companyId.toString()) });
+        recentBlockedItems = await this.getRecentBlockedItems({ 
+          company_id: new mongoose.Types.ObjectId(companyId.toString()),
+          ...(filter?.projectId ? { project_id: new mongoose.Types.ObjectId(filter.projectId) } : {}),
+          ...(filter?.sprintId ? { sprint_id: new mongoose.Types.ObjectId(filter.sprintId) } : {})
+        });
       } else {
         // Lead OR Manager-with-Team: Team Scope
         const [companyEmployees, companySprints] = await Promise.all([
@@ -155,20 +222,32 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
           members = companyEmployees.filter(m => m.team_id?.toString() === teamId.toString());
           const memberIds = members.map(m => m._id);
 
-          teamSubTasks = await this._subTaskRepo.find({ team_id: new mongoose.Types.ObjectId(teamId.toString()) });
+          const teamQuery: any = { team_id: new mongoose.Types.ObjectId(teamId.toString()) };
+          if (filter?.projectId) teamQuery.project_id = new mongoose.Types.ObjectId(filter.projectId);
+          if (filter?.sprintId) teamQuery.sprint_id = new mongoose.Types.ObjectId(filter.sprintId);
+
+          teamSubTasks = await this._subTaskRepo.find(teamQuery);
           const parentIssueIds = [...new Set(teamSubTasks.map(st => st.issue_id.toString()))];
           
-          teamIssues = await this._issueRepo.find({ 
+          const teamIssueQuery: any = { 
             $or: [
               { assignee_id: { $in: memberIds } },
               { _id: { $in: parentIssueIds.map(id => new mongoose.Types.ObjectId(id)) } }
             ]
-          });
+          };
+          if (filter?.projectId) teamIssueQuery.project_id = new mongoose.Types.ObjectId(filter.projectId);
+          if (filter?.sprintId) teamIssueQuery.sprint_id = new mongoose.Types.ObjectId(filter.sprintId);
+
+          teamIssues = await this._issueRepo.find(teamIssueQuery);
         } else {
           // Lead without a specific team: Show items they are involved in
           members = [employee];
-          teamIssues = await this._issueRepo.find({ created_by: empIdObj });
-          teamSubTasks = await this._subTaskRepo.find({ created_by: empIdObj });
+          const personalQuery: any = { created_by: empIdObj };
+          if (filter?.projectId) personalQuery.project_id = new mongoose.Types.ObjectId(filter.projectId);
+          if (filter?.sprintId) personalQuery.sprint_id = new mongoose.Types.ObjectId(filter.sprintId);
+
+          teamIssues = await this._issueRepo.find(personalQuery);
+          teamSubTasks = await this._subTaskRepo.find(personalQuery);
         }
 
         teamMembers = members;
@@ -321,6 +400,11 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
         userId: userId.toString(),
         employeeId: employeeId.toString(),
         permissions: permissions
+      },
+      availableFilters: {
+        projects: availableProjects.map(p => ({ _id: p._id.toString(), name: p.name })),
+        sprints: availableSprints.map(s => ({ _id: s._id.toString(), name: s.name, sprint_number: s.sprint_number })),
+        teams: undefined
       }
     };
   }
@@ -331,25 +415,37 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
 
 
 
-  private async getUpcomingTasks(employeeId: mongoose.Types.ObjectId) {
+  private async getUpcomingTasks(employeeId: mongoose.Types.ObjectId, filter: any = {}, stFilter: any = {}) {
     const issues = await this._issueRepo.find(
       { 
         assignee_id: employeeId, 
         status: { $ne: IssueStatus.DONE },
-        type: { $ne: IssueType.STORY }
+        type: { $ne: IssueType.STORY },
+        ...filter
       },
       { limit: 5, sort: { created_at: -1 } }
     );
     const subTasks = await this._subTaskRepo.find(
-      { assignee_id: employeeId, status: { $ne: SubTaskStatus.DONE } },
+      { assignee_id: employeeId, status: { $ne: SubTaskStatus.DONE }, ...stFilter },
       { limit: 5, sort: { created_at: -1 } }
     );
     return [...issues, ...subTasks].sort((a, b) => b.created_at.getTime() - a.created_at.getTime()).slice(0, 5);
   }
 
-  private async getEmployeeTypeStats(employeeId: mongoose.Types.ObjectId) {
-    const subTasks = await this._subTaskRepo.find({ assignee_id: employeeId });
-    if (subTasks.length === 0) return { stories: 0, tasks: 0, bugs: 0 };
+  private async getEmployeeTypeStats(employeeId: mongoose.Types.ObjectId, filter: any = {}, stFilter: any = {}) {
+    const subTasks = await this._subTaskRepo.find({ assignee_id: employeeId, ...stFilter });
+    if (subTasks.length === 0) {
+      // If we filtered by sprint/project and found no subtasks, check if there are issues anyway
+      const issuesOnly = await this._issueRepo.find({ assignee_id: employeeId, ...filter });
+      const stats = { stories: 0, tasks: 0, bugs: 0 };
+      issuesOnly.forEach(issue => {
+        const type = (issue.type || '').toLowerCase();
+        if (type === 'story') stats.stories++;
+        else if (type === 'bug') stats.bugs++;
+        else stats.tasks++;
+      });
+      return stats;
+    }
 
     const issueIds = [...new Set(subTasks.map(st => st.issue_id.toString()))];
     const issues = await this._issueRepo.find({ 
@@ -368,8 +464,17 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
   }
 
   private async getRecentBlockedItems(filter: any) {
+    const issueQuery: any = { ...filter };
+    if (issueQuery.team_id) {
+      // Issues don't have team_id, filter by team members
+      const teamId = issueQuery.team_id;
+      const members = await this._employeeRepo.find({ team_id: teamId });
+      issueQuery.assignee_id = { $in: members.map(m => m._id) };
+      delete issueQuery.team_id;
+    }
+
     const [issues, subTasks] = await Promise.all([
-      this._issueRepo.find({ ...filter, status: IssueStatus.BLOCKED, type: { $ne: IssueType.STORY } }, { sort: { updated_at: -1 }, limit: 5 }),
+      this._issueRepo.find({ ...issueQuery, status: IssueStatus.BLOCKED, type: { $ne: IssueType.STORY } }, { sort: { updated_at: -1 }, limit: 5 }),
       this._subTaskRepo.find({ ...filter, status: SubTaskStatus.BLOCKED }, { sort: { updated_at: -1 }, limit: 5 })
     ]);
 

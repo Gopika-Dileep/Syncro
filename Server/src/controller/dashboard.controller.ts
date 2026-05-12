@@ -27,7 +27,14 @@ export class DashboardController {
     try {
       const userId = req.userId!;
       const permissions = req.permissions || [];
-      const data = await this._getEmployeeDashboardService.execute(userId, permissions);
+      const filter = {
+        projectId: req.query.projectId as string,
+        sprintId: req.query.sprintId as string,
+        teamId: req.query.teamId as string,
+        startDate: req.query.startDate as string,
+        endDate: req.query.endDate as string,
+      };
+      const data = await this._getEmployeeDashboardService.execute(userId, permissions, filter);
       success(res, data);
     } catch (error) {
       handleAsyncError(error, next);
