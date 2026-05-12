@@ -556,3 +556,10 @@
 2026-05-12 11:05:23:523 http: OPTIONS /api/dashboard/company 204 0 - 0.065 ms
 2026-05-12 11:05:23:523 http: GET /api/dashboard/company 200 271 - 101.934 ms
 2026-05-12 11:05:23:523 http: GET /api/dashboard/company 304 - - 104.091 ms
+2026-05-12 11:07:33:733 info: server is running on port 5000
+2026-05-12 11:25:49:2549 info: server is running on port 5000
+2026-05-12 11:27:46:2746 info: server is running on port 5000
+2026-05-12 11:29:05:295 info: server is running on port 5000
+2026-05-12 11:31:04:314 info: server is running on port 5000
+2026-05-12 11:32:26:3226 info: server is running on port 5000
+2026-05-12 11:38:05:385 info: server is running on port 5000

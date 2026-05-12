@@ -42,3 +42,18 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     res.status(HttpStatus.UNAUTHORIZED).json({ success: false, message: AUTH_MESSAGES.INVALID_TOKEN });
   }
 };
+
+export const checkRole = (allowedRoles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const userRole = req.userRole;
+
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+        success: false,
+        message: 'Access denied: Insufficient permissions',
+      });
+    }
+
+    next();
+  };
+};
