@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { ProjectStatus, ProjectPriority } from '../enums/ProjectEnums';
+import { IssueResponseDTO } from './issue.dto';
+import { SubTaskResponseDTO } from './subTask.dto';
 
 export const ProjectBaseSchema = z.object({
   name: z
@@ -60,9 +62,34 @@ export interface ProjectResponseDTO {
   target_date: string;
   created_at: string;
   updated_at: string;
+  created_by?: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
 }
 
 export interface PaginatedProjectResponseDTO {
   projects: ProjectResponseDTO[];
   total: number;
+}
+
+export interface ProjectInsightsDTO {
+  project: ProjectResponseDTO;
+  stats: {
+    total_stories: number;
+    total_tasks: number;
+    total_bugs: number;
+    completed_points: number;
+    total_points: number;
+  };
+  team: {
+    _id: string;
+    name: string;
+    role: string;
+    avatar?: string;
+  }[];
+  stories: IssueResponseDTO[];
+  bugs: IssueResponseDTO[];
+  subtasks: SubTaskResponseDTO[];
 }

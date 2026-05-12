@@ -1,0 +1,41 @@
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../di/types';
+import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
+import { IGetAssignedSubTasksService } from '../../interfaces/services/subTask/IGetAssignedSubTasksService';
+import { SubTaskResponseDTO } from '../../dto/subTask.dto';
+import { SubTaskMapper } from '../../mappers/subTask.mapper';
+import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { IssueType } from '../../enums/IssueEnums';
+
+@injectable()
+export class GetAssignedSubTasksService implements IGetAssignedSubTasksService {
+  constructor(
+    @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
+    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
+    @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
+  ) {}
+
+  async execute(userId: string, search: string): Promise<SubTaskResponseDTO[]> {
+    const employee = await this._employeeRepository.findOne({ user_id: userId });
+    if (!employee) return [];
+    const subTasks = await this._subTaskRepository.findAllByAssigneeId(employee._id.toString());
+    const issues = await this._issueRepository.findPopulated({
+      company_id: employee.company_id,
+      assignee_id: employee._id,
+      type: { $in: [IssueType.TASK, IssueType.BUG] },
+      status: { $ne: 'Backlog' },
+    });
+
+    let mappedSubTasks = SubTaskMapper.toResponseList(subTasks);
+    let mappedIssues = issues.map((issue) => SubTaskMapper.fromIssue(issue));
+
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      mappedSubTasks = mappedSubTasks.filter((t) => searchRegex.test(t.title));
+      mappedIssues = mappedIssues.filter((t) => searchRegex.test(t.title));
+    }
+
+    return [...mappedSubTasks, ...mappedIssues];
+  }
+}

@@ -1,4 +1,3 @@
-import React from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, X } from "lucide-react";
 
@@ -13,13 +12,13 @@ interface ConfirmModalProps {
     type?: "danger" | "warning" | "info";
 }
 
-export default function ConfirmModal({ 
-    isOpen, 
-    onClose, 
-    onConfirm, 
-    title, 
-    message, 
-    confirmText = "Delete", 
+export default function ConfirmModal({
+    isOpen,
+    onClose,
+    onConfirm,
+    title,
+    message,
+    confirmText = "Delete",
     cancelText = "Cancel",
     type = "danger"
 }: ConfirmModalProps) {
@@ -46,9 +45,9 @@ export default function ConfirmModal({
     const style = colors[type];
 
     const modalContent = (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
-            <div className="bg-white rounded-[24px] w-full max-w-sm shadow-2xl relative z-[1110] animate-in fade-in zoom-in duration-200 overflow-hidden border border-white/20">
+            <div className="bg-white rounded-[24px] w-full max-w-sm shadow-2xl relative z-[3010] animate-in fade-in zoom-in duration-200 overflow-hidden border border-white/20">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-5">
                         <div className={`w-10 h-10 rounded-xl ${style.bg} flex items-center justify-center ${style.icon}`}>

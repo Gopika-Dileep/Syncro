@@ -10,4 +10,5 @@ export interface IBaseRepository<T> {
   updateMany(filter: Record<string, unknown>, update: Record<string, unknown>): Promise<void>;
   deleteById(id: string): Promise<T | null>;
   deleteMany(filter: Record<string, unknown>): Promise<void>;
+  count(filter: Record<string, unknown>): Promise<number>;
 }

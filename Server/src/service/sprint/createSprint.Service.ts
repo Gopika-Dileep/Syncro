@@ -18,7 +18,7 @@ export class CreateSprintService implements ICreateSprintService {
   async execute(userId: string, data: CreateSprintRequestDTO): Promise<{ message: string; sprint: SprintResponseDTO }> {
     const employee = await this._employeeRepo.findByUserId(userId);
     const companyId: string = String(employee?.company_id._id || employee?.company_id);
-    
+
     if (!companyId) throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
 
     const sprintData = SprintMapper.toCreate(data, companyId);

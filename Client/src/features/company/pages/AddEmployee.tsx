@@ -19,9 +19,13 @@ import { employeeSchema, getZodErrors, type EmployeeformInput } from "@/lib/sche
 
 const initialPermissions: EmployeePermissions = {
     project: { create: false, view: { all: false, assigned: false }, update: false, delete: false },
-    userStory: { create: false, view: { all: false }, update: false, delete: false, assign: false, assignEmployee: false, comment: false },
+    issue: {
+        story: { create: false, view: false, update: false, delete: false, assign_to_sprint: false, comment: false, status_work: false, status_review: false, block: false },
+        task: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
+        bug: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
+    },
     sprint: { create: false, view: { all: false }, update: false, delete: false, addStory: false, start: false, complete: false },
-    task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, start: false, submit: false, review: false },
+    task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, status_work: false, status_review: false, block: false },
     team: { view: { team: false, all: false } }
 };
 
@@ -95,12 +99,20 @@ export default function AddEmployee() {
             setFetching(false);
         }
     }, [userId, isEditMode, navigate]);
+
     useEffect(() => {
         const fetchTeams = async () => {
             try {
                 const response = await getTeamsApi();
-                if (response.success) setTeams(response.data);
-            } catch { toast.error("Failed to load departments"); }
+                if (response.success) {
+                    setTeams(response.data);
+                } else {
+                    toast.error(response.message || "Failed to load departments");
+                }
+            } catch (err: any) { 
+                const msg = err.response?.data?.message || err.message || "Failed to load departments";
+                toast.error(msg); 
+            }
         };
         fetchTeams();
     }, []);
@@ -306,15 +318,45 @@ export default function AddEmployee() {
                             ]}
                         />
                         <ModuleItem
-                            icon={<Layers size={13} />} title="User Story (Backlog)"
+                            icon={<Layers size={13} />} title="Issue: User Stories"
                             items={[
-                                { label: "Create", checked: permissions.userStory.create, onClick: () => handlePermissionToggle('userStory', 'create') },
-                                { label: "View All", checked: permissions.userStory.view.all, onClick: () => handlePermissionToggle('userStory', 'view', 'all') },
-                                { label: "Update", checked: permissions.userStory.update, onClick: () => handlePermissionToggle('userStory', 'update') },
-                                { label: "Delete", checked: permissions.userStory.delete, onClick: () => handlePermissionToggle('userStory', 'delete') },
-                                { label: "Assign", checked: permissions.userStory.assign, onClick: () => handlePermissionToggle('userStory', 'assign') },
-                                { label: "Assign Employee", checked: permissions.userStory.assignEmployee, onClick: () => handlePermissionToggle('userStory', 'assignEmployee') },
-                                { label: "Comment", checked: permissions.userStory.comment, onClick: () => handlePermissionToggle('userStory', 'comment') },
+                                { label: "Create", checked: permissions.issue.story.create, onClick: () => handlePermissionToggle('issue', 'story', 'create') },
+                                { label: "View", checked: permissions.issue.story.view, onClick: () => handlePermissionToggle('issue', 'story', 'view') },
+                                { label: "Update", checked: permissions.issue.story.update, onClick: () => handlePermissionToggle('issue', 'story', 'update') },
+                                { label: "Delete", checked: permissions.issue.story.delete, onClick: () => handlePermissionToggle('issue', 'story', 'delete') },
+                                { label: "Assign to Sprint", checked: permissions.issue.story.assign_to_sprint, onClick: () => handlePermissionToggle('issue', 'story', 'assign_to_sprint') },
+                                { label: "Comment", checked: permissions.issue.story.comment, onClick: () => handlePermissionToggle('issue', 'story', 'comment') },
+                                { label: "Status: Work", checked: permissions.issue.story.status_work, onClick: () => handlePermissionToggle('issue', 'story', 'status_work') },
+                                { label: "Status: Review", checked: permissions.issue.story.status_review, onClick: () => handlePermissionToggle('issue', 'story', 'status_review') },
+                                { label: "Block", checked: permissions.issue.story.block, onClick: () => handlePermissionToggle('issue', 'story', 'block') },
+                            ]}
+                        />
+                        <ModuleItem
+                            icon={<Layers size={13} />} title="Issue: Technical Tasks"
+                            items={[
+                                { label: "Create", checked: permissions.issue.task.create, onClick: () => handlePermissionToggle('issue', 'task', 'create') },
+                                { label: "View", checked: permissions.issue.task.view, onClick: () => handlePermissionToggle('issue', 'task', 'view') },
+                                { label: "Update", checked: permissions.issue.task.update, onClick: () => handlePermissionToggle('issue', 'task', 'update') },
+                                { label: "Delete", checked: permissions.issue.task.delete, onClick: () => handlePermissionToggle('issue', 'task', 'delete') },
+                                { label: "Assign Employee", checked: permissions.issue.task.assign, onClick: () => handlePermissionToggle('issue', 'task', 'assign') },
+                                { label: "Assign to Sprint", checked: permissions.issue.task.assign_to_sprint, onClick: () => handlePermissionToggle('issue', 'task', 'assign_to_sprint') },
+                                { label: "Status: Work", checked: permissions.issue.task.status_work, onClick: () => handlePermissionToggle('issue', 'task', 'status_work') },
+                                { label: "Status: Review", checked: permissions.issue.task.status_review, onClick: () => handlePermissionToggle('issue', 'task', 'status_review') },
+                                { label: "Block", checked: permissions.issue.task.block, onClick: () => handlePermissionToggle('issue', 'task', 'block') },
+                            ]}
+                        />
+                        <ModuleItem
+                            icon={<Layers size={13} />} title="Issue: Bug Reports"
+                            items={[
+                                { label: "Create", checked: permissions.issue.bug.create, onClick: () => handlePermissionToggle('issue', 'bug', 'create') },
+                                { label: "View", checked: permissions.issue.bug.view, onClick: () => handlePermissionToggle('issue', 'bug', 'view') },
+                                { label: "Update", checked: permissions.issue.bug.update, onClick: () => handlePermissionToggle('issue', 'bug', 'update') },
+                                { label: "Delete", checked: permissions.issue.bug.delete, onClick: () => handlePermissionToggle('issue', 'bug', 'delete') },
+                                { label: "Assign Employee", checked: permissions.issue.bug.assign, onClick: () => handlePermissionToggle('issue', 'bug', 'assign') },
+                                { label: "Assign to Sprint", checked: permissions.issue.bug.assign_to_sprint, onClick: () => handlePermissionToggle('issue', 'bug', 'assign_to_sprint') },
+                                { label: "Status: Work", checked: permissions.issue.bug.status_work, onClick: () => handlePermissionToggle('issue', 'bug', 'status_work') },
+                                { label: "Status: Review", checked: permissions.issue.bug.status_review, onClick: () => handlePermissionToggle('issue', 'bug', 'status_review') },
+                                { label: "Block", checked: permissions.issue.bug.block, onClick: () => handlePermissionToggle('issue', 'bug', 'block') },
                             ]}
                         />
                         <ModuleItem
@@ -330,7 +372,7 @@ export default function AddEmployee() {
                             ]}
                         />
                         <ModuleItem
-                            icon={<CheckCircle size={13} />} title="Task Workflow"
+                            icon={<CheckCircle size={13} />} title="Task Workflow (Sub-tasks)"
                             items={[
                                 { label: "Create", checked: permissions.task.create, onClick: () => handlePermissionToggle('task', 'create') },
                                 { label: "View Assigned", checked: permissions.task.view.assigned, onClick: () => handlePermissionToggle('task', 'view', 'assigned') },
@@ -339,9 +381,9 @@ export default function AddEmployee() {
                                 { label: "Assign", checked: permissions.task.assign, onClick: () => handlePermissionToggle('task', 'assign') },
                                 { label: "Update", checked: permissions.task.update, onClick: () => handlePermissionToggle('task', 'update') },
                                 { label: "Delete", checked: permissions.task.delete, onClick: () => handlePermissionToggle('task', 'delete') },
-                                { label: "Start", checked: permissions.task.start, onClick: () => handlePermissionToggle('task', 'start') },
-                                { label: "Submit", checked: permissions.task.submit, onClick: () => handlePermissionToggle('task', 'submit') },
-                                { label: "Review", checked: permissions.task.review, onClick: () => handlePermissionToggle('task', 'review') },
+                                { label: "Status: Work", checked: permissions.task.status_work, onClick: () => handlePermissionToggle('task', 'status_work') },
+                                { label: "Status: Review", checked: permissions.task.status_review, onClick: () => handlePermissionToggle('task', 'status_review') },
+                                { label: "Block", checked: permissions.task.block, onClick: () => handlePermissionToggle('task', 'block') },
                             ]}
                         />
                         <ModuleItem

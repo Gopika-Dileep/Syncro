@@ -10,7 +10,7 @@ interface EmployeeSidebarProps {
 
 export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
     const user = useSelector((state: RootState) => state.auth.user);
-    const { hasModuleAccess } = usePermission();
+    const { hasModuleAccess, can } = usePermission();
 
     const navItems = [
         { label: "Dashboard", path: "/employee/dashboard", icon: LayoutDashboard },
@@ -18,13 +18,13 @@ export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
             label: "Projects",
             path: "/employee/projects",
             icon: FolderKanban,
-            visible: hasModuleAccess('project')
+            visible: can('project:view:all')
         },
         {
             label: "Backlog",
             path: "/employee/backlogs",
             icon: ListTodo,
-            visible: hasModuleAccess('userStory')
+            visible: can('issue:story:view') || can('issue:task:view') || can('issue:bug:view') || can('issue:story:view:assigned') || can('issue:task:view:assigned') || can('issue:bug:view:assigned')
         },
         {
             label: "Sprints",
@@ -73,7 +73,7 @@ export default function EmployeeSidebar({ onClose }: EmployeeSidebarProps) {
                             onClick={onClose}
                             className={({ isActive }) =>
                                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${isActive
-                                    ? "bg-white/10 text-white"
+                                    ? "bg-[#fa8029] text-white shadow-lg shadow-orange-900/20"
                                     : "text-white/50 hover:bg-white/5 hover:text-white/80"
                                 }`
                             }

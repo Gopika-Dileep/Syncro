@@ -1,18 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare } from "lucide-react";
+import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import { getProjectsApi, type Project } from "@/features/employee/api/projectApi";
-import {
-    getUserStoriesByProjectApi,
-    createUserStoryApi,
-    updateUserStoryApi,
-    deleteUserStoryApi,
-    type UserStory
-} from "@/features/employee/api/userStoryApi";
-import UserStoryModal, { type StoryFormData as ModalStoryFormData } from "../components/UserStoryModal";
-import UserStoryDetailsModal from "../components/UserStoryDetailsModal";
+import { getIssuesByProjectApi, createIssueApi, updateIssueApi, deleteIssueApi, type Issue } from "@/features/employee/api/issueApi";
+import IssueModal, { type IssueFormData as ModalIssueFormData } from "../components/IssueModal";
+import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
+import { getTeamDirectoryApi } from "../api/teamApi";
 
 const TypeIcon = ({ type, size = 12 }: { type: string; size?: number }) => {
     switch (type?.toLowerCase()) {
@@ -24,7 +19,7 @@ const TypeIcon = ({ type, size = 12 }: { type: string; size?: number }) => {
 
 interface DropdownPos { top: number; right: number }
 
-interface StoryMenuProps {
+interface IssueMenuProps {
     pos: DropdownPos;
     onClose: () => void;
     onView: () => void;
@@ -34,7 +29,7 @@ interface StoryMenuProps {
     canDelete: boolean;
 }
 
-function StoryMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete }: StoryMenuProps) {
+function IssueMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete }: IssueMenuProps) {
     return createPortal(
         <>
             <div className="fixed inset-0 z-[999]" onClick={onClose} />
@@ -55,7 +50,7 @@ function StoryMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete 
                             onClick={() => { onClose(); onEdit(); }}
                             className="flex items-center gap-2.5 w-full px-3.5 py-2 text-[12px] text-[#555] hover:bg-[#f7f7f7] transition-colors"
                         >
-                            <Edit2 size={13} className="text-[#888]" /> Edit Story
+                            <Edit2 size={13} className="text-[#888]" /> Edit Issue
                         </button>
                     </>
                 )}
@@ -66,7 +61,7 @@ function StoryMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete 
                             onClick={() => { onClose(); onDelete(); }}
                             className="flex items-center gap-2.5 w-full px-3.5 py-2 text-[12px] font-medium text-rose-500 hover:bg-rose-50 transition-colors"
                         >
-                            <Trash2 size={13} /> Delete Story
+                            <Trash2 size={13} /> Delete Issue
                         </button>
                     </>
                 )}
@@ -77,39 +72,31 @@ function StoryMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete 
 }
 
 export default function Backlogs() {
-    const { can } = usePermission();
+    const { can, user } = usePermission();
 
     const [projects, setProjects] = useState<Project[]>([]);
     const [fetchingProjects, setFetchingProjects] = useState(true);
+    const [members, setMembers] = useState<{ _id: string; name: string; designation?: string }[]>([]);
 
-    // key: projectId, value: array of stories
-    const [storiesConfig, setStoriesConfig] = useState<Record<string, { data: UserStory[], loading: boolean }>>({});
+    const [issuesConfig, setIssuesConfig] = useState<Record<string, { data: Issue[], loading: boolean }>>({});
     const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
 
-    // Modals state
     const [isFormModalOpen, setFormModalOpen] = useState(false);
-    const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
+    const [isDetailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
 
-    // Selected states
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-    const [selectedStory, setSelectedStory] = useState<UserStory | null>(null);
+    const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Confirmation states
-    const [storyToMarkReady, setStoryToMarkReady] = useState<UserStory | null>(null);
-    const [storyToDelete, setStoryToDelete] = useState<UserStory | null>(null);
+    const [issueToMarkReady, setIssueToMarkReady] = useState<Issue | null>(null);
+    const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
 
-    // Dropdown state
-    const [openMenuStoryId, setOpenMenuStoryId] = useState<string | null>(null);
+    const [openMenuIssueId, setOpenMenuIssueId] = useState<string | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-    useEffect(() => {
-        fetchProjects();
-    }, []);
-
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         setFetchingProjects(true);
         try {
             const res = await getProjectsApi();
@@ -120,26 +107,44 @@ export default function Backlogs() {
         } finally {
             setFetchingProjects(false);
         }
-    };
+    }, []);
 
-    const fetchStoriesForProject = async (projectId: string) => {
-        setStoriesConfig(prev => ({ ...prev, [projectId]: { data: prev[projectId]?.data || [], loading: true } }));
+    const fetchMembers = useCallback(async () => {
         try {
-            const res = await getUserStoriesByProjectApi(projectId);
-            setStoriesConfig(prev => ({ ...prev, [projectId]: { data: res.data || [], loading: false } }));
-        } catch {
-            toast.error("Failed to load user stories");
-            setStoriesConfig(prev => ({ ...prev, [projectId]: { data: [], loading: false } }));
+            const res = await getTeamDirectoryApi();
+            if (res.success) {
+                const allMembers = res.data.flatMap(t => t.members);
+                const unique = allMembers.filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
+                setMembers(unique);
+            }
+        } catch (err) {
+            console.error("Failed to fetch members", err);
         }
-    };
+    }, []);
+
+    const fetchIssuesForProject = useCallback(async (projectId: string) => {
+        setIssuesConfig(prev => ({ ...prev, [projectId]: { data: prev[projectId]?.data || [], loading: true } }));
+        try {
+            const res = await getIssuesByProjectApi(projectId);
+            setIssuesConfig(prev => ({ ...prev, [projectId]: { data: res.data || [], loading: false } }));
+        } catch {
+            toast.error("Failed to load issues");
+            setIssuesConfig(prev => ({ ...prev, [projectId]: { data: [], loading: false } }));
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchProjects();
+        fetchMembers();
+    }, [fetchProjects, fetchMembers]);
 
     const toggleProject = (projectId: string) => {
         if (expandedProjectId === projectId) {
             setExpandedProjectId(null);
         } else {
             setExpandedProjectId(projectId);
-            if (!storiesConfig[projectId]) {
-                fetchStoriesForProject(projectId);
+            if (!issuesConfig[projectId]) {
+                fetchIssuesForProject(projectId);
             }
         }
     };
@@ -147,75 +152,75 @@ export default function Backlogs() {
     const handleOpenCreateModal = (projectId: string) => {
         setSelectedProjectId(projectId);
         setIsEditing(false);
-        setSelectedStory(null);
+        setSelectedIssue(null);
         setFormModalOpen(true);
     };
 
-    const handleOpenEditModal = (story: UserStory) => {
-        setSelectedProjectId(story.project_id);
+    const handleOpenEditModal = (issue: Issue) => {
+        setSelectedProjectId(issue.project_id);
         setIsEditing(true);
-        setSelectedStory(story);
+        setSelectedIssue(issue);
         setFormModalOpen(true);
     };
 
-    const handleOpenDetails = (story: UserStory) => {
-        setSelectedStory(story);
-        setDetailsModalOpen(true);
+    const handleOpenDetails = (issue: Issue) => {
+        setSelectedIssue(issue);
+        setDetailsDrawerOpen(true);
     };
 
-    const openMenu = (storyId: string) => {
-        const btn = btnRefs.current[storyId];
+    const openMenu = (issueId: string) => {
+        const btn = btnRefs.current[issueId];
         if (!btn) return;
         const rect = btn.getBoundingClientRect();
         setDropPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-        setOpenMenuStoryId(storyId);
+        setOpenMenuIssueId(issueId);
     };
 
     const confirmMarkReady = async () => {
-        if (!storyToMarkReady) return;
+        if (!issueToMarkReady) return;
         try {
-            await updateUserStoryApi(storyToMarkReady._id, { status: "Ready" });
-            toast.success("Story marked as ready!");
-            setStoriesConfig(prev => {
-                const pData = prev[storyToMarkReady.project_id].data.map(s => s._id === storyToMarkReady._id ? { ...s, status: "Ready" } : s);
-                return { ...prev, [storyToMarkReady.project_id]: { ...prev[storyToMarkReady.project_id], data: pData } };
+            await updateIssueApi(issueToMarkReady._id, { status: "Ready" });
+            toast.success("Issue marked as ready!");
+            setIssuesConfig(prev => {
+                const pData = prev[issueToMarkReady.project_id].data.map(i => i._id === issueToMarkReady._id ? { ...i, status: "Ready" } : i);
+                return { ...prev, [issueToMarkReady.project_id]: { ...prev[issueToMarkReady.project_id], data: pData } };
             });
         } catch {
             toast.error("Failed to update status");
         } finally {
-            setStoryToMarkReady(null);
+            setIssueToMarkReady(null);
         }
     };
 
-    const confirmDeleteStory = async () => {
-        if (!storyToDelete) return;
+    const confirmDeleteIssue = async () => {
+        if (!issueToDelete) return;
         try {
-            await deleteUserStoryApi(storyToDelete._id);
-            toast.success("User story deleted successfully.");
-            fetchStoriesForProject(storyToDelete.project_id);
+            await deleteIssueApi(issueToDelete._id);
+            toast.success("Issue deleted successfully.");
+            fetchIssuesForProject(issueToDelete.project_id);
         } catch {
-            toast.error("Failed to delete user story");
+            toast.error("Failed to delete issue");
         } finally {
-            setStoryToDelete(null);
+            setIssueToDelete(null);
         }
     };
 
-    const handleFormSubmit = async (data: ModalStoryFormData) => {
+    const handleFormSubmit = async (data: ModalIssueFormData) => {
         if (!selectedProjectId) return;
         setIsSubmitting(true);
         try {
-            if (isEditing && selectedStory) {
-                await updateUserStoryApi(selectedStory._id, data);
-                toast.success("User story updated successfully");
+            if (isEditing && selectedIssue) {
+                await updateIssueApi(selectedIssue._id, data);
+                toast.success("Issue updated successfully");
             } else {
-                await createUserStoryApi({ ...data, project_id: selectedProjectId });
-                toast.success("User story created successfully");
+                await createIssueApi({ ...data, project_id: selectedProjectId });
+                toast.success("Issue created successfully");
             }
             setFormModalOpen(false);
-            fetchStoriesForProject(selectedProjectId);
+            fetchIssuesForProject(selectedProjectId);
         } catch (err: unknown) {
             const e = err as { response?: { data?: { message?: string } } };
-            toast.error(e.response?.data?.message || "Failed to save user story");
+            toast.error(e.response?.data?.message || "Failed to save issue");
         } finally {
             setIsSubmitting(false);
         }
@@ -226,12 +231,14 @@ export default function Backlogs() {
             case 'new': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'ready': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
             case 'to do': return 'bg-purple-50 text-purple-600 border-purple-100';
+            case 'blocked': return 'bg-amber-50 text-amber-600 border-amber-100';
+            case 'done': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
             default: return 'bg-slate-50 text-slate-600 border-slate-100';
         }
     };
 
-    const renderStories = (projectId: string) => {
-        const config = storiesConfig[projectId];
+    const renderIssues = (projectId: string) => {
+        const config = issuesConfig[projectId];
         if (!config) return null;
 
         if (config.loading) {
@@ -245,72 +252,92 @@ export default function Backlogs() {
         if (config.data.length === 0) {
             return (
                 <div className="p-8 text-center text-[#888]">
-                    <p className="text-[13px]">No user stories found for this project.</p>
+                    <p className="text-[13px]">No issues found for this project.</p>
                 </div>
             );
         }
 
-        const canEditStory = can('userStory:update') || can('userStory:update:all');
-        const canDeleteStory = can('userStory:delete') || can('userStory:delete:all');
-
         return (
             <div className="p-3 bg-[#fdfdfd] border-t border-[#f0f0f0]">
                 <div className="space-y-2">
-                    {config.data.map((story) => (
-                        <div key={story._id} className="flex items-center justify-between p-3 bg-white border border-[#eaeaea] rounded-xl hover:shadow-sm transition-all group">
-                            <div className="flex items-center gap-3">
-                                <GripVertical size={16} className="text-[#ddd] cursor-move" />
-                                <div className="p-1.5 bg-gray-50 rounded border border-gray-100">
-                                    <TypeIcon type={story.type} size={14} />
-                                </div>
-                                <div>
-                                    <h4 className="text-[13px] font-bold text-[#1f2124]">{story.title}</h4>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className={`px-2 py-[1px] rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusStyle(story.status)}`}>
-                                            {story.status}
-                                        </span>
-                                        {story.type === 'story' && (
-                                            <span className="text-[10px] uppercase font-bold text-[#888] bg-[#f5f5f5] px-1.5 py-0.5 rounded">
-                                                {story.story_points} points
+                    {config.data.map((issue) => {
+                        const isOwner = issue.created_by?._id === user?._id || user?.role === 'company';
+                        const issueType = (issue.type || 'task').toLowerCase();
+                        const canEditIssue = can(`issue:${issueType}:update`) || isOwner;
+                        const canDeleteIssue = can(`issue:${issueType}:delete`) || isOwner;
+                        // Allow marking ready if they can update stories, tasks or bugs generally
+                        const canMarkReady = canEditIssue || can('issue:story:update') || can('issue:task:update') || can('issue:bug:update');
+
+                        return (
+                            <div key={issue._id} className="flex items-center justify-between p-3 bg-white border border-[#eaeaea] rounded-xl hover:shadow-sm transition-all group">
+                                <div className="flex items-center gap-3">
+                                    <GripVertical size={16} className="text-[#ddd] cursor-move" />
+                                    <div className="p-1.5 bg-gray-50 rounded border border-gray-100">
+                                        <TypeIcon type={issue.type} size={14} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-[13px] font-bold text-[#1f2124]">{issue.title}</h4>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className={`px-2 py-[1px] rounded-full text-[9px] font-bold uppercase tracking-wider border ${getStatusStyle(issue.status)}`}>
+                                                {issue.status}
                                             </span>
+                                            {issue.status === 'Blocked' && issue.blocked_reason && (
+                                                <span className="text-[10px] text-amber-600 font-bold italic truncate max-w-[200px]" title={issue.blocked_reason}>
+                                                    - {issue.blocked_reason}
+                                                </span>
+                                            )}
+                                            {issue.type === 'story' && (
+                                                <span className="text-[10px] uppercase font-bold text-[#888] bg-[#f5f5f5] px-1.5 py-0.5 rounded">
+                                                    {issue.story_points} points
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    {issue.status.toLowerCase() === 'new' && canMarkReady && (
+                                        <button
+                                            onClick={() => setIssueToMarkReady(issue)}
+                                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <CheckCircle size={12} /> Mark Ready
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleOpenDetails(issue)}
+                                        className="p-1.5 text-[#bbb] hover:bg-[#fff5ef] hover:text-[#fa8029] rounded-lg transition-colors"
+                                        title="Comments & Details"
+                                    >
+                                        <MessageSquare size={15} />
+                                    </button>
+                                    <div className="relative">
+                                        <button
+                                            ref={(el) => { btnRefs.current[issue._id] = el; }}
+                                            onClick={() => openMenu(issue._id)}
+                                            className="p-1.5 text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#555] rounded-lg transition-colors"
+                                        >
+                                            <MoreHorizontal size={15} />
+                                        </button>
+
+                                        {openMenuIssueId === issue._id && (
+                                            <IssueMenu
+                                                pos={dropPos}
+                                                onClose={() => setOpenMenuIssueId(null)}
+                                                onView={() => handleOpenDetails(issue)}
+                                                onEdit={() => handleOpenEditModal(issue)}
+                                                onDelete={() => setIssueToDelete(issue)}
+                                                canEdit={canEditIssue}
+                                                canDelete={canDeleteIssue}
+                                            />
                                         )}
                                     </div>
                                 </div>
                             </div>
+                        );
+                    })}
 
-                            <div className="flex items-center gap-2">
-                                {story.status.toLowerCase() === 'new' && canEditStory && (
-                                    <button
-                                        onClick={() => setStoryToMarkReady(story)}
-                                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                    >
-                                        <CheckCircle size={12} /> Mark Ready
-                                    </button>
-                                )}
-                                <div className="relative">
-                                    <button
-                                        ref={(el) => { btnRefs.current[story._id] = el; }}
-                                        onClick={() => openMenu(story._id)}
-                                        className="p-1.5 text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#555] rounded-lg transition-colors"
-                                    >
-                                        <MoreHorizontal size={15} />
-                                    </button>
 
-                                    {openMenuStoryId === story._id && (
-                                        <StoryMenu
-                                            pos={dropPos}
-                                            onClose={() => setOpenMenuStoryId(null)}
-                                            onView={() => handleOpenDetails(story)}
-                                            onEdit={() => handleOpenEditModal(story)}
-                                            onDelete={() => setStoryToDelete(story)}
-                                            canEdit={canEditStory}
-                                            canDelete={canDeleteStory}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
                 </div>
             </div>
         );
@@ -321,7 +348,7 @@ export default function Backlogs() {
             <div className="p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#f0f0f0] bg-white shrink-0">
                 <div>
                     <h1 className="text-[20px] font-black text-[#1f2124] tracking-tight">Project Backlogs</h1>
-                    <p className="text-[12px] text-[#888] mt-1 font-medium">Manage and refine user stories across your projects</p>
+                    <p className="text-[12px] text-[#888] mt-1 font-medium">Manage and refine issues across your projects</p>
                 </div>
             </div>
 
@@ -336,7 +363,7 @@ export default function Backlogs() {
                             <FolderKanban size={24} />
                         </div>
                         <h3 className="text-[14px] font-bold text-[#333]">No Projects Available</h3>
-                        <p className="text-[12px] text-[#888] mt-1 max-w-sm">You need active projects to start creating user stories in the backlog.</p>
+                        <p className="text-[12px] text-[#888] mt-1 max-w-sm">You need active projects to start creating issues in the backlog.</p>
                     </div>
                 ) : (
                     <div className="max-w-full mx-auto space-y-4">
@@ -360,12 +387,13 @@ export default function Backlogs() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            {can('userStory:create') && (
+                                            {(can('issue:story:create') || can('issue:task:create') || can('issue:bug:create')) && (
+
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleOpenCreateModal(project._id); }}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold bg-[#fff5ef] text-[#fa8029] hover:bg-[#fa8029] hover:text-white rounded-lg transition-all"
                                                 >
-                                                    <Plus size={12} /> Add Story
+                                                    <Plus size={12} /> Add Issue
                                                 </button>
                                             )}
                                             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#f0f0f0] text-[#888]">
@@ -376,7 +404,7 @@ export default function Backlogs() {
 
                                     <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                                         <div className="overflow-hidden">
-                                            {renderStories(project._id)}
+                                            {renderIssues(project._id)}
                                         </div>
                                     </div>
                                 </div>
@@ -387,23 +415,26 @@ export default function Backlogs() {
             </div>
 
             {/* View/Edit Modals */}
-            <UserStoryModal
+            <IssueModal
                 isOpen={isFormModalOpen}
                 onClose={() => setFormModalOpen(false)}
                 onSubmit={handleFormSubmit}
-                initialData={selectedStory as ModalStoryFormData}
+                initialData={selectedIssue as ModalIssueFormData}
                 isEditing={isEditing}
                 isSubmitting={isSubmitting}
+                members={members}
             />
 
-            <UserStoryDetailsModal
-                isOpen={isDetailsModalOpen}
-                onClose={() => setDetailsModalOpen(false)}
-                story={selectedStory}
+            <ItemDetailsDrawer
+                isOpen={isDetailsDrawerOpen}
+                onClose={() => setDetailsDrawerOpen(false)}
+                item={selectedIssue}
+                type="issue"
+                onUpdate={() => selectedProjectId && fetchIssuesForProject(selectedProjectId)}
             />
 
             {/* Confirmation Modal - Mark Ready */}
-            {storyToMarkReady && (
+            {issueToMarkReady && (
                 <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 text-center">
@@ -412,12 +443,12 @@ export default function Backlogs() {
                             </div>
                             <h3 className="text-[16px] font-bold text-[#1f2124] mb-2">Mark as Ready</h3>
                             <p className="text-[13px] text-[#888] leading-relaxed">
-                                Are you sure you want to change the status of <span className="font-bold text-[#555]">'{storyToMarkReady.title}'</span> to <span className="font-bold text-emerald-600">Ready</span>?
+                                Are you sure you want to change the status of <span className="font-bold text-[#555]">'{issueToMarkReady.title}'</span> to <span className="font-bold text-emerald-600">Ready</span>?
                             </p>
                         </div>
                         <div className="flex gap-2 p-4 pt-0">
                             <button
-                                onClick={() => setStoryToMarkReady(null)}
+                                onClick={() => setIssueToMarkReady(null)}
                                 className="flex-1 py-2.5 border border-[#ebebeb] rounded-lg text-[12px] font-semibold text-[#555] hover:bg-[#f7f7f7] transition-colors"
                             >
                                 Cancel
@@ -433,28 +464,28 @@ export default function Backlogs() {
                 </div>
             )}
 
-            {/* Confirmation Modal - Delete Story */}
-            {storyToDelete && (
+            {/* Confirmation Modal - Delete Issue */}
+            {issueToDelete && (
                 <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 text-center">
                             <div className="w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <AlertCircle className="text-rose-500" size={24} />
                             </div>
-                            <h3 className="text-[16px] font-bold text-[#1f2124] mb-2">Delete Story</h3>
+                            <h3 className="text-[16px] font-bold text-[#1f2124] mb-2">Delete Issue</h3>
                             <p className="text-[13px] text-[#888] leading-relaxed">
-                                Are you sure you want to permanently delete <span className="font-bold text-[#555]">'{storyToDelete.title}'</span>? <br />This action cannot be undone.
+                                Are you sure you want to permanently delete <span className="font-bold text-[#555]">'{issueToDelete.title}'</span>? <br />This action cannot be undone.
                             </p>
                         </div>
                         <div className="flex gap-2 p-4 pt-0">
                             <button
-                                onClick={() => setStoryToDelete(null)}
+                                onClick={() => setIssueToDelete(null)}
                                 className="flex-1 py-2.5 border border-[#ebebeb] rounded-lg text-[12px] font-semibold text-[#555] hover:bg-[#f7f7f7] transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
-                                onClick={confirmDeleteStory}
+                                onClick={confirmDeleteIssue}
                                 className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-[12px] font-semibold transition-all active:scale-95"
                             >
                                 Delete

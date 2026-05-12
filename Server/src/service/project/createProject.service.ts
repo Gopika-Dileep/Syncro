@@ -17,10 +17,15 @@ export class CreateProjectService implements ICreateProjectService {
 
   async execute(userId: string, data: CreateProjectRequestDTO): Promise<{ message: string; project: ProjectResponseDTO }> {
     const employee = await this._employeeRepo.findByUserId(userId);
-    const companyId: string = String(employee?.company_id._id);
-    if (!companyId) throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
 
-    const projectData = ProjectMapper.toCreate(data, companyId);
+    if (!employee || !employee.company_id) {
+      throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
+    }
+
+    const companyId = employee.company_id._id ? String(employee.company_id._id) : String(employee.company_id);
+    const creatorId = String(employee._id);
+
+    const projectData = ProjectMapper.toCreate(data, companyId, creatorId);
 
     const project = await this._projectRepository.create(projectData);
     return {

@@ -10,7 +10,18 @@ export class ProjectRepository extends BaseRepository<IProject> implements IProj
   }
 
   async findAllByCompanyId(companyId: string): Promise<IProject[]> {
-    return await this._model.find({ company_id: companyId }).sort({ created_at: -1 }).exec();
+    return await this._model
+      .find({ company_id: companyId })
+      .populate({ path: 'created_by', populate: { path: 'user_id' } })
+      .sort({ created_at: -1 })
+      .exec();
+  }
+
+  async findById(id: string): Promise<IProject | null> {
+    return await this._model
+      .findById(id)
+      .populate({ path: 'created_by', populate: { path: 'user_id' } })
+      .exec();
   }
 
   async getProjectsWithPagination(companyId: string, page: number, limit: number, search: string, status?: string): Promise<{ projects: IProject[]; total: number }> {
@@ -27,6 +38,7 @@ export class ProjectRepository extends BaseRepository<IProject> implements IProj
     const total = await this._model.countDocuments(filter);
     const projects = await this._model
       .find(filter)
+      .populate({ path: 'created_by', populate: { path: 'user_id' } })
       .sort({ created_at: -1 })
       .skip((page - 1) * limit)
       .limit(limit)

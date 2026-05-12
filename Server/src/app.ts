@@ -9,10 +9,13 @@ import { morganMiddleware } from './middleware/morgan.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 
 import { ProjectRouter } from './routes/project.routes';
-import { UserStoryRouter } from './routes/userStory.routes';
+import { IssueRouter } from './routes/issue.routes';
 import { TeamRouter } from './routes/team.routes';
 import { SprintRouter } from './routes/sprint.routes';
-import { TaskRouter } from './routes/task.routes';
+import { SubTaskRouter } from './routes/subTask.routes';
+import { UploadRouter } from './routes/upload.routes';
+import { DashboardRouter } from './routes/dashboard.routes';
+import path from 'path';
 export default class App {
   public app: Application;
   constructor() {
@@ -26,10 +29,13 @@ export default class App {
     this.app.use('/api/company', new CompanyRouter().router);
     this.app.use('/api/user', new UserRouter().router);
     this.app.use('/api/projects', new ProjectRouter().router);
-    this.app.use('/api/user-stories', new UserStoryRouter().router);
+    this.app.use('/api/issues', new IssueRouter().router);
     this.app.use('/api/teams', new TeamRouter().router);
-    this.app.use('/api/sprints',new SprintRouter().router);
-    this.app.use('/api/tasks', new TaskRouter().router);
+    this.app.use('/api/sprints', new SprintRouter().router);
+    this.app.use('/api/subtasks', new SubTaskRouter().router);
+    this.app.use('/api/upload', new UploadRouter().router);
+    this.app.use('/api/dashboard', new DashboardRouter().router);
+    this.app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
   }
   private _configureMiddleware(): void {
     this.app.use(morganMiddleware);

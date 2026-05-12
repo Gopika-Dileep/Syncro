@@ -5,9 +5,10 @@ import { IGetProjectsService } from '../interfaces/services/project/IGetProjects
 import { IGetProjectByIdService } from '../interfaces/services/project/IGetProjectByIdService';
 import { IUpdateProjectService } from '../interfaces/services/project/IUpdateProjectService';
 import { IDeleteProjectService } from '../interfaces/services/project/IDeleteProjectService';
-import { HttpStatus } from '../enums/HttpStatus';
+import { IGetProjectInsightsService } from '../interfaces/services/project/IGetProjectInsightsService';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
+import { success, created } from '../utils/response.utils';
 import { PROJECT_MESSAGES } from '../constants/messages';
 import { GetProjectsRequestDTO } from '../dto/project.dto';
 
@@ -19,16 +20,13 @@ export class ProjectController {
     @inject(TYPES.IGetProjectByIdService) private _getProjectByIdService: IGetProjectByIdService,
     @inject(TYPES.IUpdateProjectService) private _updateProjectService: IUpdateProjectService,
     @inject(TYPES.IDeleteProjectService) private _deleteProjectService: IDeleteProjectService,
+    @inject(TYPES.IGetProjectInsightsService) private _getProjectInsightsService: IGetProjectInsightsService,
   ) {}
 
   createProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._createProjectService.execute(req.userId!, req.body);
-      res.status(HttpStatus.CREATED).json({
-        success: true,
-        data: result.project,
-        message: result.message,
-      });
+      created(res, result.project, result.message);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -38,14 +36,7 @@ export class ProjectController {
     try {
       const query = req.query as unknown as GetProjectsRequestDTO;
       const { projects, total } = await this._getProjectsService.execute(req.userId!, query);
-      res.status(HttpStatus.OK).json({
-        success: true,
-        data: projects,
-        total,
-        page: query.page,
-        limit: query.limit,
-        message: PROJECT_MESSAGES.FETCH_SUCCESS,
-      });
+      success(res, { projects, total, page: query.page, limit: query.limit }, PROJECT_MESSAGES.FETCH_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -55,11 +46,7 @@ export class ProjectController {
     try {
       const { projectId } = req.params;
       const project = await this._updateProjectService.execute(projectId as string, req.body);
-      res.status(HttpStatus.OK).json({
-        success: true,
-        data: project,
-        message: PROJECT_MESSAGES.UPDATE_SUCCESS,
-      });
+      success(res, project, PROJECT_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -69,10 +56,7 @@ export class ProjectController {
     try {
       const { projectId } = req.params;
       await this._deleteProjectService.execute(projectId as string);
-      res.status(HttpStatus.OK).json({
-        success: true,
-        message: PROJECT_MESSAGES.DELETE_SUCCESS,
-      });
+      success(res, PROJECT_MESSAGES.DELETE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }
@@ -82,11 +66,17 @@ export class ProjectController {
     try {
       const { projectId } = req.params;
       const project = await this._getProjectByIdService.execute(projectId as string);
-      res.status(HttpStatus.OK).json({
-        success: true,
-        data: project,
-        message: PROJECT_MESSAGES.FETCH_SUCCESS,
-      });
+      success(res, project, PROJECT_MESSAGES.FETCH_SUCCESS);
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  getProjectInsights = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { projectId } = req.params;
+      const insights = await this._getProjectInsightsService.execute(projectId as string);
+      success(res, insights, PROJECT_MESSAGES.FETCH_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }

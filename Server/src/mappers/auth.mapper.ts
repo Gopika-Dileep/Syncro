@@ -2,13 +2,15 @@ import { AuthResponseDTO, AuthUserDTO } from '../dto/auth.dto';
 import { IUser } from '../models/user.model';
 
 export class AuthMapper {
-  static toUserDTO(user: IUser, designation: string | null, companyName: string | null): AuthUserDTO {
+  static toUserDTO(user: IUser, designation: string | null, companyName: string | null, team_id?: string, team?: { _id: string; name: string } | null): AuthUserDTO {
     return {
       id: user._id.toString(),
       name: user.name,
       role: user.role,
       designation: designation,
       companyName: companyName,
+      team_id,
+      team,
     };
   }
 

@@ -36,18 +36,29 @@ export class VerifyOtpService implements IVerifyOtpService {
     let permissions: string[] = [];
     let designation: string | null = null;
     let companyName: string | null = null;
+    let team_id: string | undefined = undefined;
+    let team: { _id: string; name: string } | null = null;
 
     if (user.role === 'employee') {
       const employeeData = await this._employeeRepo.findByUserId(user._id.toString());
       designation = employeeData?.designation || null;
       if (employeeData && employeeData.company_id) companyName = employeeData.company_id.name;
+      if (employeeData && employeeData.team_id) {
+        team_id = employeeData.team_id._id?.toString() || employeeData.team_id.toString();
+        if (typeof employeeData.team_id === 'object' && 'name' in employeeData.team_id) {
+          team = {
+            _id: team_id,
+            name: String((employeeData.team_id as unknown as Record<string, unknown>).name),
+          };
+        }
+      }
       permissions = await this._permissionRepo.getPermissionKeysByUserId(user._id.toString());
     } else {
       const company = await this._companyRepo.findOne({ user_id: user._id.toString() });
       companyName = company?.name || null;
     }
 
-    const userDTO = AuthMapper.toUserDTO(user, designation, companyName);
+    const userDTO = AuthMapper.toUserDTO(user, designation, companyName, team_id, team);
     const accessToken = generateAccessToken(userDTO.id, userDTO.role, permissions, userDTO.name, userDTO.designation, userDTO.companyName);
     const refreshToken = generateRefreshToken(userDTO.id);
 

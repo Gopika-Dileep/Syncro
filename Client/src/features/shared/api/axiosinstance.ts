@@ -5,7 +5,6 @@ import { ENDPOINTS } from '@/constants/endpoints'
 
 const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
-    headers: { "content-Type" : "application/json" },
     withCredentials:true
 })
 
@@ -40,8 +39,8 @@ axiosInstance.interceptors.response.use((response) => {
                     {},
                     { withCredentials: true }
                 )
-                const { token, user, permissions } = res.data
-                store.dispatch(setAuth({ token, user, permissions }))
+                const { token, data } = res.data
+                store.dispatch(setAuth({ token, user: data?.user, permissions: data?.permissions }))
                 originalRequest.headers.Authorization = `Bearer ${token}`
                 return axiosInstance(originalRequest)
             } catch {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Users, Mail, User, Search } from "lucide-react";
 import { getTeamDirectoryApi, type TeamDirectory } from "../api/teamApi";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -10,11 +10,7 @@ export default function Team() {
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 500);
 
-    useEffect(() => {
-        fetchDirectory();
-    }, [debouncedSearch]);
-
-    const fetchDirectory = async () => {
+    const fetchDirectory = useCallback(async () => {
         setFetching(true);
         try {
             const res = await getTeamDirectoryApi(debouncedSearch);
@@ -25,7 +21,11 @@ export default function Team() {
         } finally {
             setFetching(false);
         }
-    };
+    }, [debouncedSearch]);
+
+    useEffect(() => {
+        fetchDirectory();
+    }, [debouncedSearch, fetchDirectory]);
 
 
     if (fetching) {
