@@ -73,7 +73,9 @@ export class IssueController {
     try {
       const { issueId } = req.params;
       const userId = req.userId!;
-      const issue = await this._updateIssueService.execute(issueId as string, req.body, userId);
+      const permissions = req.permissions || [];
+      const userRole = req.userRole;
+      const issue = await this._updateIssueService.execute(issueId as string, req.body, userId, permissions, userRole);
       success(res, issue, ISSUE_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
@@ -83,9 +85,11 @@ export class IssueController {
   assignIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
+      const permissions = req.permissions || [];
+      const userRole = req.userRole;
       const { issueId } = req.params;
       const data = { ...req.body, issue_id: issueId };
-      const issue = await this._assignIssueService.execute(data, userId);
+      const issue = await this._assignIssueService.execute(data, userId, permissions, userRole);
       success(res, issue, 'Assignment updated successfully');
     } catch (error) {
       handleAsyncError(error, next);

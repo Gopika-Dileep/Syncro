@@ -262,8 +262,11 @@ export default function Backlogs() {
                 <div className="space-y-2">
                     {config.data.map((issue) => {
                         const isOwner = issue.created_by?._id === user?._id || user?.role === 'company';
-                        const canEditIssue = can(`issue:${issue.type.toLowerCase()}:update`) || isOwner;
-                        const canDeleteIssue = can(`issue:${issue.type.toLowerCase()}:delete`) || isOwner;
+                        const issueType = (issue.type || 'task').toLowerCase();
+                        const canEditIssue = can(`issue:${issueType}:update`) || isOwner;
+                        const canDeleteIssue = can(`issue:${issueType}:delete`) || isOwner;
+                        // Allow marking ready if they can update stories, tasks or bugs generally
+                        const canMarkReady = canEditIssue || can('issue:story:update') || can('issue:task:update') || can('issue:bug:update');
 
                         return (
                             <div key={issue._id} className="flex items-center justify-between p-3 bg-white border border-[#eaeaea] rounded-xl hover:shadow-sm transition-all group">
@@ -293,7 +296,7 @@ export default function Backlogs() {
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    {issue.status.toLowerCase() === 'new' && canEditIssue && (
+                                    {issue.status.toLowerCase() === 'new' && canMarkReady && (
                                         <button
                                             onClick={() => setIssueToMarkReady(issue)}
                                             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors opacity-0 group-hover:opacity-100"

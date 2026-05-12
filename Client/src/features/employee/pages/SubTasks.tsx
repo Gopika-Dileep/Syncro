@@ -362,158 +362,166 @@ export default function SubTasks() {
                                                 ref={provided.innerRef}
                                                 className={`flex-1 rounded-xl transition-all duration-200 overflow-y-auto no-scrollbar ${snapshot.isDraggingOver ? 'bg-[#f0f2f5]/50' : ''}`}
                                             >
-                                                {columnItems.map((item, index) => (
-                                                    <Draggable key={item._id} draggableId={item._id} index={index}>
-                                                        {(provided, snapshot) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
-                                                                onClick={() => { setSelectedSubTask(item); setShowDetailsDrawer(true); }}
-                                                                className={`bg-white p-3 rounded-lg border border-[#eee] shadow-sm mb-3 hover:border-[#fa8029]/30 transition-all group relative ${snapshot.isDragging ? 'shadow-2xl ring-2 ring-[#fa8029]/10 rotate-1' : ''}`}
-                                                            >
-                                                                <div className="flex flex-col gap-2">
-                                                                    <div className="flex flex-col gap-0.5">
-                                                                        <div className="flex items-center gap-2 mb-1">
-                                                                            {item.subtask_type === 'sub-task' ? (
-                                                                                <span className="text-[8px] font-black text-[#fa8029] bg-[#fff5ef] px-1.5 py-0.5 rounded border border-[#fa8029]/10 uppercase tracking-wider shrink-0">Sub-task</span>
-                                                                            ) : item.subtask_type === 'bug' ? (
-                                                                                <span className="text-[8px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 uppercase tracking-wider shrink-0">Bug</span>
-                                                                            ) : (
-                                                                                <span className="text-[8px] font-black text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wider shrink-0">Task</span>
-                                                                            )}
-                                                                            {item.rework_reason && item.status !== 'Done' && (
-                                                                                <span className="text-[8px] font-black text-white bg-rose-500 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 animate-pulse">Rework</span>
-                                                                            )}
-                                                                            {item.status === 'Blocked' && (
-                                                                                <span className="text-[8px] font-black text-white bg-amber-500 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Blocked</span>
-                                                                            )}
-                                                                            {item.subtask_type === 'sub-task' && item.parent_issue && (
-                                                                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-wider truncate">
-                                                                                    Story: {item.parent_issue.title}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                         <div className="flex items-start justify-between gap-3">
-                                                                            <h4 className="text-[12px] font-bold text-[#1f2124] leading-tight group-hover:text-[#fa8029] transition-colors flex-1">
-                                                                                <MentionText text={item.title} />
-                                                                            </h4>
-                                                                            <div className="flex items-center gap-1.5 shrink-0">
-                                                                                <div className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider ${
-                                                                                    item.priority === 'High' ? 'bg-rose-50 text-rose-500 border border-rose-100' :
-                                                                                    item.priority === 'Medium' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
-                                                                                    'bg-blue-50 text-blue-500 border border-blue-100'
-                                                                                }`}>
-                                                                                    {item.priority}
-                                                                                </div>
-                                                                                <div className="relative">
-                                                                                    <button 
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            setActiveMenuId(activeMenuId === item._id ? null : item._id);
-                                                                                        }}
-                                                                                        className="p-1 text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#555] rounded-md transition-colors"
-                                                                                    >
-                                                                                        <MoreVertical size={14} />
-                                                                                    </button>
+                                                {columnItems.map((item, index) => {
+                                                    const isReadOnly = item.sprint_status?.toLowerCase() === 'completed';
+                                                    return (
+                                                        <Draggable key={item._id} draggableId={item._id} index={index} isDragDisabled={isReadOnly}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    onClick={() => { setSelectedSubTask(item); setShowDetailsDrawer(true); }}
+                                                                    className={`bg-white p-3 rounded-lg border border-[#eee] shadow-sm mb-3 hover:border-[#fa8029]/30 transition-all group relative ${snapshot.isDragging ? 'shadow-2xl ring-2 ring-[#fa8029]/10 rotate-1' : ''}`}
+                                                                >
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <div className="flex flex-col gap-0.5">
+                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                                {item.subtask_type === 'sub-task' ? (
+                                                                                    <span className="text-[8px] font-black text-[#fa8029] bg-[#fff5ef] px-1.5 py-0.5 rounded border border-[#fa8029]/10 uppercase tracking-wider shrink-0">Sub-task</span>
+                                                                                ) : item.subtask_type === 'bug' ? (
+                                                                                    <span className="text-[8px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 uppercase tracking-wider shrink-0">Bug</span>
+                                                                                ) : (
+                                                                                    <span className="text-[8px] font-black text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wider shrink-0">Task</span>
+                                                                                )}
+                                                                                {item.rework_reason && item.status !== 'Done' && (
+                                                                                    <span className="text-[8px] font-black text-white bg-rose-500 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 animate-pulse">Rework</span>
+                                                                                )}
+                                                                                {item.status === 'Blocked' && (
+                                                                                    <span className="text-[8px] font-black text-white bg-amber-500 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Blocked</span>
+                                                                                )}
+                                                                                {item.subtask_type === 'sub-task' && item.parent_issue && (
+                                                                                    <span className="text-[8px] font-black text-gray-400 uppercase tracking-wider truncate">
+                                                                                        Story: {item.parent_issue.title}
+                                                                                    </span>
+                                                                                )}
+                                                                                {item.sprint_status?.toLowerCase() === 'completed' && (
+                                                                                    <span className="text-[8px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 uppercase tracking-wider shrink-0">Locked</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="flex items-start justify-between gap-3">
+                                                                                <h4 className="text-[12px] font-bold text-[#1f2124] leading-tight group-hover:text-[#fa8029] transition-colors flex-1">
+                                                                                    <MentionText text={item.title} />
+                                                                                </h4>
+                                                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                                                    <div className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider ${
+                                                                                        item.priority === 'High' ? 'bg-rose-50 text-rose-500 border border-rose-100' :
+                                                                                        item.priority === 'Medium' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
+                                                                                        'bg-blue-50 text-blue-500 border border-blue-100'
+                                                                                    }`}>
+                                                                                        {item.priority}
+                                                                                    </div>
+                                                                                    <div className="relative">
+                                                                                        <button 
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                setActiveMenuId(activeMenuId === item._id ? null : item._id);
+                                                                                            }}
+                                                                                            className="p-1 text-[#bbb] hover:bg-[#f0f0f0] hover:text-[#555] rounded-md transition-colors"
+                                                                                        >
+                                                                                            <MoreVertical size={14} />
+                                                                                        </button>
 
-                                                                                    {activeMenuId === item._id && (
-                                                                                        <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-xl border border-[#f0f0f0] py-1 z-[100] animate-in fade-in zoom-in-95 duration-100">
-                                                                                            <button 
-                                                                                                onClick={(e) => {
-                                                                                                    e.stopPropagation();
-                                                                                                    setSelectedSubTask(item);
-                                                                                                    setShowDetailsDrawer(true);
-                                                                                                    setActiveMenuId(null);
-                                                                                                }}
-                                                                                                className="w-full px-3 py-2 text-left text-[11px] font-bold text-[#555] hover:bg-[#fff5ef] hover:text-[#fa8029] transition-colors flex items-center gap-2"
-                                                                                            >
-                                                                                                <Eye size={13} /> View Details
-                                                                                            </button>
-                                                                                            
-                                                                                            {col === 'In Progress' && item.status === 'In Progress' && (
-                                                                                                item.subtask_type === 'sub-task' ? can('task:block') :
-                                                                                                item.subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                                                                                                item.subtask_type === 'task' ? can('issue:task:block' as any) :
-                                                                                                can('task:block')
-                                                                                            ) && (
+                                                                                        {activeMenuId === item._id && (
+                                                                                            <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-xl border border-[#f0f0f0] py-1 z-[100] animate-in fade-in zoom-in-95 duration-100">
                                                                                                 <button 
                                                                                                     onClick={(e) => {
                                                                                                         e.stopPropagation();
                                                                                                         setSelectedSubTask(item);
-                                                                                                        setShowBlockModal(true);
+                                                                                                        setShowDetailsDrawer(true);
                                                                                                         setActiveMenuId(null);
                                                                                                     }}
-                                                                                                    className="w-full px-3 py-2 text-left text-[11px] font-bold text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+                                                                                                    className="w-full px-3 py-2 text-left text-[11px] font-bold text-[#555] hover:bg-[#fff5ef] hover:text-[#fa8029] transition-colors flex items-center gap-2"
                                                                                                 >
-                                                                                                    <Clock size={13} /> Block Task
+                                                                                                    <Eye size={13} /> View Details
                                                                                                 </button>
-                                                                                            )}
+                                                                                                
+                                                                                                {!isReadOnly && col === 'In Progress' && item.status === 'In Progress' && (
+                                                                                                    (item.subtask_type === 'sub-task' ? can('task:block') :
+                                                                                                    item.subtask_type === 'bug' ? can('issue:bug:block' as any) :
+                                                                                                    item.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                                                                                    can('task:block')) && (
+                                                                                                    <button 
+                                                                                                        onClick={(e) => {
+                                                                                                            e.stopPropagation();
+                                                                                                            setSelectedSubTask(item);
+                                                                                                            setShowBlockModal(true);
+                                                                                                            setActiveMenuId(null);
+                                                                                                        }}
+                                                                                                        className="w-full px-3 py-2 text-left text-[11px] font-bold text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+                                                                                                    >
+                                                                                                        <Clock size={13} /> Block Task
+                                                                                                    </button>
+                                                                                                ))}
 
-                                                                                            {col === 'In Progress' && item.status === 'Blocked' && (
-                                                                                                item.subtask_type === 'sub-task' ? can('task:block') :
-                                                                                                item.subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                                                                                                item.subtask_type === 'task' ? can('issue:task:block' as any) :
-                                                                                                can('task:block')
-                                                                                            ) && (
-                                                                                                <button 
-                                                                                                    onClick={(e) => {
-                                                                                                        e.stopPropagation();
-                                                                                                        handleStatusChange(item._id, 'In Progress');
-                                                                                                        setActiveMenuId(null);
-                                                                                                    }}
-                                                                                                    className="w-full px-3 py-2 text-left text-[11px] font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
-                                                                                                >
-                                                                                                    <Play size={13} /> Unblock / Resume
-                                                                                                </button>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    )}
+                                                                                                {!isReadOnly && col === 'In Progress' && item.status === 'Blocked' && (
+                                                                                                    (item.subtask_type === 'sub-task' ? can('task:block') :
+                                                                                                    item.subtask_type === 'bug' ? can('issue:bug:block' as any) :
+                                                                                                    item.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                                                                                    can('task:block')) && (
+                                                                                                    <button 
+                                                                                                        onClick={(e) => {
+                                                                                                            e.stopPropagation();
+                                                                                                            handleStatusChange(item._id, 'In Progress');
+                                                                                                            setActiveMenuId(null);
+                                                                                                        }}
+                                                                                                        className="w-full px-3 py-2 text-left text-[11px] font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
+                                                                                                    >
+                                                                                                        <Play size={13} /> Unblock / Resume
+                                                                                                    </button>
+                                                                                                ))}
+
+                                                                                                {isReadOnly && (
+                                                                                                    <div className="px-3 py-2 text-[10px] text-gray-400 italic">
+                                                                                                        Locked (Sprint Completed)
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
+                                                                            {item.rework_reason && item.status !== 'Done' && (
+                                                                                <div className="mt-1.5 p-1.5 bg-rose-50 rounded border border-rose-100/50">
+                                                                                    <div className="text-[9px] text-rose-600 font-bold leading-tight line-clamp-2 italic">
+                                                                                        <MentionText text={item.rework_reason} />
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {item.status === 'Blocked' && item.blocked_reason && (
+                                                                                <div className="mt-1.5 p-1.5 bg-amber-50 rounded border border-amber-100/50">
+                                                                                    <div className="text-[9px] text-amber-700 font-bold leading-tight line-clamp-2 italic">
+                                                                                        <MentionText text={item.blocked_reason} />
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
-                                                                        {item.rework_reason && item.status !== 'Done' && (
-                                                                            <div className="mt-1.5 p-1.5 bg-rose-50 rounded border border-rose-100/50">
-                                                                                <div className="text-[9px] text-rose-600 font-bold leading-tight line-clamp-2 italic">
-                                                                                    <MentionText text={item.rework_reason} />
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                        {item.status === 'Blocked' && item.blocked_reason && (
-                                                                            <div className="mt-1.5 p-1.5 bg-amber-50 rounded border border-amber-100/50">
-                                                                                <div className="text-[9px] text-amber-700 font-bold leading-tight line-clamp-2 italic">
-                                                                                    <MentionText text={item.blocked_reason} />
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
 
-                                                                    <div className="flex items-center justify-between mt-1 pt-2 border-t border-[#fcfcfc]">
-                                                                        <div className="flex items-center gap-1 text-[9px] text-[#aaa] font-bold">
-                                                                            <Clock size={10} className="text-[#ddd]" />
-                                                                            {item.estimated_hours}h
+                                                                        <div className="flex items-center justify-between mt-1 pt-2 border-t border-[#fcfcfc]">
+                                                                            <div className="flex items-center gap-1 text-[9px] text-[#aaa] font-bold">
+                                                                                <Clock size={10} className="text-[#ddd]" />
+                                                                                {item.estimated_hours}h
+                                                                            </div>
+                                                                            
+                                                                            {item.assignee_id ? (
+                                                                                <div className="flex items-center gap-1.5">
+                                                                                    <span className="text-[8px] font-bold text-[#aaa]">{item.assignee_id.name}</span>
+                                                                                    <div className="w-4 h-4 rounded-full bg-[#fa8029] text-white flex items-center justify-center text-[8px] font-black border border-white shadow-sm">
+                                                                                        {item.assignee_id.name[0].toUpperCase()}
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="px-1.5 py-0.5 bg-gray-50 text-gray-400 text-[8px] font-bold rounded border border-gray-100">
+                                                                                    Unassigned
+                                                                                </div>
+                                                                            )}
                                                                         </div>
-                                                                        
-                                                                        {item.assignee_id ? (
-                                                                            <div className="flex items-center gap-1.5">
-                                                                                <span className="text-[8px] font-bold text-[#aaa]">{item.assignee_id.name}</span>
-                                                                                <div className="w-4 h-4 rounded-full bg-[#fa8029] text-white flex items-center justify-center text-[8px] font-black border border-white shadow-sm">
-                                                                                    {item.assignee_id.name[0].toUpperCase()}
-                                                                                </div>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className="px-1.5 py-0.5 bg-gray-50 text-gray-400 text-[8px] font-bold rounded border border-gray-100">
-                                                                                Unassigned
-                                                                            </div>
-                                                                        )}
                                                                     </div>
-
-                                                                    {/* Action buttons removed from card body, moved to menu */}
                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                ))}
+                                                            )}
+                                                        </Draggable>
+                                                    );
+                                                })}
                                                 {provided.placeholder}
                                             </div>
                                         )}

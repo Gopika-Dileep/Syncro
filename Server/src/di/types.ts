@@ -75,4 +75,7 @@ export const TYPES = {
   IReviewSubTaskService: Symbol.for('IReviewSubTaskService'),
   IAddCommentToSubTaskService: Symbol.for('IAddCommentToSubTaskService'),
   IAddAttachmentToSubTaskService: Symbol.for('IAddAttachmentToSubTaskService'),
+  IGetCompanyDashboardService: Symbol.for('IGetCompanyDashboardService'),
+  IGetEmployeeDashboardService: Symbol.for('IGetEmployeeDashboardService'),
+  DashboardController: Symbol.for('DashboardController'),
 };

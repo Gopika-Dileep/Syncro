@@ -45,4 +45,8 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
   async deleteMany(filter: Record<string, unknown>): Promise<void> {
     await this._model.deleteMany(filter).exec();
   }
+
+  async count(filter: Record<string, unknown>): Promise<number> {
+    return await this._model.countDocuments(filter).exec();
+  }
 }

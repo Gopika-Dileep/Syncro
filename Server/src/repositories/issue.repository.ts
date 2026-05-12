@@ -10,6 +10,7 @@ export class IssueRepository extends BaseRepository<IIssue> implements IIssueRep
   }
 
   private readonly POPULATE_OPTS = [
+    { path: 'sprint_id', select: 'status' },
     { path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] },
     { path: 'created_by', populate: { path: 'user_id' } },
     { path: 'assigned_by', populate: { path: 'user_id' } },

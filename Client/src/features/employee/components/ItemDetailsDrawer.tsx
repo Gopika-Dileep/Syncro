@@ -283,11 +283,12 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         }
     };
 
+    const isReadOnly = fullItem?.sprint_status?.toLowerCase() === 'completed';
     const isInReview = fullItem.status.toLowerCase() === 'in review' || fullItem.status.toLowerCase() === 'submitted';
     const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') &&
         (fullItem.status.toLowerCase() === 'rework' || !!(internalType === 'subtask' ? (fullItem as SubTask).rework_reason : null));
     const isReviewer = can('task:view:all') || can('task:update') || can('task:status:review') || currentUser?.role === 'company';
-    const canAssign = can('task:assign') || can('task:view:all') || can('project:update') || currentUser?.role === 'company';
+    const canAssign = (can('task:assign') || can('task:view:all') || can('project:update') || currentUser?.role === 'company') && !isReadOnly;
 
     const rawTimeline = [
         ...(fullItem.comments || []).map(c => ({ ...c, type: 'comment', source: 'current', taskId: internalType === 'subtask' ? fullItem._id : undefined })),
@@ -370,6 +371,16 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                         </button>
                     </div>
                 </div>
+
+                {/* Completed Sprint Banner */}
+                {isReadOnly && (
+                    <div className="bg-amber-50 border-b border-amber-100 p-3 flex items-center gap-3 shrink-0">
+                        <Clock size={16} className="text-amber-500" />
+                        <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+                            Sprint Completed - Activities Locked
+                        </span>
+                    </div>
+                )}
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fcfcfc]">
@@ -703,14 +714,16 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Attachments</h3>
-                                        <button
-                                            onClick={() => triggerFileUpload('item')}
-                                            disabled={isUploading}
-                                            className="text-[11px] font-bold text-[#fa8029] hover:underline flex items-center gap-1 disabled:opacity-50"
-                                        >
-                                            <Paperclip size={12} />
-                                            {isUploading ? 'Uploading...' : 'Add'}
-                                        </button>
+                                        {!isReadOnly && (
+                                            <button
+                                                onClick={() => triggerFileUpload('item')}
+                                                disabled={isUploading}
+                                                className="text-[11px] font-bold text-[#fa8029] hover:underline flex items-center gap-1 disabled:opacity-50"
+                                            >
+                                                <Paperclip size={12} />
+                                                {isUploading ? 'Uploading...' : 'Add'}
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         {(fullItem.attachments && fullItem.attachments.length > 0) ? (
@@ -884,7 +897,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                 <div className="p-4 border-t border-gray-100 bg-white space-y-4">
                     {/* Review Actions Bar */}
-                    {isInReview && isReviewer && !showReworkInput && (
+                    {isInReview && isReviewer && !showReworkInput && !isReadOnly && (
                         <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
                             <button
                                 onClick={() => handleReview('approve')}
@@ -903,7 +916,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                         </div>
                     )}
 
-                    {fullItem.status === 'In Progress' && (
+                    {fullItem.status === 'In Progress' && !showBlockInput && !isReadOnly && (
                         internalType === 'issue' ? (
                             (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block' as any) :
                             (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block' as any) :
@@ -913,7 +926,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                             (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block' as any) :
                             can('issue:task:block' as any)
                         )
-                    ) && !showBlockInput && (
+                    ) && (
                         <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
                             <button
                                 onClick={() => setShowBlockInput(true)}
@@ -925,7 +938,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                         </div>
                     )}
 
-                    {fullItem.status === 'Blocked' && (
+                    {fullItem.status === 'Blocked' && !showBlockInput && !isReadOnly && (
                         internalType === 'issue' ? (
                             (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block' as any) :
                             (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block' as any) :
@@ -935,7 +948,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                             (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block' as any) :
                             can('issue:task:block' as any)
                         )
-                    ) && !showBlockInput && (
+                    ) && (
                         <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
                             <button
                                 onClick={() => handleBlock('unblock')}
@@ -1013,40 +1026,46 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                             ))}
                         </div>
                     )}
-                    <div className="relative group">
-                        <MentionTextArea
-                            value={comment}
-                            onChange={(text, m) => {
-                                setComment(text);
-                                setMentions(m);
-                            }}
-                            placeholder="Add a comment or feedback... (Type @ to mention)"
-                            users={employees}
-                            className="bg-gray-50 border border-gray-100 pr-12 min-h-[100px]"
-                        />
-                        <div className="absolute bottom-4 right-4 flex items-center gap-2 z-20">
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden"
+                    {!isReadOnly ? (
+                        <div className="relative group">
+                            <MentionTextArea
+                                value={comment}
+                                onChange={(text, m) => {
+                                    setComment(text);
+                                    setMentions(m);
+                                }}
+                                placeholder="Add a comment or feedback... (Type @ to mention)"
+                                users={employees}
+                                className="bg-gray-50 border border-gray-100 pr-12 min-h-[100px]"
                             />
-                            <button
-                                onClick={() => triggerFileUpload('comment')}
-                                disabled={isUploading}
-                                className={`p-2 transition-colors rounded-lg disabled:opacity-50 ${isUploading && uploadMode === 'comment' ? 'text-[#fa8029] animate-pulse' : 'text-gray-400 hover:text-[#fa8029]'}`}
-                            >
-                                <Paperclip size={18} />
-                            </button>
-                            <button
-                                onClick={handleAddComment}
-                                disabled={isSubmitting || !comment.trim()}
-                                className="p-2 bg-[#fa8029] text-white rounded-xl shadow-lg shadow-[#fa8029]/20 hover:bg-[#e67324] disabled:opacity-50 disabled:shadow-none transition-all"
-                            >
-                                <Send size={18} />
-                            </button>
+                            <div className="absolute bottom-4 right-4 flex items-center gap-2 z-20">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                />
+                                <button
+                                    onClick={() => triggerFileUpload('comment')}
+                                    disabled={isUploading}
+                                    className={`p-2 transition-colors rounded-lg disabled:opacity-50 ${isUploading && uploadMode === 'comment' ? 'text-[#fa8029] animate-pulse' : 'text-gray-400 hover:text-[#fa8029]'}`}
+                                >
+                                    <Paperclip size={18} />
+                                </button>
+                                <button
+                                    onClick={handleAddComment}
+                                    disabled={isSubmitting || !comment.trim()}
+                                    className="p-2 bg-[#fa8029] text-white rounded-xl shadow-lg shadow-[#fa8029]/20 hover:bg-[#e67324] disabled:opacity-50 disabled:shadow-none transition-all"
+                                >
+                                    <Send size={18} />
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                            <p className="text-[12px] text-gray-400 font-medium italic">Comments are disabled for completed sprints</p>
+                        </div>
+                    )}
                 </div>
             </div>
 

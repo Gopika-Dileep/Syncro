@@ -39,8 +39,9 @@ const ISSUE_TYPES = [
 export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isEditing = false, isSubmitting = false, members = [] }: IssueModalProps) {
     const { can } = usePermission();
     
-    const availableTypes = ISSUE_TYPES.filter(it => 
-        isEditing ? true : can(`issue:${it.id}:create`)
+    const availableTypes = React.useMemo(() => 
+        ISSUE_TYPES.filter(it => isEditing ? true : can(`issue:${it.id}:create`)),
+        [isEditing, can]
     );
 
     const [title, setTitle] = useState("");
@@ -85,7 +86,7 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                 setAssigneeId("");
             }
         }
-    }, [isOpen, initialData, availableTypes]);
+    }, [isOpen, initialData]); // Remove availableTypes to prevent reset-on-render
 
     if (!isOpen) return null;
 

@@ -14,12 +14,34 @@ export class AssignIssueService implements IAssignIssueService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
   ) { }
 
-  async execute(data: AssignIssueRequestDTO, userId: string): Promise<IssueResponseDTO> {
+  async execute(data: AssignIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
     if (!assigner) throw new Error('Assigner not found');
 
     const issueToUpdate = await this._issueRepository.findById(data.issue_id);
     if (!issueToUpdate) throw new Error('Issue not found');
+
+    const isCompany = userRole === 'company';
+    const type = (issueToUpdate.type || 'task').toLowerCase();
+
+    // 1. Check Assignee Permission if changing assignee
+    if (data.assignee_id && String(data.assignee_id) !== String(issueToUpdate.assignee_id)) {
+      if (!isCompany && !permissions.includes(`issue:${type}:assign`)) {
+        throw new Error(`You do not have permission to assign this ${type}`);
+      }
+    }
+
+    // 2. Check Sprint Permission if changing sprint
+    if (data.sprint_id && String(data.sprint_id) !== String(issueToUpdate.sprint_id)) {
+      if (!isCompany && !permissions.includes(`issue:${type}:assign_to_sprint`)) {
+        throw new Error(`You do not have permission to add this ${type} to a sprint`);
+      }
+
+      // NEW: Status Check - Only 'Ready' items can be moved from backlog to sprint
+      if (!issueToUpdate.sprint_id && issueToUpdate.status !== 'Ready') {
+        throw new Error(`Only items with status 'Ready' can be added to a sprint. Please mark this ${type} as ready first.`);
+      }
+    }
 
     const updateData: Record<string, unknown> = {
       assigned_by: assigner._id,

@@ -17,10 +17,26 @@ export class UpdateIssueService implements IUpdateIssueService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
   ) {}
 
-  async execute(issueId: string, data: UpdateIssueRequestDTO, userId: string): Promise<IssueResponseDTO> {
+  async execute(issueId: string, data: UpdateIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
     const oldIssue = await this._issueRepository.findById(issueId);
     if (!oldIssue) throw new Error('Issue not found');
+
+    // SECURITY CHECK: If changing sprint, verify specific permission and status
+    if (data.sprint_id && String(data.sprint_id) !== String(oldIssue.sprint_id)) {
+      const isCompany = userRole === 'company';
+      const type = (oldIssue.type || 'task').toLowerCase();
+      const hasSprintPerm = permissions.includes(`issue:${type}:assign_to_sprint`);
+      
+      if (!isCompany && !hasSprintPerm) {
+        throw new Error(`You do not have permission to add this ${type} to a sprint`);
+      }
+
+      // NEW: Status Check - Only 'Ready' items can be moved from backlog to sprint
+      if (!oldIssue.sprint_id && oldIssue.status !== 'Ready') {
+        throw new Error(`Only items with status 'Ready' can be added to a sprint. Please mark this ${type} as ready first.`);
+      }
+    }
 
     const historyEntry = {
       user: employee?._id,

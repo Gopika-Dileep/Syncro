@@ -104,6 +104,7 @@ export interface SubTaskResponseDTO {
   _id: string;
   issue_id: string;
   sprint_id: string;
+  sprint_status?: string;
   company_id: string;
   team_id?: SubTaskPersonRef | null;
   created_by?: SubTaskPersonRef | null;

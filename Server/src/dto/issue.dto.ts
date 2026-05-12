@@ -78,6 +78,7 @@ export interface IssueResponseDTO {
   project_id: string;
   company_id: string;
   sprint_id?: string;
+  sprint_status?: string;
   assignee_id?:
     | string
     | null

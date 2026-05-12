@@ -6,6 +6,7 @@ export interface Issue {
     project_id: string;
     company_id: string;
     sprint_id?: string | null;
+    sprint_status?: string;
     assignee_id?: {
         _id: string;
         name: string;

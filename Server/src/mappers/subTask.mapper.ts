@@ -53,7 +53,8 @@ export class SubTaskMapper {
     return {
       _id: subTask._id.toString(),
       issue_id: typeof t.issue_id === 'object' && t.issue_id !== null ? String((t.issue_id as IPopulatedIssue)._id) : String(t.issue_id),
-      sprint_id: subTask.sprint_id.toString(),
+      sprint_id: typeof t.sprint_id === 'object' && t.sprint_id !== null ? String((t.sprint_id as { _id: string })._id) : String(t.sprint_id),
+      sprint_status: typeof t.sprint_id === 'object' && t.sprint_id !== null ? String((t.sprint_id as { status: string }).status) : undefined,
       company_id: subTask.company_id?.toString() ?? '',
       team_id: extractRef(t.team_id),
       created_by: extractRef(t.created_by),

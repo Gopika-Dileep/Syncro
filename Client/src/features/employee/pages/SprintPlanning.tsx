@@ -64,7 +64,7 @@ export default function SprintPlanning() {
             // Filter items not in any active sprint and in a 'plannable' status
             setBacklogIssues(allIssues.filter(i => 
                 !i.sprint_id && 
-                (i.status === 'New' || i.status === 'To Do' || i.status === 'Ready')
+                i.status === 'Ready'
             ));
         } catch {
             toast.error("Failed to fetch backlog issues");
@@ -180,15 +180,26 @@ export default function SprintPlanning() {
             executeRemove();
         }
     };
+
+    const isCompleted = sprint?.status?.toLowerCase() === 'completed';
+
     const onDragEnd = (result: DropResult) => {
         const { source, destination, draggableId } = result;
 
-        if (!destination) return;
-
+        if (!destination || isCompleted) return;
         if (source.droppableId === destination.droppableId) return;
 
         const issue = [...backlogIssues, ...sprintIssues].find(i => i._id === draggableId);
         if (!issue) return;
+
+        // PERMISSION CHECK FOR DRAG-AND-DROP
+        const type = (issue.type || 'task').toLowerCase();
+        const canAssign = can('sprint:update') || can(`issue:${type}:assign_to_sprint`);
+
+        if (!canAssign) {
+            toast.error("You do not have permission to modify the sprint backlog");
+            return;
+        }
 
         if (source.droppableId === 'backlog' && destination.droppableId === 'sprint') {
             addToSprint(issue);
@@ -223,6 +234,12 @@ export default function SprintPlanning() {
                         <p className="text-[12px] text-[#888] font-medium">{sprint.name} • {sprint.goal}</p>
                     </div>
                 </div>
+                {isCompleted && (
+                    <div className="bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 flex items-center gap-2 animate-pulse">
+                        <Target size={16} className="text-amber-500" />
+                        <span className="text-[12px] font-bold text-amber-700 uppercase tracking-wider">Sprint Completed - Planning Locked</span>
+                    </div>
+                )}
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end">
                         <span className="text-[11px] font-bold text-[#555]">Duration</span>
@@ -279,7 +296,7 @@ export default function SprintPlanning() {
                                         </div>
                                     ) : (
                                         backlogIssues.map((issue, index) => (
-                                            <Draggable key={issue._id} draggableId={issue._id} index={index}>
+                                            <Draggable key={issue._id} draggableId={issue._id} index={index} isDragDisabled={isCompleted}>
                                                 {(provided, snapshot) => (
                                                     <div
                                                         ref={provided.innerRef}
@@ -302,7 +319,7 @@ export default function SprintPlanning() {
                                                                 {issue.type === 'story' && issue.story_points > 0 && <span className="text-[10px] text-[#888] font-bold">{issue.story_points} Points</span>}
                                                             </div>
                                                         </div>
-                                                        {(can('sprint:update') || can(`issue:${issue.type}:assign_to_sprint`)) && (
+                                                        {(can('sprint:update') || can(`issue:${issue.type}:assign_to_sprint`)) && !isCompleted && (
                                                             <button
                                                                 disabled={actionLoading === issue._id}
                                                                 onClick={(e) => { e.stopPropagation(); addToSprint(issue); }}
@@ -351,7 +368,7 @@ export default function SprintPlanning() {
                                         </div>
                                     ) : (
                                         sprintIssues.map((issue, index) => (
-                                            <Draggable key={issue._id} draggableId={issue._id} index={index}>
+                                            <Draggable key={issue._id} draggableId={issue._id} index={index} isDragDisabled={isCompleted}>
                                                 {(provided, snapshot) => (
                                                     <div
                                                         ref={provided.innerRef}
@@ -374,7 +391,7 @@ export default function SprintPlanning() {
                                                                 {issue.type === 'story' && issue.story_points > 0 && <span className="text-[10px] text-[#888] font-bold">{issue.story_points} Points</span>}
                                                             </div>
                                                         </div>
-                                                        {(can('sprint:update') || can(`issue:${issue.type}:assign_to_sprint`)) && (
+                                                        {(can('sprint:update') || can(`issue:${issue.type}:assign_to_sprint`)) && !isCompleted && (
 
                                                             <button
                                                                 disabled={actionLoading === issue._id}

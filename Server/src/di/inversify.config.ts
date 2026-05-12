@@ -63,6 +63,11 @@ import { IssueRepository } from '../repositories/issue.repository';
 import { IssueController } from '../controller/issue.controller';
 import { IIssueRepository } from '../interfaces/repositories/IIssueRepository';
 import { UploadController } from '../controller/upload.controller';
+import { IGetCompanyDashboardService } from '../interfaces/services/dashboard/IGetCompanyDashboardService';
+import { GetCompanyDashboardService } from '../service/dashboard/GetCompanyDashboardService';
+import { IGetEmployeeDashboardService } from '../interfaces/services/dashboard/IGetEmployeeDashboardService';
+import { GetEmployeeDashboardService } from '../service/dashboard/GetEmployeeDashboardService';
+import { DashboardController } from '../controller/dashboard.controller';
 
 // Issue Services
 import { ICreateIssueService } from '../interfaces/services/issue/ICreateIssueService';
@@ -218,6 +223,8 @@ container.bind<ISubmitSubTaskService>(TYPES.ISubmitSubTaskService).to(SubmitSubT
 container.bind<IReviewSubTaskService>(TYPES.IReviewSubTaskService).to(ReviewSubTaskService);
 container.bind<IAddCommentToSubTaskService>(TYPES.IAddCommentToSubTaskService).to(AddCommentToSubTaskService);
 container.bind<IAddAttachmentToSubTaskService>(TYPES.IAddAttachmentToSubTaskService).to(AddAttachmentToSubTaskService);
+container.bind<IGetCompanyDashboardService>(TYPES.IGetCompanyDashboardService).to(GetCompanyDashboardService);
+container.bind<IGetEmployeeDashboardService>(TYPES.IGetEmployeeDashboardService).to(GetEmployeeDashboardService);
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);
@@ -228,6 +235,7 @@ container.bind<IssueController>(TYPES.IssueController).to(IssueController);
 container.bind<SprintController>(TYPES.SprintController).to(SprintController);
 container.bind<SubTaskController>(TYPES.SubTaskController).to(SubTaskController);
 container.bind<UploadController>(TYPES.UploadController).to(UploadController);
+container.bind<DashboardController>(TYPES.DashboardController).to(DashboardController);
 
 container.bind<IRegisterService>(TYPES.IRegisterService).to(RegisterService);
 container.bind<IVerifyOtpService>(TYPES.IVerifyOtpService).to(VerifyOtpService);

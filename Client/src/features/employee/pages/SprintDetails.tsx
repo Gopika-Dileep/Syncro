@@ -178,7 +178,7 @@ export default function SprintDetails() {
                 // Filter out issues already in the current sprint and completed issues
                 const available = response.data.filter(issue =>
                     (!issue.sprint_id || issue.sprint_id !== sprintId) &&
-                    issue.status !== 'Completed'
+                    issue.status === 'Ready'
                 );
                 setBacklogIssues(available);
             }
@@ -365,12 +365,21 @@ export default function SprintDetails() {
         if (!destination) return;
         if (source.droppableId === destination.droppableId) return;
 
+        const issue = [...backlogIssues, ...issues].find(i => i._id === draggableId);
+        if (!issue) return;
+
+        const type = (issue.type || 'task').toLowerCase();
+        const canAssign = can('sprint:update') || can(`issue:${type}:assign_to_sprint`);
+
+        if (!canAssign) {
+            toast.error("You do not have permission to modify the sprint backlog");
+            return;
+        }
+
         if (source.droppableId === 'modal-backlog' && destination.droppableId === 'sprint-target') {
-            const issue = backlogIssues.find(i => i._id === draggableId);
-            if (issue) handleAddIssueToSprint(issue);
+            handleAddIssueToSprint(issue);
         } else if (source.droppableId === 'sprint-target' && destination.droppableId === 'modal-backlog') {
-            const issue = issues.find(i => i._id === draggableId);
-            if (issue) handleRemoveFromSprint(issue);
+            handleRemoveFromSprint(issue);
         }
     };
 
@@ -442,12 +451,12 @@ export default function SprintDetails() {
                         {subTask.assignee_id ? (
                             <button
                                 onClick={(e) => {
-                                    if (can('task:assign')) {
+                                    if (can('task:assign') && sprint?.status?.toLowerCase() !== 'completed') {
                                         e.stopPropagation();
                                         setSubTaskToAssign({ issueId, subTask });
                                     }
                                 }}
-                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can('task:assign') ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
+                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can('task:assign') && sprint?.status?.toLowerCase() !== 'completed' ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
                                 title={subTask.assignee_id.name}
                             >
                                 {(() => {
@@ -459,7 +468,7 @@ export default function SprintDetails() {
                                         : name.substring(0, 2).toUpperCase();
                                 })()}
                             </button>
-                        ) : can('task:assign') && (
+                        ) : can('task:assign') && sprint?.status?.toLowerCase() !== 'completed' && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); setSubTaskToAssign({ issueId, subTask }); }}
                                 className="w-8 h-8 rounded-full bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-[#fa8029] hover:text-[#fa8029] transition-all shadow-sm"
@@ -514,7 +523,7 @@ export default function SprintDetails() {
                                         <MessageSquare size={15} /> Comments
                                     </button>
 
-                                    {can('task:update') && (
+                                    {can('task:update') && sprint?.status?.toLowerCase() !== 'completed' && (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -532,7 +541,7 @@ export default function SprintDetails() {
                                         subTask.subtask_type === 'bug' ? can('issue:bug:block' as any) :
                                         subTask.subtask_type === 'task' ? can('issue:task:block' as any) :
                                         can('task:block')
-                                    ) && (
+                                    ) && sprint?.status?.toLowerCase() !== 'completed' && (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -551,7 +560,7 @@ export default function SprintDetails() {
                                         subTask.subtask_type === 'bug' ? can('issue:bug:block' as any) :
                                         subTask.subtask_type === 'task' ? can('issue:task:block' as any) :
                                         can('task:block')
-                                    ) && (
+                                    ) && sprint?.status?.toLowerCase() !== 'completed' && (
                                         <button
                                             onClick={async (e) => {
                                                 e.stopPropagation();
@@ -568,7 +577,7 @@ export default function SprintDetails() {
                                         </button>
                                     )}
 
-                                    {can('task:delete') && (
+                                    {can('task:delete') && sprint?.status?.toLowerCase() !== 'completed' && (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -658,12 +667,14 @@ export default function SprintDetails() {
                                     <CheckCircle2 size={18} /> Complete Sprint
                                 </button>
                             )}
-                            <button
-                                onClick={() => setIsAddItemModalOpen(true)}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl text-[13px] font-bold hover:bg-[#fa8029] transition-all shadow-lg shadow-black/5 active:scale-95"
-                            >
-                                <Plus size={18} /> Add Item
-                            </button>
+                            {(can('issue:story:assign_to_sprint') || can('issue:task:assign_to_sprint') || can('issue:bug:assign_to_sprint')) && sprint?.status?.toLowerCase() !== 'completed' && (
+                                <button
+                                    onClick={() => setIsAddItemModalOpen(true)}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl text-[13px] font-bold hover:bg-[#fa8029] transition-all shadow-lg shadow-black/5 active:scale-95"
+                                >
+                                    <Plus size={18} /> Add Item
+                                </button>
+                            )}
                             <button className="p-2.5 bg-white border border-[#eee] text-[#aaa] rounded-xl hover:text-[#fa8029] hover:border-[#fa8029]/30 transition-all">
                                 <MoreHorizontal size={20} />
                             </button>
@@ -811,12 +822,12 @@ export default function SprintDetails() {
                                                         {issue.assignee_id ? (
                                                             <button
                                                                 onClick={(e) => {
-                                                                    if (can(`issue:${issue.type}:assign` as Parameters<typeof can>[0])) {
+                                                                    if (can(`issue:${issue.type}:assign` as Parameters<typeof can>[0]) && sprint?.status?.toLowerCase() !== 'completed') {
                                                                         e.stopPropagation();
                                                                         setIssueToAssign(issue);
                                                                     }
                                                                 }}
-                                                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
+                                                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && sprint?.status?.toLowerCase() !== 'completed' ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
                                                                 title={issue.assignee_id.name}
                                                             >
                                                                 {(() => {
@@ -829,7 +840,7 @@ export default function SprintDetails() {
                                                                         : name.substring(0, 2).toUpperCase();
                                                                 })()}
                                                             </button>
-                                                        ) : can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && (
+                                                        ) : can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && sprint?.status?.toLowerCase() !== 'completed' && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); setIssueToAssign(issue); }}
                                                                 className="w-8 h-8 rounded-full bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-[#fa8029] hover:text-[#fa8029] transition-all shadow-sm"
@@ -864,7 +875,14 @@ export default function SprintDetails() {
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        {can('task:create') && (
+                                                        {can('task:create') && issue.type === 'story' && sprint?.status?.toLowerCase() !== 'completed' && (() => {
+                                                            const userTeamId = user?.team?._id || user?.team_id;
+                                                            const teamSubTaskCount = subTaskConfig?.data?.filter(st => {
+                                                                const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
+                                                                return stTeamId === userTeamId;
+                                                            }).length || 0;
+                                                            return teamSubTaskCount < 4;
+                                                        })() && (
                                                             <button
                                                                 onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
                                                                 className="p-2 bg-[#f9fafb] text-[#aaa] rounded-xl hover:text-[#fa8029] hover:bg-[#fff5ef] transition-all border border-transparent hover:border-[#fa8029]/20"
@@ -894,7 +912,14 @@ export default function SprintDetails() {
                                                         <div className="py-12 bg-white rounded-3xl border border-[#f0f0f0] border-dashed text-center flex flex-col items-center">
                                                             <AlertCircle size={24} className="text-[#eee] mb-2" />
                                                             <p className="text-[12px] text-[#aaa] font-medium">No sub-tasks defined yet.</p>
-                                                            {can('task:create') && (
+                                                            {can('task:create') && issue.type === 'story' && sprint?.status?.toLowerCase() !== 'completed' && (() => {
+                                                                const userTeamId = user?.team?._id || user?.team_id;
+                                                                const teamSubTaskCount = subTaskConfig?.data?.filter(st => {
+                                                                    const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
+                                                                    return stTeamId === userTeamId;
+                                                                }).length || 0;
+                                                                return teamSubTaskCount < 4;
+                                                            })() && (
                                                                 <button
                                                                     onClick={(e) => handleOpenSubTaskModal(e, issue._id)}
                                                                     className="mt-3 text-[11px] font-bold text-[#fa8029] hover:underline"

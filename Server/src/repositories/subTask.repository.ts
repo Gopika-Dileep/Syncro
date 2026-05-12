@@ -5,6 +5,7 @@ import { BaseRepository } from './base.repository';
 
 const POPULATE_OPTS = [
   { path: 'issue_id', select: 'title type status' },
+  { path: 'sprint_id', select: 'status' },
   { path: 'team_id', select: 'name' },
   { path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] },
   { path: 'created_by', populate: { path: 'user_id' } },
