@@ -99,6 +99,19 @@ export interface EmployeeDashboardDTO {
     employeeId: string;
     permissions?: string[];
   };
+  availableFilters?: {
+    projects: { _id: string; name: string }[];
+    sprints: { _id: string; name: string; sprint_number: number }[];
+    teams?: { _id: string; name: string }[];
+  };
+}
+
+export interface DashboardFilter {
+  projectId?: string;
+  sprintId?: string;
+  teamId?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 

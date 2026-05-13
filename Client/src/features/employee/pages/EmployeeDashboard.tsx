@@ -11,6 +11,7 @@ import {
 } from "../api/dashboardApi";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import { ChevronDown, X } from "lucide-react";
 
 
 // --- MINIMALIST COMPONENTS ---
@@ -47,20 +48,54 @@ export default function EmployeeDashboard() {
     const employee = useSelector((state: any) => state.auth.user);
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({
+        projectId: "",
+        sprintId: "",
+        teamId: ""
+    });
+    const [options, setOptions] = useState({
+        projects: [] as any[],
+        sprints: [] as any[],
+        teams: [] as any[]
+    });
+
+    const fetchDashboard = async () => {
+        try {
+            // Clean filters: remove empty strings
+            const cleanFilters = Object.fromEntries(
+                Object.entries(filters).filter(([_, v]) => v !== "")
+            );
+            const res = await getEmployeeDashboardApi(cleanFilters);
+            if (res.success) setData(res.data);
+        } catch (err) {
+            toast.error("Failed to load dashboard");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchDashboard = async () => {
-            try {
-                const res = await getEmployeeDashboardApi();
-                if (res.success) setData(res.data);
-            } catch (err) {
-                toast.error("Failed to load dashboard");
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchDashboard();
-    }, []);
+    }, [filters]);
+
+    useEffect(() => {
+        if (data?.availableFilters) {
+            setOptions({
+                projects: data.availableFilters.projects,
+                sprints: data.availableFilters.sprints,
+                teams: data.availableFilters.teams || []
+            });
+        }
+    }, [data]);
+
+    const handleFilterChange = (key: string, value: string) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const clearFilters = () => {
+        setFilters({ projectId: "", sprintId: "", teamId: "" });
+    };
 
     const isManager = !!data?.managerMetrics;
     const isLead = !!data?.teamMetrics && !isManager;
@@ -84,6 +119,17 @@ export default function EmployeeDashboard() {
             </div>
         </div>
     );
+    if (!data) return (
+        <div className="p-8 max-w-[1440px] mx-auto space-y-8 flex flex-col items-center justify-center min-h-[60vh]">
+            <Activity size={48} className="text-gray-100 mb-4" />
+            <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest text-center">
+                Initializing Dashboard Data...
+            </h2>
+            <p className="text-[11px] text-gray-300 font-bold uppercase tracking-wider mt-2">
+                If this persists, please try refreshing the page.
+            </p>
+        </div>
+    );
 
     return (
         <div className="p-8 max-w-[1440px] mx-auto space-y-8 min-h-screen bg-[#fafafa]">
@@ -104,11 +150,64 @@ export default function EmployeeDashboard() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-100 bg-white">
-                        <Filter size={14} className="text-gray-500" />
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`p-2 rounded-lg transition-all border ${
+                            showFilters || Object.values(filters).some(v => v !== "")
+                            ? 'bg-[#1a1c1f] border-transparent text-white' 
+                            : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'
+                        }`}
+                    >
+                        <Filter size={14} />
                     </button>
                 </div>
             </div>
+
+            {/* --- FILTER BAR --- */}
+            {showFilters && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex-1 min-w-[200px]">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Project</label>
+                            <div className="relative">
+                                <select 
+                                    value={filters.projectId}
+                                    onChange={(e) => handleFilterChange('projectId', e.target.value)}
+                                    className="w-full bg-gray-50 border-none rounded-lg px-3 py-2 text-[12px] font-bold text-[#1a1c1f] appearance-none focus:ring-2 focus:ring-[#1a1c1f]/5"
+                                >
+                                    <option value="">All Projects</option>
+                                    {options.projects.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        <div className="flex-1 min-w-[200px]">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Sprint</label>
+                            <div className="relative">
+                                <select 
+                                    value={filters.sprintId}
+                                    onChange={(e) => handleFilterChange('sprintId', e.target.value)}
+                                    className="w-full bg-gray-50 border-none rounded-lg px-3 py-2 text-[12px] font-bold text-[#1a1c1f] appearance-none focus:ring-2 focus:ring-[#1a1c1f]/5"
+                                >
+                                    <option value="">All Sprints</option>
+                                    {options.sprints.map(s => <option key={s._id} value={s._id}>Sprint {s.sprint_number}: {s.name}</option>)}
+                                </select>
+                                <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        <div className="flex items-end h-full pt-5">
+                            <button 
+                                onClick={clearFilters}
+                                className="flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-gray-400 hover:text-[#ef4444] transition-colors"
+                            >
+                                <X size={14} /> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* --- MINIMAL ALERT (Developer Only) --- */}
             {data?.myStats?.blocked > 0 && !isManager && (
