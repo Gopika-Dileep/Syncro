@@ -13,6 +13,7 @@ import { NotFoundError } from '../../errors/AppError';
 import { IssueType, IssueStatus } from '../../enums/IssueEnums';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
+import { IIssue } from '../../models/issue.model';
 
 @injectable()
 export class GetCompanyDashboardService implements IGetCompanyDashboardService {
@@ -61,7 +62,7 @@ export class GetCompanyDashboardService implements IGetCompanyDashboardService {
       totalSprints,
       issueStats,
       statusDistribution: statusStats,
-      recentBlocked: (recentBlocked as any[]).map((i: any) => ({
+      recentBlocked: (recentBlocked as IIssue[]).map((i) => ({
         _id: i._id,
         title: i.title,
         priority: i.priority,

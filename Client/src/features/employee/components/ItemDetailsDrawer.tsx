@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Flag, Hash, Users as UsersIcon, User, Send, Paperclip, Clock, MessageSquare, History, CheckCircle, ExternalLink, BookOpen, GitBranch, Check, RotateCcw, Play } from "lucide-react";
 import { createPortal } from "react-dom";
+import { useSocket } from "@/context/SocketContext";
 import { type Issue, getIssueByIdApi, addCommentToIssueApi, addIssueAttachmentApi, updateIssueApi } from "../api/issueApi";
 import { type SubTask, getSubTaskByIdApi, addCommentToSubTaskApi, addAttachmentToSubTaskApi, getSubTasksByIssueApi, reviewSubTaskApi, updateSubTaskApi } from "../api/subTaskApi";
 import { uploadFileApi } from "../api/fileApi";
@@ -9,6 +10,21 @@ import { toast } from "sonner";
 import { usePermission } from "../hooks/usePermission";
 import MentionTextArea from "@/features/shared/components/MentionTextArea";
 import MentionText from "@/features/shared/components/MentionText";
+
+interface Comment {
+    _id: string;
+    user: { _id: string; name: string; avatar?: string };
+    text: string;
+    created_at: string;
+    attachments?: { file_url: string; file_name: string }[];
+    mentions?: string[];
+}
+
+interface SocketUpdateData {
+    issueId?: string;
+    subTaskId?: string;
+    comment: Comment;
+}
 
 interface ItemDetailsDrawerProps {
     isOpen: boolean;
@@ -39,6 +55,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     const [employees, setEmployees] = useState<TeamMember[]>([]);
     const [mentions, setMentions] = useState<string[]>([]);
     const { can, user: currentUser } = usePermission();
+    const { socket, joinRoom } = useSocket();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchFullDetails = useCallback(async (id?: string, targetType?: 'issue' | 'subtask') => {
@@ -94,6 +111,11 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             setFullItem(item);
             setInternalType(type);
             fetchFullDetails();
+            
+            // Join real-time room
+            const roomName = `${type}:${item._id}`;
+            joinRoom(roomName);
+
             if (type === 'subtask') {
                 const subtaskItem = item as SubTask;
                 if (subtaskItem.issue_id) fetchParentInfo(subtaskItem.issue_id);
@@ -102,12 +124,38 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                 if (issueItem.type === 'story') fetchChildSubTasks(item._id);
             }
             fetchEmployees();
+
+            // Listen for real-time comments
+            if (socket) {
+                const handleNewComment = (data: SocketUpdateData) => {
+                    const id = data.issueId || data.subTaskId;
+                    if (id === item._id) {
+                        setFullItem(prev => {
+                            if (!prev) return null;
+                            const comments = prev.comments || [];
+                            // Check if comment already exists to prevent duplicates
+                            const exists = comments.some((c: { _id: string }) => c._id === data.comment._id);
+                            if (exists) return prev;
+                            
+                            return {
+                                ...prev,
+                                comments: [...comments, data.comment]
+                            } as Issue | SubTask;
+                        });
+                    }
+                };
+
+                socket.on('new_comment', handleNewComment);
+                return () => {
+                    socket.off('new_comment', handleNewComment);
+                };
+            }
         } else if (!isOpen) {
             setParentIssue(null);
             setChildSubTasks([]);
             setFullItem(null);
         }
-    }, [isOpen, item, item?._id, item?.status, type, fetchFullDetails, fetchParentInfo, fetchChildSubTasks, fetchEmployees]);
+    }, [isOpen, item, item?._id, item?.status, type, fetchFullDetails, fetchParentInfo, fetchChildSubTasks, fetchEmployees, socket, joinRoom]);
 
     if (!fullItem) return null;
 
@@ -129,6 +177,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             setComment("");
             setPendingAttachments([]);
             toast.success("Comment added");
+            fetchFullDetails(); // Refresh the drawer content immediately
             onUpdate?.();
         } catch {
             toast.error("Failed to add comment");

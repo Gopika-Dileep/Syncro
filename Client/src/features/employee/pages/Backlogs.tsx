@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -72,6 +73,7 @@ function IssueMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete 
 }
 
 export default function Backlogs() {
+    const [searchParams] = useSearchParams();
     const { can, user } = usePermission();
 
     const [projects, setProjects] = useState<Project[]>([]);
@@ -137,6 +139,40 @@ export default function Backlogs() {
         fetchProjects();
         fetchMembers();
     }, [fetchProjects, fetchMembers]);
+
+    // Handle deep linking for issues
+    useEffect(() => {
+        const issueId = searchParams.get('selectedIssue');
+        if (issueId) {
+            // 1. Try to find in already loaded issues
+            let found = false;
+            for (const config of Object.values(issuesConfig)) {
+                const issue = config.data.find(i => i._id === issueId);
+                if (issue) {
+                    setSelectedIssue(issue);
+                    setDetailsDrawerOpen(true);
+                    found = true;
+                    break;
+                }
+            }
+
+            // 2. If not found and projects are loaded, try fetching specifically
+            if (!found && projects.length > 0) {
+                const fetchSpecific = async () => {
+                    try {
+                        const res = await getIssueByIdApi(issueId);
+                        if (res.success) {
+                            setSelectedIssue(res.data);
+                            setDetailsDrawerOpen(true);
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch linked issue", err);
+                    }
+                };
+                fetchSpecific();
+            }
+        }
+    }, [searchParams, projects, issuesConfig]);
 
     const toggleProject = (projectId: string) => {
         if (expandedProjectId === projectId) {

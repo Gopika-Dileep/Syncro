@@ -37,6 +37,7 @@ export interface SubTask {
         status: string;
     } | null;
     comments?: {
+        _id: string;
         user: SubTaskPersonRef | null;
         text: string;
         created_at: string;
@@ -44,6 +45,7 @@ export interface SubTask {
         mentions?: string[];
     }[];
     attachments?: {
+        _id: string;
         file_url: string;
         file_name: string;
         uploaded_by: SubTaskPersonRef | null;
@@ -51,6 +53,7 @@ export interface SubTask {
         uploaded_at: string;
     }[];
     history?: {
+        _id: string;
         action: string;
         from?: string;
         to?: string;

@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import Landing from '@/features/public/pages/Landing'
 import Login from '@/features/auth/pages/Login'
@@ -19,6 +19,7 @@ import AddEmployee from '@/features/company/pages/AddEmployee'
 import ProjectDetails from '@/features/company/pages/ProjectDetails'
 import EmployeeLayout from './layouts/EmployeeLayout'
 import EmployeeDashboard from '@/features/employee/pages/EmployeeDashboard'
+import EmployeeNotifications from '@/features/employee/pages/Notifications'
 import Sprints from '@/features/employee/pages/Sprints'
 import Backlogs from '@/features/employee/pages/Backlogs'
 import Teams from '@/features/company/pages/Teams'
@@ -59,7 +60,7 @@ function App() {
               <Route path='projects' element={<Projects />} />
               <Route path='projects/:projectId' element={<ProjectDetails />} />
               <Route path='teams' element={<Teams />} />
-              <Route path='notification' element={<Notifications />} />
+              <Route path='notifications' element={<Notifications />} />
               <Route path='settings' element={<Settings />} />
             </Route>
             <Route
@@ -74,13 +75,19 @@ function App() {
               <Route path='projects' element={<EmployeeProjects />} />
               <Route path='projects/add' element={<AddProject />} />
               <Route path='projects/edit/:projectId' element={<AddProject />} />
+              
               <Route path='backlogs' element={<Backlogs />} />
+              <Route path='issues' element={<Backlogs />} /> {/* Legacy support */}
+              
               <Route path='sprints' element={<Sprints />} />
               <Route path='sprints/plan/:sprintId' element={<SprintPlanning />} />
               <Route path='sprints/:sprintId' element={<SprintDetails />} />
+              
               <Route path='tasks' element={<SubTasks/>}/>
+              <Route path='subtasks' element={<SubTasks/>}/> {/* Legacy support */}
+              
               <Route path='teams'  element={<Team/>}/>
-              <Route path='notification' element={<Notifications />} />
+              <Route path='notifications' element={<EmployeeNotifications />} />
               <Route path='settings' element={<Settings />} />
             </Route>
           </Routes>
@@ -88,7 +95,6 @@ function App() {
       </BrowserRouter>
     </div>
   )
-
 }
 
-export default App
+export default App

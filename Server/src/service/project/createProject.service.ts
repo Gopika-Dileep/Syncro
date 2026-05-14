@@ -7,12 +7,17 @@ import { ProjectMapper } from '../../mappers/project.mapper';
 import { TYPES } from '../../di/types';
 import { PROJECT_MESSAGES } from '../../constants/messages';
 import { NotFoundError } from '../../errors/AppError';
+import { INotificationService } from '../../interfaces/services/INotificationService';
+import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
+import { NotificationType } from '../../models/notification.model';
 
 @injectable()
 export class CreateProjectService implements ICreateProjectService {
   constructor(
     @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
   ) {}
 
   async execute(userId: string, data: CreateProjectRequestDTO): Promise<{ message: string; project: ProjectResponseDTO }> {
@@ -28,6 +33,27 @@ export class CreateProjectService implements ICreateProjectService {
     const projectData = ProjectMapper.toCreate(data, companyId, creatorId);
 
     const project = await this._projectRepository.create(projectData);
+
+    // Notify Admin
+    try {
+        const company = await this._companyRepo.findById(companyId);
+        if (company) {
+            const adminEmployee = await this._employeeRepo.findOne({ user_id: company.user_id });
+            if (adminEmployee) {
+                await this._notificationService.createNotification({
+                    recipientId: adminEmployee._id.toString(),
+                    senderId: creatorId,
+                    type: NotificationType.PROJECT_CREATED,
+                    title: 'New Project Created',
+                    message: `${employee.user_id?.name || 'Someone'} created a new project: ${project.name}`,
+                    link: `/employee/projects`
+                });
+            }
+        }
+    } catch (err) {
+        console.error('Failed to send project creation notification to admin', err);
+    }
+
     return {
       message: PROJECT_MESSAGES.CREATE_SUCCESS,
       project: ProjectMapper.toResponseDTO(project),

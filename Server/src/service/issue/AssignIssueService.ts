@@ -6,12 +6,15 @@ import { IAssignIssueService } from '../../interfaces/services/issue/IAssignIssu
 import { AssignIssueRequestDTO, IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { INotificationService } from '../../interfaces/services/INotificationService';
+import { NotificationType } from '../../models/notification.model';
 
 @injectable()
 export class AssignIssueService implements IAssignIssueService {
   constructor(
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
   ) { }
 
   async execute(data: AssignIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
@@ -99,6 +102,21 @@ export class AssignIssueService implements IAssignIssueService {
     });
 
     if (!updatedIssue) throw new Error('Failed to update issue');
+
+    // Send Notification to Assignee
+    if (data.assignee_id && String(data.assignee_id) !== String(issueToUpdate.assignee_id)) {
+      await this._notificationService.createNotification({
+        recipientId: data.assignee_id,
+        senderId: assigner._id.toString(),
+        type: NotificationType.ISSUE_ASSIGNED,
+        title: 'New Issue Assigned',
+        message: `You have been assigned a new ${type}: ${updatedIssue.title}`,
+        link: `/employee/backlogs?selectedIssue=${updatedIssue._id.toString()}`,
+        relatedEntityId: updatedIssue._id.toString(),
+        relatedEntityType: 'Issue',
+      });
+    }
+
     return IssueMapper.toResponseDTO(updatedIssue);
   }
 }

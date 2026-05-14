@@ -78,4 +78,8 @@ export const TYPES = {
   IGetCompanyDashboardService: Symbol.for('IGetCompanyDashboardService'),
   IGetEmployeeDashboardService: Symbol.for('IGetEmployeeDashboardService'),
   DashboardController: Symbol.for('DashboardController'),
+  ISocketService: Symbol.for('ISocketService'),
+  INotificationRepository: Symbol.for('INotificationRepository'),
+  INotificationService: Symbol.for('INotificationService'),
+  NotificationController: Symbol.for('NotificationController'),
 };

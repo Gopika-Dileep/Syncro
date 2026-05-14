@@ -45,6 +45,7 @@ export interface Issue {
     type: string;
     blocked_reason?: string;
     comments?: {
+        _id: string;
         user: { _id: string; name: string; avatar?: string };
         text: string;
         created_at: string;
@@ -52,6 +53,7 @@ export interface Issue {
         mentions?: string[];
     }[];
     attachments?: {
+        _id: string;
         file_url: string;
         file_name: string;
         uploaded_by: { _id: string; name: string; avatar?: string } | null;
@@ -59,6 +61,7 @@ export interface Issue {
         uploaded_at: string;
     }[];
     history?: {
+        _id: string;
         action: string;
         from?: string;
         to?: string;
