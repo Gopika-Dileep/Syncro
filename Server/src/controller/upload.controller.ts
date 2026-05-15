@@ -26,7 +26,6 @@ export class UploadController {
         'File uploaded successfully',
       );
     } catch (error) {
-      console.error('Upload error:', error);
       handleAsyncError(error, next);
     }
   };
