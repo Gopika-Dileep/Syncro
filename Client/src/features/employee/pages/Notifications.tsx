@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Eye, Clock } from "lucide-react";
+import { Check, Eye, Clock, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { 
     getNotificationsApi, 
@@ -89,22 +89,22 @@ export default function Notifications() {
     });
 
     return (
-        <div className="max-w-4xl mx-auto py-4 px-6 min-h-screen bg-[#f8f9fa]">
-            {/* Header Tabs */}
-            <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#f8f9fa]/80 backdrop-blur-md py-4 z-20">
+        <div className="w-full min-h-screen bg-[#fcfcfc] flex flex-col">
+            {/* Header Tabs - Compact & Full Width */}
+            <div className="flex items-center justify-between px-8 py-4 sticky top-0 bg-white/90 backdrop-blur-md z-20 border-b border-[#eee]">
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={() => setFilter('unread')}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[13px] font-black transition-all ${filter === 'unread' ? 'bg-[#fa8029] text-white shadow-lg shadow-orange-200' : 'bg-white text-gray-400 hover:text-gray-600'}`}
+                        className={`flex items-center gap-2 px-5 py-1.5 rounded-full text-[12px] font-black transition-all ${filter === 'unread' ? 'bg-[#fa8029] text-white shadow-md shadow-orange-100' : 'bg-gray-50 text-gray-400 hover:text-gray-600'}`}
                     >
                         Unread
-                        <span className={`flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] ${filter === 'unread' ? 'bg-black/20 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                        <span className={`flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] ${filter === 'unread' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500'}`}>
                             {unreadCount}
                         </span>
                     </button>
                     <button 
                         onClick={() => setFilter('all')}
-                        className={`px-8 py-2.5 rounded-full text-[13px] font-black transition-all ${filter === 'all' ? 'bg-[#fa8029] text-white shadow-lg shadow-orange-200' : 'bg-white text-gray-400 hover:text-gray-600'}`}
+                        className={`px-6 py-1.5 rounded-full text-[12px] font-black transition-all ${filter === 'all' ? 'bg-[#fa8029] text-white shadow-md shadow-orange-100' : 'bg-gray-50 text-gray-400 hover:text-gray-600'}`}
                     >
                         All
                     </button>
@@ -113,62 +113,65 @@ export default function Notifications() {
                 <button 
                     onClick={handleMarkAllRead}
                     disabled={unreadCount === 0}
-                    className="w-11 h-11 flex items-center justify-center bg-[#fa8029] text-white rounded-full hover:bg-[#e67324] transition-all shadow-lg shadow-orange-100 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                    className="w-9 h-9 flex items-center justify-center bg-[#fa8029] text-white rounded-xl hover:bg-[#e67324] transition-all shadow-md shadow-orange-100 disabled:opacity-30 disabled:cursor-not-allowed"
                     title="Mark all as read"
                 >
-                    <Check size={20} strokeWidth={3} />
+                    <Check size={18} strokeWidth={3} />
                 </button>
             </div>
 
-            {/* Notification List */}
-            <div className="space-y-4">
+            {/* Notification List - Full Width & Smaller Fonts */}
+            <div className="p-6 w-full">
                 {loading ? (
-                    <div className="space-y-4">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="h-32 bg-white border border-gray-100 rounded-[2.5rem] animate-pulse" />
+                    <div className="space-y-3">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="h-20 bg-white border border-gray-100 rounded-2xl animate-pulse" />
                         ))}
                     </div>
                 ) : filteredNotifications.length > 0 ? (
-                    <div className="space-y-4 pb-12">
+                    <div className="grid gap-2.5">
                         {filteredNotifications.map((n) => (
                             <div 
                                 key={n._id}
-                                className={`bg-white rounded-[2.5rem] border p-7 transition-all ${n.isRead ? 'border-gray-100 opacity-80' : 'border-[#fa8029]/10 shadow-xl shadow-gray-200/20'}`}
+                                className={`group bg-white rounded-2xl border p-4 transition-all duration-200 flex items-center gap-4 hover:shadow-sm ${n.isRead ? 'border-gray-100 opacity-60' : 'border-[#fa8029]/10 shadow-sm'}`}
                             >
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className={`text-[17px] font-black tracking-tight ${n.isRead ? 'text-gray-500' : 'text-[#1f2124]'}`}>{n.title}</h3>
-                                        {!n.isRead && <div className="w-2 h-2 rounded-full bg-[#fa8029] ml-1" />}
-                                    </div>
-                                    <span className="text-[11px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-full">
-                                        <Clock size={12} />
-                                        {formatTimeAgo(new Date(n.createdAt))}
-                                    </span>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${n.isRead ? 'bg-gray-50 text-gray-400' : 'bg-[#fff5ef] text-[#fa8029]'}`}>
+                                    <Bell size={18} />
                                 </div>
-                                
-                                <div className="mb-6">
-                                    <p className={`text-[14px] leading-relaxed ${n.isRead ? 'text-gray-400' : 'text-gray-600 font-medium'}`}>
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-start mb-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className={`text-[14px] font-black tracking-tight truncate ${n.isRead ? 'text-gray-500' : 'text-[#1f2124]'}`}>{n.title}</h3>
+                                            {!n.isRead && <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029]" />}
+                                        </div>
+                                        <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-full">
+                                            <Clock size={10} />
+                                            {formatTimeAgo(new Date(n.createdAt))}
+                                        </span>
+                                    </div>
+                                    <p className={`text-[12px] line-clamp-1 ${n.isRead ? 'text-gray-400' : 'text-gray-600 font-medium'}`}>
                                         {n.message}
                                     </p>
                                 </div>
                                 
-                                <div className="flex items-center justify-end gap-3">
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {(n.relatedEntityId || n.link) && (
                                         <button 
                                             onClick={() => handleViewDetails(n)}
-                                            className="px-6 py-2.5 border-2 border-[#1f2124]/5 hover:border-[#1f2124]/10 hover:bg-[#1f2124]/5 text-[#1f2124] text-[12px] font-black rounded-2xl transition-all uppercase tracking-widest flex items-center gap-2"
+                                            className="w-9 h-9 flex items-center justify-center border-2 border-[#1f2124]/5 hover:border-[#1f2124]/10 hover:bg-[#1f2124]/5 text-[#1f2124] rounded-xl transition-all"
+                                            title="View Details"
                                         >
-                                            <Eye size={14} />
-                                            View Details
+                                            <Eye size={16} />
                                         </button>
                                     )}
                                     {!n.isRead && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n._id); }}
-                                            className="px-6 py-2.5 bg-[#fa8029] hover:bg-[#e67324] text-white text-[12px] font-black rounded-2xl transition-all shadow-md shadow-orange-100 uppercase tracking-widest flex items-center gap-2"
+                                            className="w-9 h-9 flex items-center justify-center bg-[#fa8029] hover:bg-[#e67324] text-white rounded-xl transition-all shadow-sm"
+                                            title="Mark as read"
                                         >
-                                            <Check size={14} strokeWidth={3} />
-                                            Mark as read
+                                            <Check size={16} strokeWidth={3} />
                                         </button>
                                     )}
                                 </div>
@@ -177,11 +180,11 @@ export default function Notifications() {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-24 text-center">
-                        <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center mb-6 shadow-xl shadow-gray-200/50 border border-gray-100">
-                            <Check size={32} className="text-[#fa8029] opacity-20" />
+                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+                            <Check size={28} className="text-[#fa8029] opacity-20" />
                         </div>
-                        <h3 className="text-[18px] font-black text-[#1f2124]">All Clear!</h3>
-                        <p className="text-[14px] text-gray-400 font-medium mt-1">No new notifications in this filter.</p>
+                        <h3 className="text-[16px] font-black text-[#1f2124]">All Clear!</h3>
+                        <p className="text-[12px] text-gray-400 font-medium mt-1">No new notifications in this filter.</p>
                     </div>
                 )}
             </div>

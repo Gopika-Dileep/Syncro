@@ -94,11 +94,29 @@ export interface ProjectInsights {
         assign_to?: { _id: string; name: string; avatar?: string };
         team?: { _id: string; name: string };
     }[];
+    standaloneTasks: {
+        _id: string;
+        title: string;
+        type: string;
+        status: string;
+        priority: string;
+        assign_to?: { _id: string; name: string; avatar?: string };
+        team?: { _id: string; name: string };
+    }[];
+    bugs: {
+        _id: string;
+        title: string;
+        type: string;
+        status: string;
+        priority: string;
+        assign_to?: { _id: string; name: string; avatar?: string };
+        team?: { _id: string; name: string };
+    }[];
     tasks: {
         _id: string;
         title: string;
         status: string;
-        user_story_id: string;
+        issue_id: string;
         assign_to?: { _id: string; name: string; avatar?: string; team_name?: string };
     }[];
 }

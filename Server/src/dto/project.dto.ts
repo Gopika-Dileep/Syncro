@@ -90,6 +90,7 @@ export interface ProjectInsightsDTO {
     avatar?: string;
   }[];
   stories: IssueResponseDTO[];
+  standaloneTasks: IssueResponseDTO[];
   bugs: IssueResponseDTO[];
-  subtasks: SubTaskResponseDTO[];
+  tasks: SubTaskResponseDTO[];
 }
