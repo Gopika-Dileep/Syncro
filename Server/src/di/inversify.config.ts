@@ -166,7 +166,14 @@ import { NotificationRepository } from '../repositories/notification.repository'
 import { INotificationService } from '../interfaces/services/INotificationService';
 import { NotificationService } from '../service/notification.service';
 import { NotificationController } from '../controller/notification.controller';
-
+import { IStorageProvider } from '../interfaces/providers/IStorageProvider';
+import { S3StorageProvider } from '../providers/S3StorageProvider';
+import { IAIService } from '../interfaces/services/ai/IAIService';
+import { AIService } from '../service/ai/ai.service';
+import { IAutoAssignSubTaskService } from '../interfaces/services/subTask/IAutoAssignSubTaskService';
+import { AutoAssignSubTaskService } from '../service/subTask/AutoAssignSubTaskService';
+import { IAutoAssignIssueService } from '../interfaces/services/issue/IAutoAssignIssueService';
+import { AutoAssignIssueService } from '../service/issue/AutoAssignIssueService';
 const container = new Container();
 
 container.bind<IAuthRepository>(TYPES.IAuthRepository).to(AuthRepository);
@@ -259,5 +266,10 @@ container.bind<IRefreshService>(TYPES.IRefreshService).to(RefreshService);
 container.bind<ILogoutService>(TYPES.ILogoutService).to(LogoutService);
 container.bind<IForgotPasswordService>(TYPES.IForgotPasswordService).to(ForgotPasswordService);
 container.bind<IResetPasswordService>(TYPES.IResetPasswordService).to(ResetPasswordService);
+
+container.bind<IStorageProvider>(TYPES.IStorageProvider).to(S3StorageProvider);
+container.bind<IAIService>(TYPES.IAIService).to(AIService);
+container.bind<IAutoAssignSubTaskService>(TYPES.IAutoAssignSubTaskService).to(AutoAssignSubTaskService);
+container.bind<IAutoAssignIssueService>(TYPES.IAutoAssignIssueService).to(AutoAssignIssueService);
 
 export { container };

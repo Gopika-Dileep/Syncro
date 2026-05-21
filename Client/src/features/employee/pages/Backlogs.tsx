@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare, MessageSquare } from "lucide-react";
+import { FolderKanban, Layout, ChevronDown, ChevronUp, Plus, Edit2, Eye, CheckCircle, GripVertical, MoreHorizontal, Trash2, AlertCircle, Bug, BookOpen, CheckSquare, MessageSquare, Users } from "lucide-react";
 import { toast } from "sonner";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import { getProjectsApi, type Project } from "@/features/employee/api/projectApi";
-import { getIssuesByProjectApi, createIssueApi, updateIssueApi, deleteIssueApi, type Issue } from "@/features/employee/api/issueApi";
+import { getIssuesByProjectApi, createIssueApi, updateIssueApi, deleteIssueApi, autoAssignIssueApi, getIssueByIdApi, type Issue } from "@/features/employee/api/issueApi";
 import IssueModal, { type IssueFormData as ModalIssueFormData } from "../components/IssueModal";
 import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
+import MemberSelectModal from "@/features/shared/components/MemberSelectModal";
 import { getTeamDirectoryApi } from "../api/teamApi";
 
 const TypeIcon = ({ type, size = 12 }: { type: string; size?: number }) => {
@@ -28,14 +29,16 @@ interface IssueMenuProps {
     onDelete: () => void;
     canEdit: boolean;
     canDelete: boolean;
+    canAssign: boolean;
+    onAssign: () => void;
 }
 
-function IssueMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete }: IssueMenuProps) {
+function IssueMenu({ pos, onClose, onView, onEdit, onDelete, onAssign, canEdit, canDelete, canAssign }: IssueMenuProps) {
     return createPortal(
         <>
             <div className="fixed inset-0 z-[999]" onClick={onClose} />
             <div
-                className="fixed z-[1000] w-40 bg-white border border-[#ebebeb] rounded-xl shadow-lg py-1"
+                className="fixed z-[1000] w-44 bg-white border border-[#ebebeb] rounded-xl shadow-lg py-1"
                 style={{ top: pos.top, right: pos.right }}
             >
                 <button
@@ -44,6 +47,17 @@ function IssueMenu({ pos, onClose, onView, onEdit, onDelete, canEdit, canDelete 
                 >
                     <Eye size={13} className="text-[#888]" /> View Details
                 </button>
+                {canAssign && (
+                    <>
+                        <div className="border-t border-[#f5f5f5] my-1" />
+                        <button
+                            onClick={() => { onClose(); onAssign(); }}
+                            className="flex items-center gap-2.5 w-full px-3.5 py-2 text-[12px] text-[#555] hover:bg-[#f7f7f7] transition-colors"
+                        >
+                            <Plus size={13} className="text-[#888]" /> Assign Employee
+                        </button>
+                    </>
+                )}
                 {canEdit && (
                     <>
                         <div className="border-t border-[#f5f5f5] my-1" />
@@ -97,6 +111,7 @@ export default function Backlogs() {
     const [openMenuIssueId, setOpenMenuIssueId] = useState<string | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+    const [issueToAssign, setIssueToAssign] = useState<Issue | null>(null);
 
     const fetchProjects = useCallback(async () => {
         setFetchingProjects(true);
@@ -241,6 +256,34 @@ export default function Backlogs() {
         }
     };
 
+    const handleAssignEmployee = async (employeeId: string) => {
+        if (!issueToAssign) return;
+        try {
+            const response = await updateIssueApi(issueToAssign._id, { assignee_id: employeeId });
+            if (response.success) {
+                toast.success("Employee assigned successfully");
+                fetchIssuesForProject(issueToAssign.project_id);
+                setIssueToAssign(null);
+            }
+        } catch {
+            toast.error("Failed to assign employee");
+        }
+    };
+
+    const handleAutoAssignIssue = async () => {
+        if (!issueToAssign) return;
+        try {
+            const response = await autoAssignIssueApi(issueToAssign._id);
+            if (response.success) {
+                toast.success("Employee auto-assigned successfully via AI");
+                fetchIssuesForProject(issueToAssign.project_id);
+                setIssueToAssign(null);
+            }
+        } catch {
+            toast.error("AI Auto-assignment failed");
+        }
+    };
+
     const handleFormSubmit = async (data: ModalIssueFormData) => {
         if (!selectedProjectId) return;
         setIsSubmitting(true);
@@ -301,6 +344,7 @@ export default function Backlogs() {
                         const issueType = (issue.type || 'task').toLowerCase();
                         const canEditIssue = can(`issue:${issueType}:update`) || isOwner;
                         const canDeleteIssue = can(`issue:${issueType}:delete`) || isOwner;
+                        const canAssignIssue = can(`issue:${issueType}:assign`) || user?.role === 'company';
                         // Allow marking ready if they can update stories, tasks or bugs generally
                         const canMarkReady = canEditIssue || can('issue:story:update') || can('issue:task:update') || can('issue:bug:update');
 
@@ -322,9 +366,13 @@ export default function Backlogs() {
                                                     - {issue.blocked_reason}
                                                 </span>
                                             )}
-                                            {issue.type === 'story' && (
-                                                <span className="text-[10px] uppercase font-bold text-[#888] bg-[#f5f5f5] px-1.5 py-0.5 rounded">
-                                                    {issue.story_points} points
+                                            {issue.assignee_id && (
+                                                <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 flex items-center gap-1">
+                                                    <Users size={10} />
+                                                    {(() => {
+                                                        const assignee = issue.assignee_id as { name: string; user_id?: { name: string } } | null;
+                                                        return assignee?.name || assignee?.user_id?.name || "Assigned";
+                                                    })()}
                                                 </span>
                                             )}
                                         </div>
@@ -363,8 +411,10 @@ export default function Backlogs() {
                                                 onView={() => handleOpenDetails(issue)}
                                                 onEdit={() => handleOpenEditModal(issue)}
                                                 onDelete={() => setIssueToDelete(issue)}
+                                                onAssign={() => setIssueToAssign(issue)}
                                                 canEdit={canEditIssue}
                                                 canDelete={canDeleteIssue}
+                                                canAssign={canAssignIssue}
                                             />
                                         )}
                                     </div>
@@ -459,6 +509,24 @@ export default function Backlogs() {
                 isEditing={isEditing}
                 isSubmitting={isSubmitting}
                 members={members}
+                onAutoAssign={isEditing && selectedIssue ? async () => {
+                    try {
+                        const response = await autoAssignIssueApi(selectedIssue._id);
+                        if (response.success) {
+                            toast.success("Employee auto-assigned successfully via AI");
+                            fetchIssuesForProject(selectedIssue.project_id);
+                            const assignee = response.data.assignee_id;
+                            if (assignee && typeof assignee === 'object') {
+                                return (assignee as any)._id;
+                            } else if (typeof assignee === 'string') {
+                                return assignee;
+                            }
+                        }
+                    } catch {
+                        toast.error("AI Auto-assignment failed");
+                    }
+                    return undefined;
+                } : undefined}
             />
 
             <ItemDetailsDrawer
@@ -467,6 +535,7 @@ export default function Backlogs() {
                 item={selectedIssue}
                 type="issue"
                 onUpdate={() => selectedProjectId && fetchIssuesForProject(selectedProjectId)}
+                onReassign={() => selectedIssue && setIssueToAssign(selectedIssue)}
             />
 
             {/* Confirmation Modal - Mark Ready */}
@@ -530,6 +599,15 @@ export default function Backlogs() {
                     </div>
                 </div>
             )}
+
+            <MemberSelectModal
+                isOpen={!!issueToAssign}
+                onClose={() => setIssueToAssign(null)}
+                onSelect={handleAssignEmployee}
+                members={members}
+                title={`Assign ${issueToAssign?.type || 'Issue'}`}
+                onAutoAssign={handleAutoAssignIssue}
+            />
         </div>
     );
 }

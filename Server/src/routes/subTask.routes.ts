@@ -31,6 +31,7 @@ export class SubTaskRouter {
     this.router.patch(ENDPOINTS.SUBTASKS.REVIEW, authMiddleware, checkPermission('task:status:review'), validateRequest(ReviewSubTaskRequestSchema), subTaskController.reviewSubTask);
     this.router.delete(ENDPOINTS.SUBTASKS.BY_ID, authMiddleware, checkPermission('task:delete'), subTaskController.deleteSubTask);
     this.router.patch(ENDPOINTS.SUBTASKS.ASSIGN, authMiddleware, checkPermission('task:assign'), validateRequest(AssignSubTaskRequestSchema), subTaskController.assignSubTask);
+    this.router.patch(ENDPOINTS.SUBTASKS.AUTO_ASSIGN, authMiddleware, checkPermission('task:assign'), subTaskController.autoAssignSubTask);
     this.router.post(ENDPOINTS.SUBTASKS.COMMENT, authMiddleware, validateRequest(AddCommentRequestSchema), subTaskController.addComment);
     this.router.post(ENDPOINTS.SUBTASKS.ATTACHMENT, authMiddleware, validateRequest(AddAttachmentRequestSchema), subTaskController.addAttachment);
   }

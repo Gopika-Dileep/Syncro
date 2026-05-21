@@ -337,7 +337,16 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') &&
         (fullItem.status.toLowerCase() === 'rework' || !!(internalType === 'subtask' ? (fullItem as SubTask).rework_reason : null));
     const isReviewer = can('task:view:all') || can('task:update') || can('task:status:review') || currentUser?.role === 'company';
-    const canAssign = (can('task:assign') || can('task:view:all') || can('project:update') || currentUser?.role === 'company') && !isReadOnly;
+    const canAssign = (
+        (internalType === 'subtask' ? can('task:assign') : (
+            (fullItem as Issue).type?.toLowerCase() === 'story' ? can('issue:story:assign') :
+            (fullItem as Issue).type?.toLowerCase() === 'bug' ? can('issue:bug:assign') :
+            can('issue:task:assign')
+        )) || 
+        can('task:view:all') || 
+        can('project:update') || 
+        currentUser?.role === 'company'
+    ) && !isReadOnly;
 
     const rawTimeline = [
         ...(fullItem.comments || []).map(c => ({ ...c, type: 'comment', source: 'current', taskId: internalType === 'subtask' ? fullItem._id : undefined })),

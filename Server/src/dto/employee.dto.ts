@@ -32,6 +32,7 @@ export const EmployeePermissionsSchema = z.object({
       view: z.boolean(),
       update: z.boolean(),
       delete: z.boolean(),
+      assign: z.boolean(),
       assign_to_sprint: z.boolean(),
       comment: z.boolean(),
       status_work: z.boolean(),

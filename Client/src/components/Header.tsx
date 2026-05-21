@@ -40,7 +40,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
         const fetchCount = async () => {
             try {
                 const res = await getNotificationsApi(1, 1);
-                setUnreadCount(res.unreadCount);
+                setUnreadCount(res.data.unreadCount);
             } catch (err) {
                 console.error("Failed to fetch notification count", err);
             }

@@ -3,6 +3,11 @@ import { Request, Response, NextFunction } from 'express';
 import { success } from '../utils/response.utils';
 import { handleAsyncError } from '../utils/error.utils';
 import { env } from '../config/env';
+import { UPLOAD_MESSAGES } from '../constants/messages';
+
+interface S3File extends Express.Multer.File {
+  location: string;
+}
 
 @injectable()
 export class UploadController {
@@ -10,10 +15,11 @@ export class UploadController {
     try {
       if (!req.file) {
         console.error('Upload failed: No file in request. Headers:', req.headers['content-type']);
-        throw new Error('No file uploaded');
+        throw new Error(UPLOAD_MESSAGES.NO_FILE_UPLOADED);
       }
 
-      const fileUrl = `${env.BACKEND_URL}/uploads/${req.file.filename}`;
+      const s3File = req.file as S3File;
+      const fileUrl = s3File.location;
 
       success(
         res,
@@ -23,7 +29,7 @@ export class UploadController {
           mimetype: req.file.mimetype,
           size: req.file.size,
         },
-        'File uploaded successfully',
+        UPLOAD_MESSAGES.UPLOAD_SUCCESS,
       );
     } catch (error) {
       handleAsyncError(error, next);
@@ -34,17 +40,20 @@ export class UploadController {
     try {
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0) {
-        throw new Error('No files uploaded');
+        throw new Error(UPLOAD_MESSAGES.NO_FILES_UPLOADED);
       }
 
-      const uploadedFiles = files.map((file) => ({
-        file_url: `${env.BACKEND_URL}/uploads/${file.filename}`,
-        file_name: file.originalname,
-        mimetype: file.mimetype,
-        size: file.size,
-      }));
+      const uploadedFiles = files.map((file) => {
+        const s3File = file as S3File;
+        return {
+          file_url: s3File.location,
+          file_name: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+        };
+      });
 
-      success(res, uploadedFiles, 'Files uploaded successfully');
+      success(res, uploadedFiles, UPLOAD_MESSAGES.UPLOAD_SUCCESS);
     } catch (error) {
       handleAsyncError(error, next);
     }

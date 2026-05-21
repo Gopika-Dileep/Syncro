@@ -1,22 +1,11 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import { container } from '../di/inversify.config';
+import { TYPES } from '../di/types';
+import { IStorageProvider } from '../interfaces/providers/IStorageProvider';
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '..', '..', 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  },
-});
+const storageProvider = container.get<IStorageProvider>(TYPES.IStorageProvider);
 
 export const upload = multer({
-  storage,
+  storage: storageProvider.getStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
 });

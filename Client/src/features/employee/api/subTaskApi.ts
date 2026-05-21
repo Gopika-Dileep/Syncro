@@ -112,6 +112,11 @@ export const assignSubTaskApi = async (id: string, employeeId: string): Promise<
     return response.data;
 };
 
+export const autoAssignSubTaskApi = async (id: string): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.patch(ENDPOINTS.SUBTASKS.AUTO_ASSIGN(id));
+    return response.data;
+};
+
 export const getAssignedSubTasksApi = async (search?: string): Promise<{ success: boolean; data: SubTask[] }> => {
     const response = await axiosInstance.get(ENDPOINTS.SUBTASKS.ASSIGNED, { params: { search } });
     return response.data;

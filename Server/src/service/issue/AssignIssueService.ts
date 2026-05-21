@@ -55,7 +55,7 @@ export class AssignIssueService implements IAssignIssueService {
       updateData.status = IssueStatus.TODO;
     }
 
-    if (issueToUpdate.type !== 'story' && data.assignee_id) {
+    if (data.assignee_id) {
       updateData.assignee_id = data.assignee_id;
     }
 

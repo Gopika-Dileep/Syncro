@@ -126,6 +126,11 @@ export const assignIssueApi = async (id: string, data: { assignee_id: string }):
     return response.data;
 };
 
+export const autoAssignIssueApi = async (id: string): Promise<{ success: boolean; data: Issue }> => {
+    const response = await axiosInstance.patch(ENDPOINTS.ISSUES.AUTO_ASSIGN(id));
+    return response.data;
+};
+
 export const addCommentToIssueApi = async (id: string, data: { text: string; attachments?: { file_url: string; file_name: string }[]; mentions?: string[] }): Promise<{ success: boolean; data: Issue }> => {
     const response = await axiosInstance.post(ENDPOINTS.ISSUES.COMMENT(id), data);
     return response.data;

@@ -82,4 +82,8 @@ export const TYPES = {
   INotificationRepository: Symbol.for('INotificationRepository'),
   INotificationService: Symbol.for('INotificationService'),
   NotificationController: Symbol.for('NotificationController'),
+  IStorageProvider: Symbol.for('IStorageProvider'),
+  IAIService: Symbol.for('IAIService'),
+  IAutoAssignSubTaskService: Symbol.for('IAutoAssignSubTaskService'),
+  IAutoAssignIssueService: Symbol.for('IAutoAssignIssueService'),
 };

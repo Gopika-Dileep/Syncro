@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { 
     Users, Briefcase, Layout, PieChart, BarChart3,
-    Activity, Zap, Calendar, AlertCircle
+    Activity, Zap, Calendar
 } from "lucide-react";
 import { 
     getCompanyDashboardApi, 

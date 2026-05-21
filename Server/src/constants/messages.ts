@@ -140,3 +140,10 @@ export const TASK_MESSAGES = {
   ASSIGN_SUCCESS: 'Task assigned successfully',
   NOT_FOUND: 'Task not found',
 };
+
+export const UPLOAD_MESSAGES = {
+  UPLOAD_SUCCESS: 'File uploaded successfully',
+  UPLOAD_FAILED: 'File upload failed',
+  NO_FILE_UPLOADED: 'No file uploaded',
+  NO_FILES_UPLOADED: 'No files uploaded',
+};
