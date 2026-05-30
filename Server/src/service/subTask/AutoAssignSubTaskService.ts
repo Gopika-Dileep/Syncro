@@ -4,7 +4,7 @@ import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskReposi
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { IAIService } from '../../interfaces/services/ai/IAIService';
-import { ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IAutoAssignSubTaskService } from '../../interfaces/services/subTask/IAutoAssignSubTaskService';
 import { SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';

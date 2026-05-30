@@ -1,7 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
-import { IIssueRepository, ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
+import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IProjectRepository } from '../../interfaces/repositories/IProjectRepository';
 import { IReviewSubTaskService } from '../../interfaces/services/subTask/IReviewSubTaskService';
 import { ReviewSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';

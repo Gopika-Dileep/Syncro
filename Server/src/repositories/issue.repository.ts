@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
-import { IIssueRepository, ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../interfaces/repositories/IIssueRepository';
+import { IIssueRepository } from '../interfaces/repositories/IIssueRepository';
+import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../dto/issue.dto';
 import { IIssue, issueModel } from '../models/issue.model';
 import { BaseRepository } from './base.repository';
 

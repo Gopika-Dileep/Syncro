@@ -8,7 +8,8 @@ import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepo
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { NotificationType } from '../../models/notification.model';
-import { IIssueRepository, ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
+import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IssueType } from '../../enums/IssueEnums';
 import { BadRequestError } from '../../errors/AppError';
 

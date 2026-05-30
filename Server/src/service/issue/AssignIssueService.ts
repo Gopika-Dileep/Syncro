@@ -1,7 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { IssueStatus } from '../../enums/IssueEnums';
-import { IIssueRepository, ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
+import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IAssignIssueService } from '../../interfaces/services/issue/IAssignIssueService';
 import { AssignIssueRequestDTO, IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';

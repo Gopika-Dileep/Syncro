@@ -1,7 +1,7 @@
 import { IBaseRepository } from './IBaseRepository';
 import { ISubTask } from '../../models/subTask.model';
 
-import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from './IIssueRepository';
+import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../../dto/issue.dto';
 
 export interface ISubTaskRepository extends IBaseRepository<ISubTask> {
   findAllByIssueId(issueId: string): Promise<ISubTask[]>;

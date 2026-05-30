@@ -147,3 +147,23 @@ export interface IssueResponseDTO {
   created_at: string;
   updated_at: string;
 }
+
+export interface ICreateCommentInput {
+  user: string;
+  text: string;
+  attachments?: { file_url: string; file_name: string }[];
+}
+
+export interface ICreateAttachmentInput {
+  file_url: string;
+  file_name: string;
+  uploaded_by: string;
+  uploaded_at: Date;
+}
+
+export interface ICreateHistoryInput {
+  action: string;
+  from?: string;
+  to?: string;
+  user: string;
+}

@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { ISubTaskRepository } from '../interfaces/repositories/ISubTaskRepository';
-import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../interfaces/repositories/IIssueRepository';
+import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../dto/issue.dto';
 import { ISubTask, subTaskModel } from '../models/subTask.model';
 import { BaseRepository } from './base.repository';
 

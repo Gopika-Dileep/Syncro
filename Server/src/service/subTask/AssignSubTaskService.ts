@@ -3,7 +3,7 @@ import { TYPES } from '../../di/types';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { IAssignSubTaskService } from '../../interfaces/services/subTask/IAssignSubTaskService';
 import { AssignSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
-import { ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
