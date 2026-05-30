@@ -155,11 +155,11 @@ export default function Backlogs() {
         fetchMembers();
     }, [fetchProjects, fetchMembers]);
 
-    // Handle deep linking for issues
+   
     useEffect(() => {
         const issueId = searchParams.get('selectedIssue');
         if (issueId) {
-            // 1. Try to find in already loaded issues
+         
             let found = false;
             for (const config of Object.values(issuesConfig)) {
                 const issue = config.data.find(i => i._id === issueId);
@@ -171,7 +171,7 @@ export default function Backlogs() {
                 }
             }
 
-            // 2. If not found and projects are loaded, try fetching specifically
+          
             if (!found && projects.length > 0) {
                 const fetchSpecific = async () => {
                     try {
@@ -345,7 +345,7 @@ export default function Backlogs() {
                         const canEditIssue = can(`issue:${issueType}:update`) || isOwner;
                         const canDeleteIssue = can(`issue:${issueType}:delete`) || isOwner;
                         const canAssignIssue = can(`issue:${issueType}:assign`) || user?.role === 'company';
-                        // Allow marking ready if they can update stories, tasks or bugs generally
+                
                         const canMarkReady = canEditIssue || can('issue:story:update') || can('issue:task:update') || can('issue:bug:update');
 
                         return (
@@ -517,7 +517,7 @@ export default function Backlogs() {
                             fetchIssuesForProject(selectedIssue.project_id);
                             const assignee = response.data.assignee_id;
                             if (assignee && typeof assignee === 'object') {
-                                return (assignee as any)._id;
+                                return (assignee as { _id: string })._id;
                             } else if (typeof assignee === 'string') {
                                 return assignee;
                             }
@@ -605,7 +605,8 @@ export default function Backlogs() {
                 onClose={() => setIssueToAssign(null)}
                 onSelect={handleAssignEmployee}
                 members={members}
-                title={`Assign ${issueToAssign?.type || 'Issue'}`}
+                title="Assign Task"
+                description={issueToAssign?.title}
                 onAutoAssign={handleAutoAssignIssue}
             />
         </div>

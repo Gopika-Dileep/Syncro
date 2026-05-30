@@ -115,7 +115,7 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
         const before = value.substring(0, lastAtIndex);
         const after = value.substring(cursorPos);
 
-        // Ensure only ONE space at the end
+       
         const mentionText = `@[${user._id}](${user.name}) `;
         const newValue = (before + mentionText + after.trimStart());
 
@@ -159,7 +159,7 @@ const MentionTextArea: React.FC<MentionTextAreaProps> = ({
             const pos = textareaRef.current.selectionStart;
             const text = value;
 
-            // Check if we are right after a mention: @[id](name) 
+          
             if (text[pos - 1] === ' ' && text[pos - 2] === ')') {
                 const lastOpenParen = text.lastIndexOf('(', pos - 2);
                 const lastCloseBracket = text.lastIndexOf(']', lastOpenParen);

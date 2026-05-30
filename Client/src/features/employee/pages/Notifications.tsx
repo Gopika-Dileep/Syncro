@@ -39,7 +39,7 @@ export default function Notifications() {
                 setNotifications(res.data.notifications || []);
                 setUnreadCount(res.data.unreadCount || 0);
             }
-        } catch (err) {
+        } catch {
             toast.error("Failed to load notifications");
         } finally {
             setLoading(false);
@@ -58,7 +58,7 @@ export default function Notifications() {
             await markAsReadApi(id);
             setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (err) {
+        } catch {
             toast.error("Failed to update notification");
         }
     };
@@ -69,7 +69,7 @@ export default function Notifications() {
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
             toast.success("All caught up!");
-        } catch (err) {
+        } catch {
             toast.error("Failed to update notifications");
         }
     };

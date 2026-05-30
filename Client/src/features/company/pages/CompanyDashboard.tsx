@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { 
     Users, Briefcase, Layout, PieChart, BarChart3,
-    Activity, Zap, Calendar
+    Activity, Zap, Calendar, type LucideIcon
 } from "lucide-react";
 import { 
     getCompanyDashboardApi, 
@@ -26,7 +26,15 @@ const STATUS_COLORS = {
 
 const PIE_COLORS = ['#fa8029', '#1a1c1f', '#6366f1', '#ef4444', '#8b5cf6'];
 
-const StatCard = ({ title, value, icon: Icon, description, isPrimary }: any) => (
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    icon: LucideIcon;
+    description: string;
+    isPrimary?: boolean;
+}
+
+const StatCard = ({ title, value, icon: Icon, description, isPrimary }: StatCardProps) => (
     <div className={`rounded-2xl p-5 border transition-all ${
         isPrimary 
         ? 'bg-[#1a1c1f] text-white border-transparent shadow-lg shadow-orange-900/10' 
@@ -52,7 +60,7 @@ export default function CompanyDashboard() {
             try {
                 const res = await getCompanyDashboardApi();
                 if (res.success) setData(res.data);
-            } catch (err) {
+            } catch {
                 toast.error("Failed to load analytics");
             } finally {
                 setLoading(false);

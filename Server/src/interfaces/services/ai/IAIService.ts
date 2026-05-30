@@ -1,10 +1,11 @@
-import { Document } from "mongoose";
-
 export interface IAIService {
-    assignTask(task: any, employees: any[]): Promise<{
-        assignedEmployeeId: string;
-        assignedEmployeeName: string;
-        reasoning: string;
-        confidenceScore: number;
-    }>;
+  assignTask(
+    task: Record<string, unknown>,
+    employees: Record<string, unknown>[],
+  ): Promise<{
+    assignedEmployeeId: string;
+    assignedEmployeeName: string;
+    reasoning: string;
+    confidenceScore: number;
+  }>;
 }

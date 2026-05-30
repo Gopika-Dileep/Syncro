@@ -23,38 +23,21 @@ export class AddCommentToIssueService implements IAddCommentToIssueService {
     const employee = await this._employeeRepository.findByUserId(userId);
     const actorId = employee?._id ? String(employee._id) : userId;
 
-    const issue = await this._issueRepository.updateById(issueId, {
-      $push: {
-        comments: {
-          user: actorId,
-          text,
-          attachments,
-          created_at: new Date(),
-        },
-      },
+    const updatedIssue = await this._issueRepository.addComment(issueId, {
+      user: actorId,
+      text,
+      attachments,
     });
 
-    if (!issue) {
+    if (!updatedIssue) {
       throw new NotFoundError('Issue not found');
     }
 
-    const updatedIssue = (await this._issueRepository.findById(issueId, {
-      populate: [
-        { path: 'comments.user', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'attachments.uploaded_by', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] },
-        { path: 'created_by', populate: { path: 'user_id' } },
-        { path: 'assigned_by', populate: { path: 'user_id' } },
-      ],
-    })) as IIssue;
-
-    // Real-time comment update
     this._socketService.emitToRoom(`issue:${issueId}`, 'new_comment', {
       issueId,
       comment: updatedIssue.comments[updatedIssue.comments.length - 1],
     });
 
-    // Handle Mentions
     const mentionRegex = /@\[([a-f\d]{24})\]\(([^)]+)\)/g;
     let match;
     const mentionedUserIds = new Set<string>();

@@ -28,8 +28,8 @@ export const IssueBaseSchema = z.object({
   assignee_id: z.string().nullable().optional(),
   title: z.string().min(2, 'Title must be at least 2 characters'),
   description: z.string().optional(),
-  reproduction_steps: z.string().optional(), // For Bugs
-  environment: z.string().optional(), // For Bugs
+  reproduction_steps: z.string().optional(),
+  environment: z.string().optional(),
   criteria: z.array(z.string().min(1, 'Criteria string cannot be empty')).optional(),
   story_points: z.number().min(0, 'Story points must be non-negative').optional(),
   estimated_hours: z.number().min(0, 'Estimated hours must be non-negative').optional(),

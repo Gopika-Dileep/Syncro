@@ -55,9 +55,9 @@ function mapAssignee(ref: unknown): IssueResponseDTO['assignee_id'] {
       designation: String(obj.designation || ''),
       team_id: teamIdObj
         ? {
-          _id: String(teamIdObj._id),
-          name: String(teamIdObj.name || ''),
-        }
+            _id: String(teamIdObj._id),
+            name: String(teamIdObj.name || ''),
+          }
         : obj.team_id
           ? String(obj.team_id)
           : undefined,
@@ -76,17 +76,17 @@ export class IssueMapper {
       _id: issue._id.toString(),
       project_id: issue.project_id.toString(),
       company_id: issue.company_id?.toString() ?? '',
-      sprint_id: typeof s.sprint_id === 'object' && s.sprint_id !== null ? String((s.sprint_id as { _id: string })._id) : String(s.sprint_id),
-      sprint_status: typeof s.sprint_id === 'object' && s.sprint_id !== null ? String((s.sprint_id as { status: string }).status) : undefined,
+      sprint_id: s.sprint_id && String(s.sprint_id) !== 'null' && String(s.sprint_id) !== 'undefined' ? (typeof s.sprint_id === 'object' && 'status' in (s.sprint_id as Record<string, unknown>) ? String((s.sprint_id as { _id: string })._id) : String(s.sprint_id)) : undefined,
+      sprint_status: typeof s.sprint_id === 'object' && s.sprint_id !== null && 'status' in (s.sprint_id as Record<string, unknown>) && (s.sprint_id as Record<string, unknown>).status !== undefined ? String((s.sprint_id as { status: string }).status) : undefined,
       assignee_id: mapAssignee(s.assignee_id),
       assign_to: extractEmployee(s.assignee_id),
       created_by: extractEmployee(s.created_by),
       assigned_by: extractEmployee(s.assigned_by),
       team: teamId
         ? {
-          _id: String(teamId._id),
-          name: String(teamId.name || ''),
-        }
+            _id: String(teamId._id),
+            name: String(teamId.name || ''),
+          }
         : undefined,
       title: issue.title,
       description: issue.description,

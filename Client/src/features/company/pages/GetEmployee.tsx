@@ -7,7 +7,7 @@ import {
     Layout, Layers, Zap, CheckCircle, Check
 } from "lucide-react";
 
-// Extend UserProfile locally to include permissions if it's not in the main types
+
 interface ExtendedUserProfile extends UserProfile {
     permissions?: EmployeePermissions;
 }
@@ -230,7 +230,7 @@ function PermissionModule({ title, icon, active }: { title: string, icon: React.
     );
 }
 
-// Permission Helpers
+
 function getProjectPermissions(p: EmployeePermissions['project'] | undefined) {
     if (!p) return [];
     const res = [];

@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { IIssueRepository } from '../interfaces/repositories/IIssueRepository';
+import { IIssueRepository, ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../interfaces/repositories/IIssueRepository';
 import { IIssue, issueModel } from '../models/issue.model';
 import { BaseRepository } from './base.repository';
 
@@ -34,11 +34,69 @@ export class IssueRepository extends BaseRepository<IIssue> implements IIssueRep
     return await this._model.find(filter).populate(this.POPULATE_OPTS).exec();
   }
 
-  override async findById(id: string): Promise<IIssue | null> {
-    return await this._model.findById(id).populate(this.POPULATE_OPTS).exec();
+  override async findById(id: string, options?: Record<string, unknown>): Promise<IIssue | null> {
+    return await this._model.findById(id, null, options).populate(this.POPULATE_OPTS).exec();
   }
 
-  override async updateById(id: string, update: Record<string, unknown>): Promise<IIssue | null> {
-    return await this._model.findByIdAndUpdate(id, update, { new: true }).populate(this.POPULATE_OPTS).exec();
+  override async updateById(id: string, update: Record<string, unknown>, options?: Record<string, unknown>): Promise<IIssue | null> {
+    return await this._model
+      .findByIdAndUpdate(id, update, { new: true, ...options })
+      .populate(this.POPULATE_OPTS)
+      .exec();
+  }
+
+  async addComment(id: string, comment: ICreateCommentInput): Promise<IIssue | null> {
+    return await this._model
+      .findByIdAndUpdate(
+        id,
+        {
+          $push: {
+            comments: {
+              ...comment,
+              created_at: new Date(),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate(this.POPULATE_OPTS)
+      .exec();
+  }
+
+  async addAttachments(id: string, attachments: ICreateAttachmentInput[]): Promise<IIssue | null> {
+    return await this._model
+      .findByIdAndUpdate(
+        id,
+        {
+          $push: {
+            attachments: { $each: attachments },
+          },
+        },
+        { new: true },
+      )
+      .populate(this.POPULATE_OPTS)
+      .exec();
+  }
+
+  async updateWithHistory(id: string, update: Record<string, unknown>, history: ICreateHistoryInput | ICreateHistoryInput[]): Promise<IIssue | null> {
+    const historyArray = Array.isArray(history) ? history : [history];
+    if (historyArray.length === 0) {
+      return await this.updateById(id, update);
+    }
+    return await this._model
+      .findByIdAndUpdate(
+        id,
+        {
+          ...update,
+          $push: {
+            history: {
+              $each: historyArray.map((h) => ({ ...h, created_at: new Date() })),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate(this.POPULATE_OPTS)
+      .exec();
   }
 }

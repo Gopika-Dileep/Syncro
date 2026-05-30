@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import { IVelocityService } from '../../interfaces/services/sprint/IVelocityService';
-import { VelocityAnalyticsResponse, VelocityDataPoint, TeamVelocity } from '../../dto/sprint.dto';
+import { VelocityAnalyticsResponse, VelocityDataPoint } from '../../dto/sprint.dto';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { ISprintRepository } from '../../interfaces/repositories/ISprintRepository';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
@@ -13,12 +13,11 @@ export class VelocityService implements IVelocityService {
     @inject(TYPES.ISprintRepository) private _sprintRepository: ISprintRepository,
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.ITeamRepository) private _teamRepository: ITeamRepository,
-  ) { }
+  ) {}
 
   async getVelocityAnalytics(sprintId: string): Promise<VelocityAnalyticsResponse> {
     const currentSprint = await this._sprintRepository.findById(sprintId);
     if (!currentSprint) throw new Error('Sprint not found');
-
 
     const allSprints = await this._sprintRepository.find({
       company_id: currentSprint.company_id,
@@ -41,19 +40,16 @@ export class VelocityService implements IVelocityService {
       });
     }
 
-
     const teamMap = new Map<string, number>();
     const currentIssues = await this._issueRepository.findPopulated({ sprint_id: sprintId });
     const doneIssues = currentIssues.filter((i) => i.status === 'Done');
 
     for (const issue of doneIssues) {
-
       const subTasks = await this._subTaskRepository.find({ issue_id: issue._id });
       const teamsInvolved = new Set<string>();
 
       for (const st of subTasks) {
         if (st.team_id) {
-
           const team = await this._teamRepository.findById(st.team_id.toString());
           if (team) teamsInvolved.add(team.name);
         }

@@ -24,7 +24,7 @@ class serverApp {
     try {
       await connectDb();
       await connectRedis();
-      
+
       const socketService = container.get<ISocketService>(TYPES.ISocketService);
       socketService.initialize(this.server);
 

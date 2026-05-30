@@ -35,7 +35,6 @@ export default function AssignMemberModal({ teamId, teamName, onClose, onSuccess
     };
 
     const handleAssign = async (employee: UserProfile) => {
-        // Validation: Cannot assign managers
         if (employee.designation?.toLowerCase().includes("manager")) {
             toast.error("Cannot assign managers to a team", {
                 description: "Manager roles are organizational-level and cannot be restricted to a single team.",

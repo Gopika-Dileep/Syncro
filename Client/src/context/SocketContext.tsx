@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useSelector } from 'react-redux';
@@ -21,6 +22,7 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { token, user } = useSelector((state: RootState) => state.auth);
     const [isConnected, setIsConnected] = useState(false);
+    const [socket, setSocket] = useState<Socket | null>(null);
     const socketRef = useRef<Socket | null>(null);
 
     const joinRoom = (room: string) => {
@@ -31,53 +33,57 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     useEffect(() => {
         if (token && user) {
-            // Prevent duplicate connections if already connecting/connected
+
             if (socketRef.current) return;
 
             console.log('Initializing socket connection...');
-            // Socket.io needs the base URL (origin), not the /api path.
-            // Using new URL().origin is safer than string replacement.
-            let socketUrl = 'http://localhost:5000';
+            let socketUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
             try {
-                const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
                 socketUrl = new URL(baseUrl).origin;
             } catch (err) {
                 console.warn('Failed to parse socket URL, falling back to default', err);
             }
             
-            const socket = io(socketUrl, {
+            const socketConn = io(socketUrl, {
                 auth: { token },
-                transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
+                transports: ['websocket', 'polling'], 
                 reconnectionAttempts: 10,
                 autoConnect: false,
             });
 
-            socketRef.current = socket;
+            socketRef.current = socketConn;
+            
+            // Set socket state asynchronously to avoid calling setState synchronously within an effect
+            const stateTimer = setTimeout(() => {
+                if (socketRef.current) {
+                    setSocket(socketConn);
+                }
+            }, 0);
 
-            // Delay connection slightly (de-bounce) to avoid the "closed before established" warning
-            // This allows React Strict Mode to finish its double-mount cycle before we try to connect
+           
             const connectionTimer = setTimeout(() => {
                 if (socketRef.current) {
-                    socket.connect();
+                    socketConn.connect();
                 }
             }, 100);
 
-            socket.on('connect', () => {
+            socketConn.on('connect', () => {
                 setIsConnected(true);
                 console.log('Socket connected successfully');
             });
 
-            socket.on('connect_error', (err) => {
+            socketConn.on('connect_error', (err) => {
                 console.error('Socket connection error:', err.message);
                 setIsConnected(false);
             });
 
-            socket.on('disconnect', (reason) => {
+            socketConn.on('disconnect', (reason) => {
                 setIsConnected(false);
                 console.log('Socket disconnected:', reason);
             });
 
-            socket.on('new_notification', (data) => {
+            socketConn.on('new_notification', (data) => {
                 toast.info(data.notification.title, {
                     description: data.notification.message,
                     action: data.notification.link ? {
@@ -91,18 +97,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
             return () => {
                 clearTimeout(connectionTimer);
+                clearTimeout(stateTimer);
                 if (socketRef.current) {
                     console.log('Cleaning up socket connection...');
                     socketRef.current.removeAllListeners();
                     socketRef.current.disconnect();
                     socketRef.current = null;
+                    setSocket(null);
                 }
             };
         }
     }, [token, user]);
 
     return (
-        <SocketContext.Provider value={{ socket: socketRef.current, isConnected, joinRoom }}>
+        <SocketContext.Provider value={{ socket, isConnected, joinRoom }}>
             {children}
         </SocketContext.Provider>
     );

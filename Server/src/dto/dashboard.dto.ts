@@ -1,3 +1,27 @@
+export interface BlockedItem {
+  _id: string;
+  title: string;
+  type?: string;
+  priority: string;
+  blocked_reason?: string;
+  updated_at: string | Date;
+}
+
+export interface UpcomingDeadlineItem {
+  _id: string;
+  title: string;
+  priority: string;
+  status: string;
+  updated_at: string;
+}
+
+export interface RecentActivityItem {
+  _id: string;
+  title: string;
+  description: string;
+  updated_at: string;
+}
+
 export interface CompanyDashboardDTO {
   totalEmployees: number;
   totalProjects: number;
@@ -17,7 +41,7 @@ export interface CompanyDashboardDTO {
   };
   completedSprints: number;
   totalSprints: number;
-  recentBlocked: any[];
+  recentBlocked: BlockedItem[];
 }
 
 export interface EmployeeDashboardDTO {
@@ -59,7 +83,7 @@ export interface EmployeeDashboardDTO {
       completedTasks: number;
       incompleteTasks: number;
     };
-    recentBlocked?: any[];
+    recentBlocked?: BlockedItem[];
   };
   managerMetrics?: {
     companyHealthScore: number;
@@ -81,7 +105,7 @@ export interface EmployeeDashboardDTO {
       totalItems: number;
       completedItems: number;
     }[];
-    recentBlocked?: any[];
+    recentBlocked?: BlockedItem[];
   };
   myFocus?: {
     currentTask?: {
@@ -92,8 +116,8 @@ export interface EmployeeDashboardDTO {
     nextDeadline?: string;
     dailyProgress: number;
   };
-  upcomingDeadlines: any[];
-  recentActivity: any[];
+  upcomingDeadlines: UpcomingDeadlineItem[];
+  recentActivity: RecentActivityItem[];
   debug?: {
     userId: string;
     employeeId: string;
@@ -113,5 +137,3 @@ export interface DashboardFilter {
   startDate?: string;
   endDate?: string;
 }
-
-

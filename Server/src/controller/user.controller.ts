@@ -5,7 +5,6 @@ import { IChangePasswordService } from '../interfaces/services/user/IChangePassw
 import { IUpdateUserProfileService } from '../interfaces/services/user/IUpdateUserProfileService';
 import { USER_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
-import { handleAsyncError } from '../utils/error.utils';
 import { success } from '../utils/response.utils';
 
 @injectable()
@@ -21,7 +20,7 @@ export class UserController {
       const profile = await this._getProfileService.execute(req.userId!);
       success(res, profile);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -30,7 +29,7 @@ export class UserController {
       const result = await this._changePasswordService.execute(req.userId!, req.body);
       success(res, result.message);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -39,7 +38,7 @@ export class UserController {
       const result = await this._updateUserProfileService.execute(req.userId!, req.body);
       success(res, result, USER_MESSAGES.PROFILE_UPDATE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

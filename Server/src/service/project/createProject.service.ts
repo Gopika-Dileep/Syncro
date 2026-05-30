@@ -34,24 +34,23 @@ export class CreateProjectService implements ICreateProjectService {
 
     const project = await this._projectRepository.create(projectData);
 
-    // Notify Admin
     try {
-        const company = await this._companyRepo.findById(companyId);
-        if (company) {
-            const adminEmployee = await this._employeeRepo.findOne({ user_id: company.user_id });
-            if (adminEmployee) {
-                await this._notificationService.createNotification({
-                    recipientId: adminEmployee._id.toString(),
-                    senderId: creatorId,
-                    type: NotificationType.PROJECT_CREATED,
-                    title: 'New Project Created',
-                    message: `${employee.user_id?.name || 'Someone'} created a new project: ${project.name}`,
-                    link: `/employee/projects`
-                });
-            }
+      const company = await this._companyRepo.findById(companyId);
+      if (company) {
+        const adminEmployee = await this._employeeRepo.findOne({ user_id: company.user_id });
+        if (adminEmployee) {
+          await this._notificationService.createNotification({
+            recipientId: adminEmployee._id.toString(),
+            senderId: creatorId,
+            type: NotificationType.PROJECT_CREATED,
+            title: 'New Project Created',
+            message: `${employee.user_id?.name || 'Someone'} created a new project: ${project.name}`,
+            link: `/employee/projects`,
+          });
         }
+      }
     } catch (err) {
-        console.error('Failed to send project creation notification to admin', err);
+      console.error('Failed to send project creation notification to admin', err);
     }
 
     return {

@@ -4,6 +4,8 @@ import { container } from '../di/inversify.config';
 import { DashboardController } from '../controller/dashboard.controller';
 import { authMiddleware, checkRole } from '../middleware/auth.middleware';
 
+const controller = container.get<DashboardController>(TYPES.DashboardController);
+
 export class DashboardRouter {
   public router: Router;
 
@@ -13,20 +15,8 @@ export class DashboardRouter {
   }
 
   private _configureRoutes(): void {
-    const controller = container.get<DashboardController>(TYPES.DashboardController);
 
-    this.router.get(
-      '/company',
-      authMiddleware,
-      checkRole(['company']),
-      controller.getCompanyDashboard
-    );
-
-    this.router.get(
-      '/employee',
-      authMiddleware,
-      checkRole(['employee']),
-      controller.getEmployeeDashboard
-    );
+    this.router.get('/company', authMiddleware, checkRole(['company']), controller.getCompanyDashboard);
+    this.router.get('/employee', authMiddleware, checkRole(['employee']), controller.getEmployeeDashboard);
   }
 }

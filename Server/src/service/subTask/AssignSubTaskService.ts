@@ -3,6 +3,7 @@ import { TYPES } from '../../di/types';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { IAssignSubTaskService } from '../../interfaces/services/subTask/IAssignSubTaskService';
 import { AssignSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
+import { ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/INotificationService';
@@ -23,29 +24,27 @@ export class AssignSubTaskService implements IAssignSubTaskService {
     const oldSubTask = await this._subTaskRepository.findById(subTaskId);
     if (!oldSubTask) throw new Error('Sub-task not found');
 
-    const assignee = await this._employeeRepository.findById(data.assignee_id);
-    if (assignee) await assignee.populate('user_id');
+    const assignee = await this._employeeRepository.findPopulatedById(data.assignee_id);
+    const oldAssignee = oldSubTask.assignee_id ? await this._employeeRepository.findPopulatedById(String(oldSubTask.assignee_id)) : null;
 
-    const oldAssignee = oldSubTask.assignee_id ? await this._employeeRepository.findById(String(oldSubTask.assignee_id)) : null;
-    if (oldAssignee) await oldAssignee.populate('user_id');
-
-    const historyEntry = {
+    const historyEntry: ICreateHistoryInput = {
       action: 'assignee_change',
-      from: (oldAssignee as unknown as { user_id?: { name: string } })?.user_id?.name || 'Unassigned',
-      to: (assignee as unknown as { user_id?: { name: string } })?.user_id?.name || 'Unknown',
-      user: assigner._id,
-      created_at: new Date(),
+      from: oldAssignee?.user_id?.name || 'Unassigned',
+      to: assignee?.user_id?.name || 'Unknown',
+      user: String(assigner._id),
     };
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      assignee_id: data.assignee_id,
-      assigned_by: assigner._id,
-      $push: { history: historyEntry },
-    } as unknown as Partial<import('../../models/subTask.model').ISubTask>);
+    const subTask = await this._subTaskRepository.updateWithHistory(
+      subTaskId,
+      {
+        assignee_id: data.assignee_id,
+        assigned_by: assigner._id,
+      },
+      historyEntry,
+    );
 
     if (!subTask) throw new Error('Sub-task not found');
 
-    // Send Notification to Assignee
     if (data.assignee_id && String(data.assignee_id) !== String(oldSubTask.assignee_id)) {
       await this._notificationService.createNotification({
         recipientId: data.assignee_id,

@@ -65,7 +65,6 @@ export default function SprintDetails() {
     const { can } = usePermission();
     const user = useSelector((state: RootState) => state.auth.user);
 
-    // Modal state
     const [isSubTaskModalOpen, setSubTaskModalOpen] = useState(false);
     const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
     const [editingSubTask, setEditingSubTask] = useState<SubTask | null>(null);
@@ -79,7 +78,7 @@ export default function SprintDetails() {
     const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
     const [isSubmittingIssue, setIsSubmittingIssue] = useState(false);
 
-    // Completion state
+    
     const [isCompleteModalOpen, setCompleteModalOpen] = useState(false);
     const [isSubmittingComplete, setIsSubmittingComplete] = useState(false);
     const [availableSprints, setAvailableSprints] = useState<Sprint[]>([]);
@@ -123,7 +122,7 @@ export default function SprintDetails() {
         }
     };
 
-    // Add Item state
+
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [backlogIssues, setBacklogIssues] = useState<Issue[]>([]);
     const [backlogProjects, setBacklogProjects] = useState<Project[]>([]);
@@ -165,7 +164,7 @@ export default function SprintDetails() {
         try {
             const response = await getTeamDirectoryApi();
             if (response.success) {
-                // setTeams(response.data || []); // teams was unused
+             
                 const allMembers = (response.data || []).flatMap(team => team.members || []);
                 const uniqueMembers = allMembers.filter((v, i, a) => a.findIndex(t => t?._id === v?._id) === i);
                 setMembers(uniqueMembers);
@@ -180,7 +179,7 @@ export default function SprintDetails() {
         try {
             const response = await getIssuesByProjectApi(projectId);
             if (response.success) {
-                // Filter out issues already in the current sprint and completed issues
+              
                 const available = response.data.filter(issue =>
                     (!issue.sprint_id || issue.sprint_id !== sprintId) &&
                     issue.status === 'Ready'
@@ -613,8 +612,8 @@ export default function SprintDetails() {
 
                                     {subTask.status === 'In Progress' && (
                                         subTask.subtask_type === 'sub-task' ? can('task:block') :
-                                        subTask.subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                                        subTask.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                        subTask.subtask_type === 'bug' ? can('issue:bug:block') :
+                                        subTask.subtask_type === 'task' ? can('issue:task:block') :
                                         can('task:block')
                                     ) && sprint?.status?.toLowerCase() !== 'completed' && (
                                         <button
@@ -632,8 +631,8 @@ export default function SprintDetails() {
 
                                     {subTask.status === 'Blocked' && (
                                         subTask.subtask_type === 'sub-task' ? can('task:block') :
-                                        subTask.subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                                        subTask.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                        subTask.subtask_type === 'bug' ? can('issue:bug:block') :
+                                        subTask.subtask_type === 'task' ? can('issue:task:block') :
                                         can('task:block')
                                     ) && sprint?.status?.toLowerCase() !== 'completed' && (
                                         <button
@@ -1022,18 +1021,17 @@ export default function SprintDetails() {
                                                                 const userTeamId = user?.team?._id || user?.team_id;
                                                                 const isPM = can('task:view:all');
 
-                                                                // Filter subtasks
                                                                 const filtered = subTaskConfig.data.filter(st => {
                                                                     const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
 
-                                                                    // If user is PM or has no team (unassigned), show everything
+                                                                   
                                                                     if (isPM || !userTeamId) return true;
 
-                                                                    // If user has a team, only show their team's subtasks
+                                                                    
                                                                     return stTeamId === userTeamId;
                                                                 });
 
-                                                                // If PM/Unassigned, group by team
+                                                                
                                                                 if ((isPM || !userTeamId) && filtered.length > 0) {
                                                                     const grouped = filtered.reduce((acc, st) => {
                                                                         const teamName = st.team_id?.name || "Unassigned";
@@ -1063,7 +1061,7 @@ export default function SprintDetails() {
                                                                     ));
                                                                 }
 
-                                                                // Otherwise just show the list
+                                                                
                                                                 return (
                                                                     <div className="space-y-1">
                                                                         {filtered.map(subTask => renderSubTask(subTask, issue._id))}
@@ -1205,7 +1203,8 @@ export default function SprintDetails() {
                 onClose={() => setIssueToAssign(null)}
                 onSelect={handleAssignEmployee}
                 members={members}
-                title={`Assign to ${issueToAssign?.type === 'bug' ? 'Bug' : 'Issue'}`}
+                title="Assign Task"
+                description={issueToAssign?.title}
                 onAutoAssign={handleAutoAssignIssue}
             />
 
@@ -1214,7 +1213,8 @@ export default function SprintDetails() {
                 onClose={() => setSubTaskToAssign(null)}
                 onSelect={handleAssignSubTaskEmployee}
                 members={members}
-                title="Assign Sub-Task"
+                title="Assign Task"
+                description={subTaskToAssign?.subTask?.title}
                 onAutoAssign={handleAutoAssignSubTask}
             />
 

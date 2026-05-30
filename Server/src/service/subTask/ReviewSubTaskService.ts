@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
-import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { IIssueRepository, ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
 import { IProjectRepository } from '../../interfaces/repositories/IProjectRepository';
 import { IReviewSubTaskService } from '../../interfaces/services/subTask/IReviewSubTaskService';
 import { ReviewSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
@@ -25,7 +25,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
     @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  ) {}
 
   async execute(subTaskId: string, data: ReviewSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
@@ -34,19 +34,21 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
 
     const status = data.action === 'approve' ? SubTaskStatus.DONE : SubTaskStatus.IN_PROGRESS;
 
-    const historyEntry = {
+    const historyEntry: ICreateHistoryInput = {
       action: 'status_change',
       from: SubTaskStatus.IN_REVIEW,
       to: status,
       user: actorId,
-      created_at: new Date(),
     };
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      status,
-      rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
-      $push: { history: historyEntry },
-    } as Record<string, unknown>);
+    const subTask = await this._subTaskRepository.updateWithHistory(
+      subTaskId,
+      {
+        status,
+        rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
+      },
+      historyEntry,
+    );
 
     if (subTask) {
       if (status === SubTaskStatus.DONE) {
@@ -71,9 +73,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
           senderId: actorId.toString(),
           type: status === SubTaskStatus.DONE ? NotificationType.SUBTASK_APPROVED : NotificationType.SUBTASK_REJECTED,
           title: status === SubTaskStatus.DONE ? 'Sub-task Approved' : 'Rework Requested',
-          message: status === SubTaskStatus.DONE 
-            ? `Your sub-task "${subTask.title}" has been approved.` 
-            : `Rework requested for "${subTask.title}". Reason: ${data.rework_reason || 'See details'}`,
+          message: status === SubTaskStatus.DONE ? `Your sub-task "${subTask.title}" has been approved.` : `Rework requested for "${subTask.title}". Reason: ${data.rework_reason || 'See details'}`,
           link: `/employee/tasks?selectedTask=${subTask._id.toString()}`,
           relatedEntityId: subTask._id.toString(),
           relatedEntityType: 'SubTask',
@@ -82,11 +82,14 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
       return SubTaskMapper.toResponseDTO(subTask);
     }
 
-    const issue = await this._issueRepository.updateById(subTaskId, {
-      status: status === SubTaskStatus.DONE ? IssueStatus.DONE : IssueStatus.IN_PROGRESS,
-      rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
-      $push: { history: historyEntry },
-    } as Record<string, unknown>);
+    const issue = await this._issueRepository.updateWithHistory(
+      subTaskId,
+      {
+        status: status === SubTaskStatus.DONE ? IssueStatus.DONE : IssueStatus.IN_PROGRESS,
+        rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
+      },
+      historyEntry,
+    );
 
     if (issue) {
       if (status === SubTaskStatus.DONE) {
@@ -105,9 +108,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
           senderId: actorId.toString(),
           type: status === SubTaskStatus.DONE ? NotificationType.SUBTASK_APPROVED : NotificationType.SUBTASK_REJECTED,
           title: status === SubTaskStatus.DONE ? 'Task Approved' : 'Rework Requested',
-          message: status === SubTaskStatus.DONE 
-            ? `Your task "${issue.title}" has been approved.` 
-            : `Rework requested for "${issue.title}". Reason: ${data.rework_reason || 'See details'}`,
+          message: status === SubTaskStatus.DONE ? `Your task "${issue.title}" has been approved.` : `Rework requested for "${issue.title}". Reason: ${data.rework_reason || 'See details'}`,
           link: `/employee/backlogs?selectedIssue=${issue._id.toString()}`,
           relatedEntityId: issue._id.toString(),
           relatedEntityType: 'Issue',

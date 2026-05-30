@@ -103,7 +103,7 @@ export interface SubTaskPersonRef {
 export interface SubTaskResponseDTO {
   _id: string;
   issue_id: string;
-  sprint_id: string;
+  sprint_id?: string;
   sprint_status?: string;
   company_id: string;
   team_id?: SubTaskPersonRef | null;

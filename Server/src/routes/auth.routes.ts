@@ -3,10 +3,10 @@ import { container } from '../di/inversify.config';
 import { TYPES } from '../di/types';
 import { AuthController } from '../controller/auth.controller';
 import { ENDPOINTS } from '../constants/endpoints';
-
-const authController = container.get<AuthController>(TYPES.AuthController);
 import { validateRequest } from '../middleware/validation.middleware';
 import { RegisterRequestSchema, LoginRequestSchema, VerifyOtpRequestSchema, ResendOtpRequestSchema, ForgotPasswordRequestSchema, ResetPasswordRequestSchema } from '../dto/auth.dto';
+
+const authController = container.get<AuthController>(TYPES.AuthController);
 
 export class AuthRouter {
   public router: Router;

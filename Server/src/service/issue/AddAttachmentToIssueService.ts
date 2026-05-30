@@ -15,30 +15,22 @@ export class AddAttachmentToIssueService implements IAddAttachmentToIssueService
 
   async execute(issueId: string, userId: string, attachments: { file_url: string; file_name: string }[]): Promise<IIssue> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
+    if (!employee) {
+      throw new NotFoundError('Employee not found');
+    }
+
     const formattedAttachments = attachments.map((att) => ({
       ...att,
-      uploaded_by: employee?._id,
+      uploaded_by: String(employee._id),
       uploaded_at: new Date(),
     }));
 
-    const issue = await this._issueRepository.updateById(issueId, {
-      $push: {
-        attachments: { $each: formattedAttachments },
-      },
-    });
+    const updatedIssue = await this._issueRepository.addAttachments(issueId, formattedAttachments);
 
-    if (!issue) {
+    if (!updatedIssue) {
       throw new NotFoundError('Issue not found');
     }
 
-    return (await this._issueRepository.findById(issueId, {
-      populate: [
-        { path: 'comments.user', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'attachments.uploaded_by', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] },
-        { path: 'created_by', populate: { path: 'user_id' } },
-        { path: 'assigned_by', populate: { path: 'user_id' } },
-      ],
-    })) as IIssue;
+    return updatedIssue;
   }
 }

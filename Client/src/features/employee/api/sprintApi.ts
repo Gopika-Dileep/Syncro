@@ -15,7 +15,7 @@ export interface Sprint {
     status: string;
     start_date: string;
     end_date: string;
-    issues?: Issue[]; // Added to support populated issues in details
+    issues?: Issue[];
     created_at: string;
     updated_at: string;
 }

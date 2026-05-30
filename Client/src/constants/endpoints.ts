@@ -21,6 +21,9 @@ export const ENDPOINTS = {
         UPDATE_TEAM: (teamId: string) => `/company/team/${teamId}`,
         DELETE_TEAM: (teamId: string) => `/company/team/${teamId}`,
     },
+    EMPLOYEE:{
+        DASHBOARD:"/dashboard/employee"
+    },
     USER: {
         PROFILE: "/user/profile",
         CHANGE_PASSWORD: "/user/change-password",

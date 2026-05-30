@@ -22,39 +22,21 @@ export class AddCommentToSubTaskService implements IAddCommentToSubTaskService {
     const employee = await this._employeeRepository.findByUserId(userId);
     const actorId = employee?._id ? String(employee._id) : userId;
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      $push: {
-        comments: {
-          user: actorId,
-          text,
-          attachments,
-          created_at: new Date(),
-        },
-      },
+    const updatedSubTask = await this._subTaskRepository.addComment(subTaskId, {
+      user: actorId,
+      text,
+      attachments,
     });
 
-    if (!subTask) {
+    if (!updatedSubTask) {
       throw new NotFoundError('Sub-task not found');
     }
 
-    const updatedSubTask = (await this._subTaskRepository.findById(subTaskId, {
-      populate: [
-        { path: 'comments.user', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'attachments.uploaded_by', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'team_id', select: 'name' },
-        { path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] },
-        { path: 'created_by', populate: { path: 'user_id' } },
-        { path: 'assigned_by', populate: { path: 'user_id' } },
-      ],
-    })) as ISubTask;
-
-    // Real-time comment update
     this._socketService.emitToRoom(`subtask:${subTaskId}`, 'new_comment', {
       subTaskId,
       comment: updatedSubTask.comments[updatedSubTask.comments.length - 1],
     });
 
-    // Handle Mentions
     const mentionRegex = /@\[([a-f\d]{24})\]\(([^)]+)\)/g;
     let match;
     const mentionedUserIds = new Set<string>();

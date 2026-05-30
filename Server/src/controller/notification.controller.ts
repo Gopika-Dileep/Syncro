@@ -10,12 +10,12 @@ import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeReposit
 export class NotificationController {
   constructor(
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository
+    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
   ) {}
 
   getNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.userId!;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
@@ -43,7 +43,7 @@ export class NotificationController {
 
   markAllAsRead = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.userId!;
       const employee = await this._employeeRepository.findOne({ user_id: userId });
       if (employee) {
         await this._notificationService.markAllAsRead(employee._id.toString());

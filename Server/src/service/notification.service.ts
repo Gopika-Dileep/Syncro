@@ -4,38 +4,29 @@ import { INotificationRepository } from '../interfaces/repositories/INotificatio
 import { ISocketService } from '../interfaces/services/ISocketService';
 import { TYPES } from '../di/types';
 import { INotification, NotificationType } from '../models/notification.model';
+import mongoose from 'mongoose';
 
 @injectable()
 export class NotificationService implements INotificationService {
   constructor(
     @inject(TYPES.INotificationRepository) private _notificationRepository: INotificationRepository,
-    @inject(TYPES.ISocketService) private _socketService: ISocketService
+    @inject(TYPES.ISocketService) private _socketService: ISocketService,
   ) {}
 
-  async createNotification(params: {
-    recipientId: string;
-    senderId?: string;
-    type: NotificationType;
-    title: string;
-    message: string;
-    link?: string;
-    relatedEntityId?: string;
-    relatedEntityType?: 'Issue' | 'SubTask';
-  }): Promise<INotification> {
+  async createNotification(params: { recipientId: string; senderId?: string; type: NotificationType; title: string; message: string; link?: string; relatedEntityId?: string; relatedEntityType?: 'Issue' | 'SubTask' }): Promise<INotification> {
     const notification = await this._notificationRepository.create({
-      recipient: params.recipientId as any,
-      sender: params.senderId as any,
+      recipient: new mongoose.Types.ObjectId(params.recipientId),
+      sender: params.senderId ? new mongoose.Types.ObjectId(params.senderId) : undefined,
       type: params.type,
       title: params.title,
       message: params.message,
       link: params.link,
-      relatedEntityId: params.relatedEntityId as any,
+      relatedEntityId: params.relatedEntityId ? new mongoose.Types.ObjectId(params.relatedEntityId) : undefined,
       relatedEntityType: params.relatedEntityType,
     });
 
     const unreadCount = await this._notificationRepository.getUnreadCount(params.recipientId);
 
-    // Emit to socket
     this._socketService.emitToUser(params.recipientId, 'new_notification', {
       notification,
       unreadCount,
@@ -48,16 +39,15 @@ export class NotificationService implements INotificationService {
     const skip = (page - 1) * limit;
     const notifications = await this._notificationRepository.findByRecipient(recipientId, limit, skip);
     const unreadCount = await this._notificationRepository.getUnreadCount(recipientId);
-    
-    // We might want to get total count too, but for now this is enough
+
     return { notifications, total: notifications.length, unreadCount };
   }
 
   async markAsRead(notificationId: string): Promise<INotification | null> {
     const notification = await this._notificationRepository.updateById(notificationId, { isRead: true });
     if (notification) {
-        const unreadCount = await this._notificationRepository.getUnreadCount(notification.recipient.toString());
-        this._socketService.emitToUser(notification.recipient.toString(), 'unread_count_update', { unreadCount });
+      const unreadCount = await this._notificationRepository.getUnreadCount(notification.recipient.toString());
+      this._socketService.emitToUser(notification.recipient.toString(), 'unread_count_update', { unreadCount });
     }
     return notification;
   }

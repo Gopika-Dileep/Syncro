@@ -12,8 +12,8 @@ export class PermissionRepository extends BaseRepository<IPermission> implements
 
   async getDefinitionIdsByKeys(keys: string[]): Promise<string[]> {
     const existingDefinitions = await permissionDefinitionModel.find({ permission_key: { $in: keys } });
-    const existingKeys = existingDefinitions.map(d => d.permission_key);
-    const missingKeys = keys.filter(k => !existingKeys.includes(k));
+    const existingKeys = existingDefinitions.map((d) => d.permission_key);
+    const missingKeys = keys.filter((k) => !existingKeys.includes(k));
 
     if (missingKeys.length > 0) {
       for (const key of missingKeys) {
@@ -27,16 +27,12 @@ export class PermissionRepository extends BaseRepository<IPermission> implements
         } else if (parts.length === 2) {
           [module, action] = parts as [string, string];
         } else if (parts.length === 4) {
-           module = parts[0] as string;
-           action = parts[1] as string;
-           scope = parts.slice(2).join(':');
+          module = parts[0] as string;
+          action = parts[1] as string;
+          scope = parts.slice(2).join(':');
         }
 
-        const definition = await permissionDefinitionModel.findOneAndUpdate(
-          { permission_key: key },
-          { $setOnInsert: { module, action, scope, permission_key: key } },
-          { upsert: true, new: true }
-        );
+        const definition = await permissionDefinitionModel.findOneAndUpdate({ permission_key: key }, { $setOnInsert: { module, action, scope, permission_key: key } }, { upsert: true, new: true });
         if (definition) existingDefinitions.push(definition);
       }
     }

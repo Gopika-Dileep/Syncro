@@ -146,4 +146,12 @@ export class EmployeeRepository extends BaseRepository<IEmployee> implements IEm
 
     return (await employeeModel.aggregate(pipeline)) as IPopulatedEmployee[];
   }
+
+  async findPopulated(filter: Record<string, unknown>): Promise<IPopulatedEmployee[]> {
+    return (await this._model.find(filter).populate('user_id').populate('team_id').exec()) as unknown as IPopulatedEmployee[];
+  }
+
+  async findPopulatedById(id: string): Promise<IPopulatedEmployee | null> {
+    return (await this._model.findById(id).populate('user_id').populate('team_id').exec()) as unknown as IPopulatedEmployee | null;
+  }
 }

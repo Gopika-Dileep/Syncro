@@ -62,7 +62,6 @@ export default function AddEmployee() {
                             team_id: emp.team?._id || ""
                         });
                         if (emp.permissions) {
-                            // Deep merge to ensure newly added permission schema fields exist for older database records
                             setPermissions(() => {
                                 const merged = JSON.parse(JSON.stringify(initialPermissions));
                                 const mergeDefaults = (target: Record<string, unknown>, source: Record<string, unknown>) => {
@@ -91,7 +90,6 @@ export default function AddEmployee() {
             };
             fetchEmployee();
         } else {
-            // Reset form for add mode if navigating from edit
             setFormData({
                 name: "", email: "", phone: "", designation: "", date_of_joining: "", team_id: ""
             });
@@ -109,8 +107,13 @@ export default function AddEmployee() {
                 } else {
                     toast.error(response.message || "Failed to load departments");
                 }
-            } catch (err: any) { 
-                const msg = err.response?.data?.message || err.message || "Failed to load departments";
+            } catch (err: unknown) { 
+                let msg = "Failed to load departments";
+                if (axios.isAxiosError(err)) {
+                    msg = err.response?.data?.message || err.message || msg;
+                } else if (err instanceof Error) {
+                    msg = err.message;
+                }
                 toast.error(msg); 
             }
         };

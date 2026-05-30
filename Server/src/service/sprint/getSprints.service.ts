@@ -32,7 +32,7 @@ export class GetSprintsService implements IGetSprintsService {
 
     const statsMap = issues.reduce(
       (acc, issue) => {
-        const sid = issue.sprint_id?.toString();
+        const sid = issue.sprint_id ? (typeof issue.sprint_id === 'object' ? String((issue.sprint_id as { _id?: unknown })._id || issue.sprint_id) : String(issue.sprint_id)) : undefined;
         if (sid) {
           if (!acc[sid]) acc[sid] = { points: 0, count: 0, completed: 0 };
           acc[sid].points += issue.story_points || 0;

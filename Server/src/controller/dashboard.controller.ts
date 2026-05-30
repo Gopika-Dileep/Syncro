@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from 'express';
 import { IGetCompanyDashboardService } from '../interfaces/services/dashboard/IGetCompanyDashboardService';
 import { IGetEmployeeDashboardService } from '../interfaces/services/dashboard/IGetEmployeeDashboardService';
 import { TYPES } from '../di/types';
-import { handleAsyncError } from '../utils/error.utils';
 import { success } from '../utils/response.utils';
 
 @injectable()
@@ -19,7 +18,7 @@ export class DashboardController {
       const data = await this._getCompanyDashboardService.execute(userId);
       success(res, data);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -37,7 +36,7 @@ export class DashboardController {
       const data = await this._getEmployeeDashboardService.execute(userId, permissions, filter);
       success(res, data);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

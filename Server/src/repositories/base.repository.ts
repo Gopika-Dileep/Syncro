@@ -14,24 +14,24 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     return await this._model.create(data as unknown as T);
   }
 
-  async findById(id: string, options?: mongoose.QueryOptions): Promise<T | null> {
-    return await this._model.findById(id, null, options).exec();
+  async findById(id: string, options?: Record<string, unknown>): Promise<T | null> {
+    return await this._model.findById(id, null, options as mongoose.QueryOptions).exec();
   }
 
-  async findOne(filter: Record<string, unknown>, options?: mongoose.QueryOptions): Promise<T | null> {
-    return await this._model.findOne(filter, null, options).exec();
+  async findOne(filter: Record<string, unknown>, options?: Record<string, unknown>): Promise<T | null> {
+    return await this._model.findOne(filter, null, options as mongoose.QueryOptions).exec();
   }
 
-  async find(filter: Record<string, unknown>, options?: mongoose.QueryOptions): Promise<T[]> {
-    return await this._model.find(filter, null, options).exec();
+  async find(filter: Record<string, unknown>, options?: Record<string, unknown>): Promise<T[]> {
+    return await this._model.find(filter, null, options as mongoose.QueryOptions).exec();
   }
 
-  async updateById(id: string, update: Record<string, unknown>, options?: mongoose.QueryOptions): Promise<T | null> {
-    return await this._model.findByIdAndUpdate(id, update, { new: true, ...options }).exec();
+  async updateById(id: string, update: Record<string, unknown>, options?: Record<string, unknown>): Promise<T | null> {
+    return await this._model.findByIdAndUpdate(id, update, { new: true, ...(options as mongoose.QueryOptions) }).exec();
   }
 
-  async updateOne(filter: Record<string, unknown>, update: Record<string, unknown>, options?: mongoose.QueryOptions): Promise<T | null> {
-    return await this._model.findOneAndUpdate(filter, update, { new: true, ...options }).exec();
+  async updateOne(filter: Record<string, unknown>, update: Record<string, unknown>, options?: Record<string, unknown>): Promise<T | null> {
+    return await this._model.findOneAndUpdate(filter, update, { new: true, ...(options as mongoose.QueryOptions) }).exec();
   }
 
   async deleteById(id: string): Promise<T | null> {

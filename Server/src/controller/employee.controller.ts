@@ -10,7 +10,6 @@ import { IAssignTeamToEmployeeService } from '../interfaces/services/employee/IA
 import { EMPLOYEE_MESSAGES } from '../constants/messages';
 import { GetEmployeesRequestDTO } from '../dto/employee.dto';
 import { TYPES } from '../di/types';
-import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';
 
 @injectable()
@@ -31,7 +30,7 @@ export class EmployeeController {
       const result = await this._getUnassignedEmployeesService.execute(req.userId!, search as string);
       success(res, result);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -42,7 +41,7 @@ export class EmployeeController {
       const result = await this._assignTeamToEmployeeService.execute(req.userId!, employeeId as string, teamId);
       success(res, result);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -51,7 +50,7 @@ export class EmployeeController {
       const result = await this._addEmployeeService.execute(req.userId!, req.body);
       created(res, result.message);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -61,7 +60,7 @@ export class EmployeeController {
       const { employees, total } = await this._getEmployeesService.execute(req.userId!, query);
       success(res, { employees, total, page: query.page, limit: query.limit });
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -70,7 +69,7 @@ export class EmployeeController {
       const isBlocked = await this._toggleBlockEmployeeService.execute(req.userId!, req.params.userId as string);
       success(res, { isBlocked }, EMPLOYEE_MESSAGES.TOGGLE_BLOCK_SUCCESS(isBlocked));
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -79,7 +78,7 @@ export class EmployeeController {
       const result = await this._getEmployeeDetailsService.execute(req.params.userId as string);
       success(res, result);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -88,7 +87,7 @@ export class EmployeeController {
       const result = await this._updateEmployeeDetailsService.execute(req.params.userId as string, req.body);
       success(res, result, EMPLOYEE_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

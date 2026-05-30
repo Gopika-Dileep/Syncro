@@ -8,7 +8,6 @@ import { IGetTeamDirectoryService } from '../interfaces/services/team/IGetTeamDi
 import { TEAM_MESSAGES } from '../constants/messages';
 import { GetTeamsRequestDTO, GetTeamDirectoryRequestDTO } from '../dto/team.dto';
 import { TYPES } from '../di/types';
-import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';
 
 @injectable()
@@ -27,7 +26,7 @@ export class TeamController {
       const team = await this._createTeamService.execute(req.body.name, userId);
       created(res, team, TEAM_MESSAGES.CREATE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -38,7 +37,7 @@ export class TeamController {
       const { teams, total } = await this._getTeamsService.execute(userId, query);
       success(res, { teams, total, page: query.page, limit: query.limit });
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -49,7 +48,7 @@ export class TeamController {
       const team = await this._updateTeamService.execute(teamId as string, name);
       success(res, team, TEAM_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -59,7 +58,7 @@ export class TeamController {
       await this._deleteTeamService.execute(teamId as string);
       success(res, TEAM_MESSAGES.DELETE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -69,7 +68,7 @@ export class TeamController {
       const directory = await this._getTeamDirectoryService.execute(req.userId!, req.permissions || [], query);
       success(res, directory, TEAM_MESSAGES.FETCH_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

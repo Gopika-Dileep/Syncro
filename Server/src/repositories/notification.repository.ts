@@ -9,11 +9,7 @@ export class NotificationRepository implements INotificationRepository {
   }
 
   async findByRecipient(recipientId: string, limit: number = 20, skip: number = 0): Promise<INotification[]> {
-    return await Notification.find({ recipient: recipientId })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('sender', 'name avatar');
+    return await Notification.find({ recipient: recipientId }).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('sender', 'name avatar');
   }
 
   async findById(id: string): Promise<INotification | null> {

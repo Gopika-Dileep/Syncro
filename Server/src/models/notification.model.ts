@@ -19,8 +19,8 @@ export interface INotification extends Document {
   type: NotificationType;
   title: string;
   message: string;
-  link?: string; // e.g. /employee/issues/123
-  relatedEntityId?: mongoose.Types.ObjectId; // Issue or SubTask ID
+  link?: string;
+  relatedEntityId?: mongoose.Types.ObjectId;
   relatedEntityType?: 'Issue' | 'SubTask';
   isRead: boolean;
   createdAt: Date;
@@ -38,7 +38,7 @@ const NotificationSchema: Schema = new Schema(
     relatedEntityType: { type: String, enum: ['Issue', 'SubTask'] },
     isRead: { type: Boolean, default: false },
   },
-  { timestamps: { createdAt: true, updatedAt: false } }
+  { timestamps: { createdAt: true, updatedAt: false } },
 );
 
 export const Notification = mongoose.model<INotification>('Notification', NotificationSchema);
