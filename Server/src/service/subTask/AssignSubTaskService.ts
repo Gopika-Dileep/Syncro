@@ -6,7 +6,7 @@ import { AssignSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.d
 import { ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../models/notification.model';
 
 @injectable()
@@ -15,7 +15,7 @@ export class AssignSubTaskService implements IAssignSubTaskService {
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(subTaskId: string, data: AssignSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });

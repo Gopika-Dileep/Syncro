@@ -1,12 +1,12 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { injectable, inject } from 'inversify';
-import { ISocketService } from '../interfaces/services/ISocketService';
-import { verifyAccessToken } from './token.utils';
-import { env } from '../config/env';
-import logger from '../config/logger';
-import { TYPES } from '../di/types';
-import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
+import { ISocketService } from '../../interfaces/services/socket/ISocketService';
+import { verifyAccessToken } from '../../utils/token.utils';
+import { env } from '../../config/env';
+import logger from '../../config/logger';
+import { TYPES } from '../../di/types';
+import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -17,7 +17,7 @@ interface AuthenticatedSocket extends Socket {
 export class SocketService implements ISocketService {
   private io: SocketIOServer | null = null;
 
-  constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository) {}
+  constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository) { }
 
   initialize(server: HttpServer): void {
     this.io = new SocketIOServer(server, {

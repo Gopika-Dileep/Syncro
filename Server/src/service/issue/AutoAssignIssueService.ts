@@ -7,7 +7,7 @@ import { IAIService } from '../../interfaces/services/ai/IAIService';
 import { IAutoAssignIssueService } from '../../interfaces/services/issue/IAutoAssignIssueService';
 import { IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../models/notification.model';
 import mongoose from 'mongoose';
 
@@ -19,7 +19,7 @@ export class AutoAssignIssueService implements IAutoAssignIssueService {
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.IAIService) private _aiService: IAIService,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(issueId: string, userId: string): Promise<IssueResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });

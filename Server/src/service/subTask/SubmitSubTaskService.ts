@@ -7,7 +7,7 @@ import { SubmitSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.d
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../models/notification.model';
 
 @injectable()
@@ -17,7 +17,7 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(subTaskId: string, data: SubmitSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);

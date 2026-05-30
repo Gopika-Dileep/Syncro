@@ -8,7 +8,7 @@ import { ICreateHistoryInput } from '../../interfaces/repositories/IIssueReposit
 import { IAutoAssignSubTaskService } from '../../interfaces/services/subTask/IAutoAssignSubTaskService';
 import { SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../models/notification.model';
 import mongoose from 'mongoose';
 
@@ -20,7 +20,7 @@ export class AutoAssignSubTaskService implements IAutoAssignSubTaskService {
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IAIService) private _aiService: IAIService,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(subTaskId: string, userId: string): Promise<SubTaskResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });

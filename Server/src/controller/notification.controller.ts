@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
-import { INotificationService } from '../interfaces/services/INotificationService';
+import { INotificationService } from '../interfaces/services/notification/INotificationService';
 import { TYPES } from '../di/types';
 import { success } from '../utils/response.utils';
 import { NOTIFICATION_MESSAGES } from '../constants/messages';
@@ -9,7 +9,7 @@ import { NOTIFICATION_MESSAGES } from '../constants/messages';
 export class NotificationController {
   constructor(
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   getNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

@@ -7,7 +7,7 @@ import { ProjectMapper } from '../../mappers/project.mapper';
 import { TYPES } from '../../di/types';
 import { PROJECT_MESSAGES } from '../../constants/messages';
 import { NotFoundError } from '../../errors/AppError';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { NotificationType } from '../../models/notification.model';
 
@@ -18,7 +18,7 @@ export class CreateProjectService implements ICreateProjectService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(userId: string, data: CreateProjectRequestDTO): Promise<{ message: string; project: ProjectResponseDTO }> {
     const employee = await this._employeeRepo.findByUserId(userId);

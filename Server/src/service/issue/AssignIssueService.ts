@@ -6,7 +6,7 @@ import { IAssignIssueService } from '../../interfaces/services/issue/IAssignIssu
 import { AssignIssueRequestDTO, IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../models/notification.model';
 
 @injectable()
@@ -15,7 +15,7 @@ export class AssignIssueService implements IAssignIssueService {
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(data: AssignIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });

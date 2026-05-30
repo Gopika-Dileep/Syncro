@@ -9,7 +9,7 @@ import { connectRedis } from './config/redis';
 import logger from './config/logger';
 import { container } from './di/inversify.config';
 import { TYPES } from './di/types';
-import { ISocketService } from './interfaces/services/ISocketService';
+import { ISocketService } from './interfaces/services/socket/ISocketService';
 
 const appinstance = new App();
 

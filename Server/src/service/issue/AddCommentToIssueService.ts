@@ -6,8 +6,8 @@ import { TYPES } from '../../di/types';
 import { NotFoundError } from '../../errors/AppError';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 
-import { INotificationService } from '../../interfaces/services/INotificationService';
-import { ISocketService } from '../../interfaces/services/ISocketService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
+import { ISocketService } from '../../interfaces/services/socket/ISocketService';
 import { NotificationType } from '../../models/notification.model';
 
 @injectable()
@@ -17,7 +17,7 @@ export class AddCommentToIssueService implements IAddCommentToIssueService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
-  ) {}
+  ) { }
 
   async execute(issueId: string, userId: string, text: string, attachments?: { file_url: string; file_name: string }[]): Promise<IIssue> {
     const employee = await this._employeeRepository.findByUserId(userId);

@@ -154,12 +154,12 @@ import { IAddAttachmentToSubTaskService } from '../interfaces/services/subTask/I
 import { AddAttachmentToSubTaskService } from '../service/subTask/AddAttachmentToSubTaskService';
 import { SubTaskController } from '../controller/subTask.controller';
 
-import { ISocketService } from '../interfaces/services/ISocketService';
-import { SocketService } from '../utils/socket.service';
+import { ISocketService } from '../interfaces/services/socket/ISocketService';
+import { SocketService } from '../service/socket/socket.service';
 import { INotificationRepository } from '../interfaces/repositories/INotificationRepository';
 import { NotificationRepository } from '../repositories/notification.repository';
-import { INotificationService } from '../interfaces/services/INotificationService';
-import { NotificationService } from '../service/notification.service';
+import { INotificationService } from '../interfaces/services/notification/INotificationService';
+import { NotificationService } from '../service/notification/notification.service';
 import { NotificationController } from '../controller/notification.controller';
 import { IStorageProvider } from '../interfaces/providers/IStorageProvider';
 import { S3StorageProvider } from '../providers/S3StorageProvider';

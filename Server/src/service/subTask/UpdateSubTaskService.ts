@@ -5,7 +5,7 @@ import { IUpdateSubTaskService } from '../../interfaces/services/subTask/IUpdate
 import { UpdateSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { NotificationType } from '../../models/notification.model';
 import { IIssueRepository, ICreateHistoryInput } from '../../interfaces/repositories/IIssueRepository';
@@ -20,7 +20,7 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
-  ) {}
+  ) { }
 
   async execute(subTaskId: string, data: UpdateSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);

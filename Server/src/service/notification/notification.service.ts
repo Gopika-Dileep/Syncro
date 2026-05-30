@@ -1,10 +1,10 @@
 import { injectable, inject } from 'inversify';
-import { INotificationService } from '../interfaces/services/INotificationService';
-import { INotificationRepository } from '../interfaces/repositories/INotificationRepository';
-import { ISocketService } from '../interfaces/services/ISocketService';
-import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
-import { TYPES } from '../di/types';
-import { INotification, NotificationType } from '../models/notification.model';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
+import { INotificationRepository } from '../../interfaces/repositories/INotificationRepository';
+import { ISocketService } from '../../interfaces/services/socket/ISocketService';
+import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { TYPES } from '../../di/types';
+import { INotification, NotificationType } from '../../models/notification.model';
 import mongoose from 'mongoose';
 
 @injectable()
@@ -13,7 +13,7 @@ export class NotificationService implements INotificationService {
     @inject(TYPES.INotificationRepository) private _notificationRepository: INotificationRepository,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
-  ) {}
+  ) { }
 
   async createNotification(params: { recipientId: string; senderId?: string; type: NotificationType; title: string; message: string; link?: string; relatedEntityId?: string; relatedEntityType?: 'Issue' | 'SubTask' }): Promise<INotification> {
     const notification = await this._notificationRepository.create({

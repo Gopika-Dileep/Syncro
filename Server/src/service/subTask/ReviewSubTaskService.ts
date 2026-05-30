@@ -10,7 +10,7 @@ import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IssueStatus } from '../../enums/IssueEnums';
 import { ProjectStatus } from '../../enums/ProjectEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../models/notification.model';
 
 interface IPopulatedId {
@@ -25,7 +25,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
     @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(subTaskId: string, data: ReviewSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);

@@ -1,4 +1,4 @@
-import { INotification, NotificationType } from '../../models/notification.model';
+import { INotification, NotificationType } from '../../../models/notification.model';
 
 export interface INotificationService {
   createNotification(params: { recipientId: string; senderId?: string; type: NotificationType; title: string; message: string; link?: string; relatedEntityId?: string; relatedEntityType?: 'Issue' | 'SubTask' }): Promise<INotification>;

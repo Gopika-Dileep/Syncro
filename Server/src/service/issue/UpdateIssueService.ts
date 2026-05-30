@@ -8,7 +8,7 @@ import { IssueMapper } from '../../mappers/issue.mapper';
 import { IssueStatus } from '../../enums/IssueEnums';
 import { ProjectStatus } from '../../enums/ProjectEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { NotificationType } from '../../models/notification.model';
 
@@ -20,7 +20,7 @@ export class UpdateIssueService implements IUpdateIssueService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(issueId: string, data: UpdateIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);

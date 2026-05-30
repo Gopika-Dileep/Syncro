@@ -5,7 +5,7 @@ import { ICreateSubTaskService } from '../../interfaces/services/subTask/ICreate
 import { CreateSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../models/notification.model';
 import { BadRequestError } from '../../errors/AppError';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
@@ -20,7 +20,7 @@ export class CreateSubTaskService implements ICreateSubTaskService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
-  ) {}
+  ) { }
 
   async execute(data: CreateSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const creator = await this._employeeRepository.findByUserId(userId);
