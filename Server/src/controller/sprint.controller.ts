@@ -9,6 +9,7 @@ import { IGetSprintByIdService } from '../interfaces/services/sprint/IGetSprintB
 import { IVelocityService } from '../interfaces/services/sprint/IVelocityService';
 import { GetSprintRequestDTO } from '../dto/sprint.dto';
 import { success, created } from '../utils/response.utils';
+import { SPRINT_MESSAGES } from '../constants/messages';
 
 @injectable()
 export class SprintController {
@@ -76,7 +77,7 @@ export class SprintController {
     try {
       const { sprintId } = req.params;
       const result = await this._velocityService.getVelocityAnalytics(sprintId as string);
-      success(res, result, 'Velocity analytics fetched successfully');
+      success(res, result, SPRINT_MESSAGES.VELOCITY_FETCH_SUCCESS);
     } catch (error) {
       next(error);
     }

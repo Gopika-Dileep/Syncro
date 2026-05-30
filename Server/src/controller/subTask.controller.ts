@@ -107,7 +107,7 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._autoAssignSubTaskService.execute(subTaskId as string, userId);
-      success(res, subTask, 'Auto-assigned successfully using AI');
+      success(res, subTask, SUBTASK_MESSAGES.AUTO_ASSIGN_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -118,7 +118,7 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._startSubTaskService.execute(subTaskId as string, userId);
-      success(res, subTask, 'Task started successfully');
+      success(res, subTask, SUBTASK_MESSAGES.START_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -129,7 +129,7 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._submitSubTaskService.execute(subTaskId as string, req.body, userId);
-      success(res, subTask, 'Task submitted for review');
+      success(res, subTask, SUBTASK_MESSAGES.SUBMIT_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -140,7 +140,7 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._reviewSubTaskService.execute(subTaskId as string, req.body, userId);
-      success(res, subTask, 'Review completed');
+      success(res, subTask, SUBTASK_MESSAGES.REVIEW_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -186,7 +186,7 @@ export class SubTaskController {
       const userId = req.userId!;
       const subTask = await this._addCommentToSubTaskService.execute(subTaskId as string, userId, text, attachments);
       const mapped = SubTaskMapper.toResponseDTO(subTask);
-      success(res, mapped, 'Comment added successfully');
+      success(res, mapped, SUBTASK_MESSAGES.COMMENT_ADD_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -199,7 +199,7 @@ export class SubTaskController {
       const userId = req.userId!;
       const subTask = await this._addAttachmentToSubTaskService.execute(subTaskId as string, userId, attachments);
       const mapped = SubTaskMapper.toResponseDTO(subTask);
-      success(res, mapped, 'Attachments added successfully');
+      success(res, mapped, SUBTASK_MESSAGES.ATTACHMENT_ADD_SUCCESS);
     } catch (error) {
       next(error);
     }

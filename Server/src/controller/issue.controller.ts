@@ -91,7 +91,7 @@ export class IssueController {
       const { issueId } = req.params;
       const data = { ...req.body, issue_id: issueId };
       const issue = await this._assignIssueService.execute(data, userId, permissions, userRole);
-      success(res, issue, 'Assignment updated successfully');
+      success(res, issue, ISSUE_MESSAGES.ASSIGN_UPDATE_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -114,7 +114,7 @@ export class IssueController {
       const userId = req.userId!;
       const issue = await this._addCommentToIssueService.execute(issueId as string, userId, text, attachments);
       const mapped = IssueMapper.toResponseDTO(issue);
-      success(res, mapped, 'Comment added successfully');
+      success(res, mapped, ISSUE_MESSAGES.COMMENT_ADD_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -127,7 +127,7 @@ export class IssueController {
       const userId = req.userId!;
       const issue = await this._addAttachmentToIssueService.execute(issueId as string, userId, attachments);
       const mapped = IssueMapper.toResponseDTO(issue);
-      success(res, mapped, 'Attachments added successfully');
+      success(res, mapped, ISSUE_MESSAGES.ATTACHMENT_ADD_SUCCESS);
     } catch (error) {
       next(error);
     }
@@ -138,7 +138,7 @@ export class IssueController {
       const { issueId } = req.params;
       const userId = req.userId!;
       const issue = await this._autoAssignIssueService.execute(issueId as string, userId);
-      success(res, issue, 'Issue auto-assigned successfully');
+      success(res, issue, ISSUE_MESSAGES.AUTO_ASSIGN_SUCCESS);
     } catch (error) {
       next(error);
     }
