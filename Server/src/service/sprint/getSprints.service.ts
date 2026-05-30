@@ -25,7 +25,13 @@ export class GetSprintsService implements IGetSprintsService {
 
     if (!companyId) throw new NotFoundError(PROJECT_MESSAGES.COMPANY_CONTEXT_NOT_FOUND);
 
-    const { sprints, total } = await this._sprintRepository.getSprintsWithPagination(companyId, page, limit, search, status);
+    const { sprints, total } = await this._sprintRepository.getSprintsWithPagination({
+      companyId,
+      page,
+      limit,
+      search,
+      status,
+    });
 
     const sprintIds = sprints.map((s) => s._id.toString());
     const issues = await this._issueRepo.findAllBySprintIds(sprintIds);

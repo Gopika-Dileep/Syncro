@@ -94,3 +94,11 @@ export interface ProjectInsightsDTO {
   bugs: IssueResponseDTO[];
   tasks: SubTaskResponseDTO[];
 }
+
+export interface GetProjectsRepositoryDTO {
+  companyId: string;
+  page: number;
+  limit: number;
+  search: string;
+  status?: string;
+}

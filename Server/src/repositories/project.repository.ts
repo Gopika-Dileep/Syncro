@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { IProjectRepository } from '../interfaces/repositories/IProjectRepository';
 import { IProject, projectModel } from '../models/project.model';
 import { BaseRepository } from './base.repository';
+import { GetProjectsRepositoryDTO } from '../dto/project.dto';
 
 @injectable()
 export class ProjectRepository extends BaseRepository<IProject> implements IProjectRepository {
@@ -24,7 +25,8 @@ export class ProjectRepository extends BaseRepository<IProject> implements IProj
       .exec();
   }
 
-  async getProjectsWithPagination(companyId: string, page: number, limit: number, search: string, status?: string): Promise<{ projects: IProject[]; total: number }> {
+  async getProjectsWithPagination(query: GetProjectsRepositoryDTO): Promise<{ projects: IProject[]; total: number }> {
+    const { companyId, page, limit, search, status } = query;
     const filter: Record<string, unknown> = { company_id: companyId };
 
     if (search) {
