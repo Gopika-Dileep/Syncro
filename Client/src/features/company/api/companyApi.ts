@@ -35,7 +35,7 @@ export interface EmployeePermissions {
         complete: boolean;
     };
     issue: {
-        story: { create: boolean; view: boolean; update: boolean; delete: boolean; assign_to_sprint: boolean; comment: boolean; status_work: boolean; status_review: boolean; block: boolean };
+        story: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; comment: boolean; status_work: boolean; status_review: boolean; block: boolean };
         task: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean; block: boolean };
         bug: { create: boolean; view: boolean; update: boolean; delete: boolean; assign: boolean; assign_to_sprint: boolean; status_work: boolean; status_review: boolean; block: boolean };
     };

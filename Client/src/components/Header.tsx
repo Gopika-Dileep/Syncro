@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "@/store/slices/authSlice";
 import { logoutApi } from "@/features/auth/api/authapi";
 import type { RootState } from "@/store/store";
+import { useState, useEffect } from "react";
+import { getNotificationsApi } from "@/features/employee/api/notificationApi";
 
 // Map route segments to readable page titles
 const pageTitles: Record<string, string> = {
@@ -16,7 +18,7 @@ const pageTitles: Record<string, string> = {
     teams:     "Teams",
     settings:  "Settings",
     profile:   "Profile",
-    notification: "Notifications",
+    notifications: "Notifications",
 };
 
 interface HeaderProps {
@@ -28,10 +30,28 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
     const navigate   = useNavigate();
     const location   = useLocation();
     const user       = useSelector((state: RootState) => state.auth.user);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     // Derive page title from URL
     const segment    = location.pathname.split("/").filter(Boolean).pop() ?? "";
     const pageTitle  = pageTitles[segment] ?? "Syncro";
+
+    useEffect(() => {
+        const fetchCount = async () => {
+            try {
+                const res = await getNotificationsApi(1, 1);
+                setUnreadCount(res.data.unreadCount);
+            } catch (err) {
+                console.error("Failed to fetch notification count", err);
+            }
+        };
+
+        fetchCount();
+
+        const handleUpdate = () => fetchCount();
+        window.addEventListener('notification_update', handleUpdate);
+        return () => window.removeEventListener('notification_update', handleUpdate);
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -65,9 +85,16 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
             <div className="flex items-center gap-2">
 
                 {/* Bell */}
-                <button className="relative w-9 h-9 flex items-center justify-center rounded-xl text-[#888] hover:bg-[#f7f7f7] hover:text-[#1f2124] transition-colors">
+                <button 
+                    onClick={() => navigate(user?.role === 'company' ? '/company/notifications' : '/employee/notifications')}
+                    className="relative w-9 h-9 flex items-center justify-center rounded-xl text-[#888] hover:bg-[#f7f7f7] hover:text-[#1f2124] transition-colors"
+                >
                     <Bell size={17} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#fa8029] rounded-full border-2 border-white" />
+                    {unreadCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] px-1 bg-[#fa8029] text-white text-[8px] font-black rounded-full border-2 border-white flex items-center justify-center">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
                 </button>
 
                 {/* Divider */}

@@ -9,6 +9,7 @@ import { IDeleteIssueService } from '../interfaces/services/issue/IDeleteIssueSe
 import { IAssignIssueService } from '../interfaces/services/issue/IAssignIssueService';
 import { IAddCommentToIssueService } from '../interfaces/services/issue/IAddCommentToIssueService';
 import { IAddAttachmentToIssueService } from '../interfaces/services/issue/IAddAttachmentToIssueService';
+import { IAutoAssignIssueService } from '../interfaces/services/issue/IAutoAssignIssueService';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';
@@ -27,6 +28,7 @@ export class IssueController {
     @inject(TYPES.IAssignIssueService) private _assignIssueService: IAssignIssueService,
     @inject(TYPES.IAddCommentToIssueService) private _addCommentToIssueService: IAddCommentToIssueService,
     @inject(TYPES.IAddAttachmentToIssueService) private _addAttachmentToIssueService: IAddAttachmentToIssueService,
+    @inject(TYPES.IAutoAssignIssueService) private _autoAssignIssueService: IAutoAssignIssueService,
   ) {}
 
   createIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -127,6 +129,17 @@ export class IssueController {
       const issue = await this._addAttachmentToIssueService.execute(issueId as string, userId, attachments);
       const mapped = IssueMapper.toResponseDTO(issue);
       success(res, mapped, 'Attachments added successfully');
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  autoAssignIssue = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { issueId } = req.params;
+      const userId = req.userId!;
+      const issue = await this._autoAssignIssueService.execute(issueId as string, userId);
+      success(res, issue, 'Issue auto-assigned successfully');
     } catch (error) {
       handleAsyncError(error, next);
     }

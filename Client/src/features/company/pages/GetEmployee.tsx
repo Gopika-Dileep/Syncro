@@ -248,6 +248,7 @@ function getStoryPermissions(p: EmployeePermissions['issue']['story'] | undefine
     if (p.view) res.push("View");
     if (p.update) res.push("Update");
     if (p.delete) res.push("Delete");
+    if (p.assign) res.push("Assign Employee");
     if (p.assign_to_sprint) res.push("Assign to Sprint");
     if (p.comment) res.push("Comment");
     if (p.status_work) res.push("Status (Work)");

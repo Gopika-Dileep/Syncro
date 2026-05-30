@@ -5,12 +5,15 @@ import { IAssignSubTaskService } from '../../interfaces/services/subTask/IAssign
 import { AssignSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { INotificationService } from '../../interfaces/services/INotificationService';
+import { NotificationType } from '../../models/notification.model';
 
 @injectable()
 export class AssignSubTaskService implements IAssignSubTaskService {
   constructor(
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
   ) {}
 
   async execute(subTaskId: string, data: AssignSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
@@ -41,6 +44,21 @@ export class AssignSubTaskService implements IAssignSubTaskService {
     } as unknown as Partial<import('../../models/subTask.model').ISubTask>);
 
     if (!subTask) throw new Error('Sub-task not found');
+
+    // Send Notification to Assignee
+    if (data.assignee_id && String(data.assignee_id) !== String(oldSubTask.assignee_id)) {
+      await this._notificationService.createNotification({
+        recipientId: data.assignee_id,
+        senderId: assigner._id.toString(),
+        type: NotificationType.SUBTASK_ASSIGNED,
+        title: 'New Sub-task Assigned',
+        message: `You have been assigned a new sub-task: ${subTask.title}`,
+        link: `/employee/tasks?selectedTask=${subTask._id.toString()}`,
+        relatedEntityId: subTask._id.toString(),
+        relatedEntityType: 'SubTask',
+      });
+    }
+
     return SubTaskMapper.toResponseDTO(subTask);
   }
 }

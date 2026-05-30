@@ -9,7 +9,7 @@ export interface Sprint {
     sprint_number: number;
     goal: string;
     total_points: number;
-    committed_points?: number; 
+    committed_points?: number;
     completed_points?: number;
     item_count?: number;
     status: string;
@@ -32,10 +32,8 @@ export interface SprintFormData {
 }
 
 export const createSprintApi = async (data: SprintFormData): Promise<{ success: boolean; data: Sprint }> => {
-    // Explicitly construct URL to avoid malformed path errors
-    const url = `${ENDPOINTS.SPRINTS.BASE}`; 
+    const url = `${ENDPOINTS.SPRINTS.BASE}`;
     const response = await axiosInstance.post(url, data);
-    // Aligning backend property 'sprint' to frontend 'data'
     return {
         success: response.data.success,
         data: response.data.sprint || response.data.data

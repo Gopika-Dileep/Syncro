@@ -1,22 +1,36 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type FC } from "react";
 import { 
     AlertCircle, Zap, 
     CheckCircle2,
     Activity, Users,
-    LayoutGrid, Filter, MoreHorizontal
+    LayoutGrid, Filter, MoreHorizontal,
+    type LucideIcon
 } from "lucide-react";
 
 import { 
-    getEmployeeDashboardApi 
+    getEmployeeDashboardApi,
+    type EmployeeDashboardData,
+    type DashboardFilters,
+    type RecentItem
 } from "../api/dashboardApi";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { ChevronDown, X } from "lucide-react";
+import type { RootState } from "@/store/store";
 
 
 // --- MINIMALIST COMPONENTS ---
 
-const MetricCard = ({ title, value, icon: Icon, description, trend, isPrimary }: any) => (
+interface MetricCardProps {
+    title: string;
+    value: string | number;
+    icon: LucideIcon;
+    description?: string;
+    trend?: string;
+    isPrimary?: boolean;
+}
+
+const MetricCard: FC<MetricCardProps> = ({ title, value, icon: Icon, description, trend, isPrimary }) => (
     <div className={`p-5 rounded-xl border transition-all ${
         isPrimary 
         ? 'bg-[#1a1c1f] text-white border-transparent' 
@@ -45,25 +59,25 @@ const MetricCard = ({ title, value, icon: Icon, description, trend, isPrimary }:
 );
 
 export default function EmployeeDashboard() {
-    const employee = useSelector((state: any) => state.auth.user);
-    const [data, setData] = useState<any>(null);
+    const employee = useSelector((state: RootState) => state.auth.user);
+    const [data, setData] = useState<EmployeeDashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<DashboardFilters>({
         projectId: "",
         sprintId: "",
         teamId: ""
     });
     const [options, setOptions] = useState({
-        projects: [] as any[],
-        sprints: [] as any[],
-        teams: [] as any[]
+        projects: [] as { _id: string; name: string }[],
+        sprints: [] as { _id: string; name: string; sprint_number?: number }[],
+        teams: [] as { _id: string; name: string }[]
     });
 
     const fetchDashboard = async () => {
         try {
             // Clean filters: remove empty strings
-            const cleanFilters = Object.fromEntries(
+            const cleanFilters: DashboardFilters = Object.fromEntries(
                 Object.entries(filters).filter(([_, v]) => v !== "")
             );
             const res = await getEmployeeDashboardApi(cleanFilters);
@@ -89,7 +103,7 @@ export default function EmployeeDashboard() {
         }
     }, [data]);
 
-    const handleFilterChange = (key: string, value: string) => {
+    const handleFilterChange = (key: keyof DashboardFilters, value: string) => {
         setFilters(prev => ({ ...prev, [key]: value }));
     };
 
@@ -102,8 +116,8 @@ export default function EmployeeDashboard() {
 
     const completionRate = useMemo(() => {
         if (!data) return 0;
-        const total = data.teamMetrics ? data.teamMetrics.totalAssigned : data.myStats.totalAssigned;
-        const done = data.teamMetrics ? data.teamMetrics.completed : data.myStats.completed;
+        const total = data.teamMetrics ? (data.teamMetrics as any).totalAssigned : data.myStats.totalAssigned;
+        const done = data.teamMetrics ? (data.teamMetrics as any).completed : data.myStats.completed;
         return total > 0 ? Math.round((done / total) * 100) : 0;
     }, [data]);
 
@@ -139,7 +153,7 @@ export default function EmployeeDashboard() {
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <h1 className="text-xl font-black text-[#1a1c1f]">
-                            {isManager || isLead ? `Welcome, ${employee?.name.split(' ')[0]}` : "My Work"}
+                            {isManager || isLead ? `Welcome, ${employee?.name?.split(' ')[0]}` : "My Work"}
                         </h1>
                         <span className="px-2 py-0.5 bg-[#1a1c1f] text-white text-[8px] font-black uppercase tracking-widest rounded">
                             {isManager ? 'MANAGER' : isLead ? 'LEAD' : 'DEVELOPER'}
@@ -171,7 +185,7 @@ export default function EmployeeDashboard() {
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Project</label>
                             <div className="relative">
                                 <select 
-                                    value={filters.projectId}
+                                    value={filters.projectId || ""}
                                     onChange={(e) => handleFilterChange('projectId', e.target.value)}
                                     className="w-full bg-gray-50 border-none rounded-lg px-3 py-2 text-[12px] font-bold text-[#1a1c1f] appearance-none focus:ring-2 focus:ring-[#1a1c1f]/5"
                                 >
@@ -186,7 +200,7 @@ export default function EmployeeDashboard() {
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Sprint</label>
                             <div className="relative">
                                 <select 
-                                    value={filters.sprintId}
+                                    value={filters.sprintId || ""}
                                     onChange={(e) => handleFilterChange('sprintId', e.target.value)}
                                     className="w-full bg-gray-50 border-none rounded-lg px-3 py-2 text-[12px] font-bold text-[#1a1c1f] appearance-none focus:ring-2 focus:ring-[#1a1c1f]/5"
                                 >
@@ -229,19 +243,19 @@ export default function EmployeeDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <MetricCard 
                     title={isManager ? "Total Projects" : isLead ? "Team Members" : "Total Tasks"}
-                    value={isManager ? data.managerMetrics?.totalActiveProjects || 0 : isLead ? data.teamStats?.totalMembers || 0 : data.myStats.totalAssigned}
+                    value={isManager ? (data.managerMetrics as any)?.totalActiveProjects || 0 : isLead ? data.teamStats?.totalMembers || 0 : data.myStats.totalAssigned}
                     icon={isManager ? LayoutGrid : Users}
                     description="Active scope"
                 />
                 <MetricCard 
                     title={isManager ? "Sprints" : isLead ? "Pending Review" : "In Progress"}
-                    value={isManager ? `${data.managerMetrics?.completedSprints || 0}/${data.managerMetrics?.totalSprints || 0}` : isLead ? data.teamMetrics?.statusDistribution?.inReview || 0 : data.myStats.inProgress}
+                    value={isManager ? `${(data.managerMetrics as any)?.completedSprints || 0}/${(data.managerMetrics as any)?.totalSprints || 0}` : isLead ? (data.teamMetrics as any)?.statusDistribution?.inReview || 0 : data.myStats.inProgress}
                     icon={Activity}
                     description={isManager ? "Done / Total" : "Work flow"}
                 />
                 <MetricCard 
                     title={isManager ? "Total Teams" : isLead ? "Team Progress" : "Completed Tasks"}
-                    value={isManager ? data.managerMetrics?.totalTeams || 0 : isLead ? `${data.teamMetrics?.completed || 0}/${data.teamMetrics?.totalAssigned || 0}` : data.myStats.completed}
+                    value={isManager ? (data.managerMetrics as any)?.totalTeams || 0 : isLead ? `${(data.teamMetrics as any)?.completed || 0}/${(data.teamMetrics as any)?.totalAssigned || 0}` : data.myStats.completed}
                     icon={isManager ? Users : CheckCircle2}
                     description="Current status"
                 />
@@ -273,7 +287,7 @@ export default function EmployeeDashboard() {
                             {(isManager || isLead) ? (
                                 <div className="space-y-6">
                                     {isManager && data.managerMetrics?.projectStatus ? (
-                                        data.managerMetrics.projectStatus.map((project: any, idx: number) => (
+                                        data.managerMetrics.projectStatus.map((project, idx) => (
                                             <div key={idx} className="group">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <div className="flex items-center gap-3">
@@ -282,7 +296,7 @@ export default function EmployeeDashboard() {
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-bold text-gray-700">{project.name}</p>
-                                                            <p className="text-[9px] text-gray-400 font-medium">{project.completedItems} / {project.totalItems} Items</p>
+                                                            <p className="text-[9px] text-gray-400 font-medium">{(project as any).completedItems} / {(project as any).totalItems} Items</p>
                                                         </div>
                                                     </div>
                                                     <span className="text-[10px] font-black text-indigo-500">
@@ -298,7 +312,7 @@ export default function EmployeeDashboard() {
                                             </div>
                                         ))
                                     ) : (
-                                        data.teamMetrics?.workloadDistribution?.slice(0, 5).map((member: any, idx: number) => {
+                                        (data.teamMetrics as any)?.workloadDistribution?.slice(0, 5).map((member: any, idx: number) => {
                                             const isLeadership = member.designation?.toLowerCase().includes('manager') || member.designation?.toLowerCase().includes('lead');
                                             return (
                                                 <div key={idx} className="group">
@@ -334,7 +348,7 @@ export default function EmployeeDashboard() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {data.upcomingDeadlines?.slice(0, 6).map((task: any, idx: number) => (
+                                    {data.upcomingDeadlines?.slice(0, 6).map((task, idx) => (
                                         <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-gray-50 hover:border-gray-100 transition-colors">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-1.5 h-1.5 rounded-full ${task.priority === 'High' ? 'bg-[#fa8029]' : 'bg-gray-300'}`} />
@@ -369,14 +383,14 @@ export default function EmployeeDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
-                                                {(isManager ? data.managerMetrics.recentBlocked : data.teamMetrics.recentBlocked).map((issue: any) => (
+                                                {(isManager ? data.managerMetrics?.recentBlocked : data.teamMetrics?.recentBlocked)?.map((issue: RecentItem) => (
                                                     <tr key={issue._id} className="group hover:bg-gray-50/50 transition-colors">
                                                         <td className="py-3">
                                                             <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
-                                                                issue.type === 'bug' ? 'bg-rose-50 text-rose-500' :
-                                                                issue.type === 'sub-task' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-500'
+                                                                (issue as any).type === 'bug' ? 'bg-rose-50 text-rose-500' :
+                                                                (issue as any).type === 'sub-task' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-500'
                                                             }`}>
-                                                                {issue.type}
+                                                                {(issue as any).type || 'Item'}
                                                             </span>
                                                         </td>
                                                         <td className="py-3">
@@ -391,7 +405,7 @@ export default function EmployeeDashboard() {
                                                             </span>
                                                         </td>
                                                         <td className="py-3">
-                                                            <p className="text-[11px] text-gray-500 italic line-clamp-1">"{issue.blocked_reason}"</p>
+                                                            <p className="text-[11px] text-gray-500 italic line-clamp-1">"{(issue as any).blocked_reason || 'Unknown'}"</p>
                                                         </td>
                                                         <td className="py-3 text-right">
                                                             <p className="text-[10px] font-bold text-gray-400">
@@ -423,34 +437,34 @@ export default function EmployeeDashboard() {
                                 <>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Stories</span>
-                                        <span className="text-xs font-black text-[#1a1c1f]">{data.managerMetrics?.globalTypeStats?.stories || 0}</span>
+                                        <span className="text-xs font-black text-[#1a1c1f]">{(data.managerMetrics as any)?.globalTypeStats?.stories || 0}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Bugs</span>
-                                        <span className="text-xs font-black text-rose-500">{data.managerMetrics?.globalTypeStats?.bugs || 0}</span>
+                                        <span className="text-xs font-black text-rose-500">{(data.managerMetrics as any)?.globalTypeStats?.bugs || 0}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Tasks</span>
-                                        <span className="text-xs font-black text-[#1a1c1f]">{data.managerMetrics?.globalTypeStats?.tasks || 0}</span>
+                                        <span className="text-xs font-black text-[#1a1c1f]">{(data.managerMetrics as any)?.globalTypeStats?.tasks || 0}</span>
                                     </div>
                                     <div className="pt-4 mt-4 border-t border-gray-50 flex items-center justify-between font-black">
                                         <span className="text-[11px] uppercase tracking-widest text-gray-400">Total Work</span>
-                                        <span className="text-sm text-[#fa8029]">{data.teamMetrics?.totalAssigned || 0}</span>
+                                        <span className="text-sm text-[#fa8029]">{data.teamMetrics ? (data.teamMetrics as any).totalAssigned : data.myStats.totalAssigned}</span>
                                     </div>
                                 </>
                             ) : isLead ? (
                                 <>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Team Total</span>
-                                        <span className="text-xs font-black text-[#1a1c1f]">{data.teamMetrics?.totalAssigned || 0}</span>
+                                        <span className="text-xs font-black text-[#1a1c1f]">{(data.teamMetrics as any)?.totalAssigned || 0}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Working On</span>
-                                        <span className="text-xs font-black text-[#fa8029]">{data.teamMetrics?.inProgress || 0}</span>
+                                        <span className="text-xs font-black text-[#fa8029]">{(data.teamMetrics as any)?.inProgress || 0}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Finished</span>
-                                        <span className="text-xs font-black text-emerald-500">{data.teamMetrics?.completed || 0}</span>
+                                        <span className="text-xs font-black text-emerald-500">{(data.teamMetrics as any)?.completed || 0}</span>
                                     </div>
                                     <div className="pt-4 mt-4 border-t border-gray-50 flex items-center justify-between font-black">
                                         <span className="text-[11px] uppercase tracking-widest text-gray-400">Team Success</span>
@@ -480,32 +494,32 @@ export default function EmployeeDashboard() {
                     <div className="bg-[#1a1c1f] rounded-2xl p-6 text-white overflow-hidden relative">
                         <div className="relative z-10">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 opacity-60">
-                                {data.teamMetrics?.activeSprint ? "Active Sprint Deadline" : "Upcoming Deadlines"}
+                                {data.teamMetrics && (data.teamMetrics as any).activeSprint ? "Active Sprint Deadline" : "Upcoming Deadlines"}
                             </h3>
                             <div className="space-y-5">
-                                {data.teamMetrics?.activeSprint ? (
+                                {data.teamMetrics && (data.teamMetrics as any).activeSprint ? (
                                     <>
                                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                                             <span className="text-[11px] font-bold opacity-80 uppercase tracking-wider">End Date</span>
                                             <span className="text-[10px] font-black px-2 py-0.5 bg-[#fa8029] rounded uppercase shadow-lg shadow-orange-900/20">
-                                                {new Date(data.teamMetrics.activeSprint.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                {new Date((data.teamMetrics as any).activeSprint.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-[11px] font-bold opacity-60">Completed</span>
-                                            <span className="text-xs font-black text-emerald-400">{data.teamMetrics.activeSprint.completedTasks} Tasks</span>
+                                            <span className="text-xs font-black text-emerald-400">{(data.teamMetrics as any).activeSprint.completedTasks} Tasks</span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-[11px] font-bold opacity-60">Incomplete</span>
-                                            <span className="text-xs font-black text-rose-400">{data.teamMetrics.activeSprint.incompleteTasks} Tasks</span>
+                                            <span className="text-xs font-black text-rose-400">{(data.teamMetrics as any).activeSprint.incompleteTasks} Tasks</span>
                                         </div>
                                     </>
                                 ) : (
-                                    data.upcomingDeadlines?.slice(0, 3).map((task: any, idx: number) => (
+                                    data.upcomingDeadlines?.slice(0, 3).map((task, idx) => (
                                         <div key={idx} className="flex items-center justify-between">
                                             <span className="text-[11px] font-bold opacity-80 truncate max-w-[120px]">{task.title}</span>
                                             <span className="text-[9px] font-black px-2 py-0.5 bg-white/10 rounded uppercase">
-                                                {new Date(task.due_date || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                {new Date((task as any).due_date || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                             </span>
                                         </div>
                                     ))

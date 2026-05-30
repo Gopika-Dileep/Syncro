@@ -15,7 +15,7 @@ const navItems = [
     { label: "Employees", path: "/company/employees", icon: Users },
     { label: "Projects", path: "/company/projects", icon: FolderKanban },
     { label: "Teams", path: "/company/teams", icon: Users },
-    { label: "Notifications", path: "/company/notification", icon: Bell },
+    { label: "Notifications", path: "/company/notifications", icon: Bell },
     { label: "Settings", path: "/company/settings", icon: Settings },
 ];
 

@@ -114,6 +114,7 @@ export interface SubTaskResponseDTO {
   status: SubTaskStatus;
   priority: SubTaskPriority;
   assignee_id?: SubTaskPersonRef | string | null;
+  assign_to?: SubTaskPersonRef | null;
   estimated_hours: number;
   actual_hours: number;
   rework_reason?: string;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, Sparkles, ChevronDown, Check, Loader2 } from "lucide-react";
+import { X, Sparkles, ChevronDown, Check, Loader2, Bot } from "lucide-react";
 import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 import { toast } from "sonner";
 
@@ -7,15 +7,17 @@ interface AssignSubTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAssign: (memberId: string) => Promise<void>;
+    onAutoAssign?: () => Promise<void>;
     subTaskTitle: string;
     teamId?: string;
 }
 
-export default function AssignSubTaskModal({ isOpen, onClose, onAssign, subTaskTitle, teamId }: AssignSubTaskModalProps) {
+export default function AssignSubTaskModal({ isOpen, onClose, onAssign, onAutoAssign, subTaskTitle, teamId }: AssignSubTaskModalProps) {
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedMember, setSelectedMember] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAutoAssigning, setIsAutoAssigning] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const fetchMembers = useCallback(async () => {
@@ -63,6 +65,19 @@ export default function AssignSubTaskModal({ isOpen, onClose, onAssign, subTaskT
         }
     };
 
+    const handleAutoAssign = async () => {
+        if (!onAutoAssign) return;
+        setIsAutoAssigning(true);
+        try {
+            await onAutoAssign();
+            onClose();
+        } catch {
+            toast.error("Auto-assignment failed");
+        } finally {
+            setIsAutoAssigning(false);
+        }
+    };
+
     if (!isOpen) return null;
 
     const selectedMemberData = members.find(m => m._id === selectedMember);
@@ -83,51 +98,65 @@ export default function AssignSubTaskModal({ isOpen, onClose, onAssign, subTaskT
                         Select a team member to handle <span className="text-[#1f2124] font-bold">"{subTaskTitle}"</span>
                     </p>
 
-                    {/* Custom Dropdown */}
-                    <div className="relative mb-5">
-                        <button
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            disabled={loading}
-                            className={`w-full flex items-center justify-between px-4 py-3 bg-[#f9f9f9] border border-gray-100 rounded-2xl text-[13px] transition-all hover:bg-white hover:border-gray-200 group ${isDropdownOpen ? 'ring-2 ring-[#fa8029]/10 border-[#fa8029]/30 bg-white' : ''}`}
-                        >
-                            <span className={selectedMemberData ? 'text-[#1f2124] font-medium' : 'text-gray-400'}>
-                                {loading ? (
-                                    <span className="flex items-center gap-2 italic"><Loader2 size={12} className="animate-spin" /> Loading members...</span>
-                                ) : (
-                                    selectedMemberData?.name || "Select assignee"
-                                )}
-                            </span>
-                            <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
+                    {/* Custom Dropdown & AI Button */}
+                    <div className="relative mb-5 flex items-center gap-2">
+                        <div className="relative flex-1">
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                disabled={loading || isAutoAssigning}
+                                className={`w-full flex items-center justify-between px-4 py-3 bg-[#f9f9f9] border border-gray-100 rounded-2xl text-[13px] transition-all hover:bg-white hover:border-gray-200 group ${isDropdownOpen ? 'ring-2 ring-[#fa8029]/10 border-[#fa8029]/30 bg-white' : ''}`}
+                            >
+                                <span className={selectedMemberData ? 'text-[#1f2124] font-medium' : 'text-gray-400'}>
+                                    {loading ? (
+                                        <span className="flex items-center gap-2 italic"><Loader2 size={12} className="animate-spin" /> Loading members...</span>
+                                    ) : (
+                                        selectedMemberData?.name || "Select assignee"
+                                    )}
+                                </span>
+                                <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
 
-                        {isDropdownOpen && !loading && (
-                            <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-gray-100 rounded-2xl shadow-xl z-10 max-h-[200px] overflow-y-auto custom-scrollbar p-1.5 animate-in slide-in-from-top-2 duration-200">
-                                {members.length > 0 ? (
-                                    members.map(member => (
-                                        <button
-                                            key={member._id}
-                                            onClick={() => {
-                                                setSelectedMember(member._id);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[12px] transition-all ${selectedMember === member._id ? 'bg-orange-50 text-[#fa8029] font-bold' : 'text-[#555] hover:bg-gray-50'}`}
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-6 h-6 rounded-full bg-[#fa8029] text-white flex items-center justify-center text-[10px] font-black uppercase">
-                                                    {member.name[0]}
+                            {isDropdownOpen && !loading && (
+                                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-gray-100 rounded-2xl shadow-xl z-10 max-h-[200px] overflow-y-auto custom-scrollbar p-1.5 animate-in slide-in-from-top-2 duration-200">
+                                    {members.length > 0 ? (
+                                        members.map(member => (
+                                            <button
+                                                key={member._id}
+                                                onClick={() => {
+                                                    setSelectedMember(member._id);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[12px] transition-all ${selectedMember === member._id ? 'bg-orange-50 text-[#fa8029] font-bold' : 'text-[#555] hover:bg-gray-50'}`}
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-6 h-6 rounded-full bg-[#fa8029] text-white flex items-center justify-center text-[10px] font-black uppercase">
+                                                        {member.name[0]}
+                                                    </div>
+                                                    <div className="text-left">
+                                                        <p className="leading-none">{member.name}</p>
+                                                        <p className="text-[9px] text-gray-400 mt-0.5 font-medium">{member.designation || 'Team Member'}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-left">
-                                                    <p className="leading-none">{member.name}</p>
-                                                    <p className="text-[9px] text-gray-400 mt-0.5 font-medium">{member.designation || 'Team Member'}</p>
-                                                </div>
-                                            </div>
-                                            {selectedMember === member._id && <Check size={12} />}
-                                        </button>
-                                    ))
-                                ) : (
-                                    <p className="text-[11px] text-gray-400 py-3 text-center italic">No team members found</p>
-                                )}
-                            </div>
+                                                {selectedMember === member._id && <Check size={12} />}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <p className="text-[11px] text-gray-400 py-3 text-center italic">No team members found</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* AI Auto Assign Button */}
+                        {onAutoAssign && (
+                            <button
+                                onClick={handleAutoAssign}
+                                disabled={isAutoAssigning || loading}
+                                title="Auto-assign using AI"
+                                className="w-11 h-[46px] shrink-0 flex items-center justify-center bg-[#f9f9f9] border border-gray-100 rounded-2xl text-[#a855f7] hover:bg-white hover:border-[#a855f7]/30 hover:shadow-sm hover:shadow-purple-500/10 transition-all active:scale-[0.96] disabled:opacity-50"
+                            >
+                                {isAutoAssigning ? <Loader2 size={16} className="animate-spin" /> : <Bot size={18} />}
+                            </button>
                         )}
                     </div>
 

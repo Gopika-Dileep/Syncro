@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
     ArrowLeft, 
-    Bug, Target, Layout
+    Bug, Target, Layout, User
 } from "lucide-react";
 import { useCallback } from "react";
 import { getProjectInsightsApi, type ProjectInsights } from "../api/projectApi";
@@ -45,6 +45,15 @@ export default function ProjectDetails() {
 
     const { project } = insights;
 
+    const getItemsForType = (type: string) => {
+        switch(type) {
+            case 'story': return insights.stories;
+            case 'task': return insights.standaloneTasks;
+            case 'bug': return insights.bugs;
+            default: return [];
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#fdfdfd] pb-8">
             <div className="max-w-[1400px] mx-auto px-6 pt-4 space-y-4">
@@ -67,7 +76,8 @@ export default function ProjectDetails() {
                                 <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
                                     project.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                     project.status === 'On-Hold' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                    'bg-blue-50 text-blue-600 border-blue-100'
+                                    project.status === 'Completed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                    'bg-gray-50 text-gray-600 border-gray-100'
                                 }`}>
                                     {project.status}
                                 </span>
@@ -106,94 +116,116 @@ export default function ProjectDetails() {
                         { type: 'story', label: 'User Stories', icon: Target, color: 'text-blue-500', bg: 'bg-blue-50', accent: '#3b82f6' },
                         { type: 'task', label: 'Active Tasks', icon: Layout, color: 'text-emerald-500', bg: 'bg-emerald-50', accent: '#10b981' },
                         { type: 'bug', label: 'Bugs & Issues', icon: Bug, color: 'text-rose-500', bg: 'bg-rose-50', accent: '#f43f5e' }
-                    ].map((col) => (
-                        <div key={col.type} className="flex flex-col gap-3">
-                            <div className="flex items-center justify-between px-1 py-1">
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-1.5 h-4 rounded-full`} style={{ backgroundColor: col.accent }} />
-                                    <h2 className="text-[13px] font-black text-[#1f2124] uppercase tracking-wider">{col.label}</h2>
-                                    <span className="text-[10px] font-black text-[#ccc]">{insights.stories.filter(s => s.type === col.type).length}</span>
+                    ].map((col) => {
+                        const items = getItemsForType(col.type);
+                        return (
+                            <div key={col.type} className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between px-1 py-1">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-1.5 h-4 rounded-full`} style={{ backgroundColor: col.accent }} />
+                                        <h2 className="text-[13px] font-black text-[#1f2124] uppercase tracking-wider">{col.label}</h2>
+                                        <span className="text-[10px] font-black text-[#ccc]">{items.length}</span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="space-y-3">
-                                {insights.stories.filter(s => s.type === col.type).map((story) => (
-                                    <div key={story._id} className="bg-white border border-[#f0f0f0] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer border-t-2" style={{ borderTopColor: col.accent + '20' }}>
-                                        <div className="flex justify-between items-start mb-3">
-                                            <h4 className="text-[12px] font-black text-[#1f2124] group-hover:text-[#fa8029] transition-colors leading-tight">
-                                                {story.title}
-                                            </h4>
-                                            <div className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest ${
-                                                story.priority === 'High' ? 'bg-rose-50 text-rose-500' :
-                                                story.priority === 'Medium' ? 'bg-amber-50 text-amber-500' :
-                                                'bg-emerald-50 text-emerald-500'
-                                            }`}>
-                                                {story.priority}
+                                <div className="space-y-3">
+                                    {items.map((item) => (
+                                        <div key={item._id} className="bg-white border border-[#f0f0f0] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer border-t-2" style={{ borderTopColor: col.accent + '20' }}>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <h4 className="text-[12px] font-black text-[#1f2124] group-hover:text-[#fa8029] transition-colors leading-tight">
+                                                    {item.title}
+                                                </h4>
+                                                <div className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest ${
+                                                    item.priority === 'High' || item.priority === 'Critical' ? 'bg-rose-50 text-rose-500' :
+                                                    item.priority === 'Medium' ? 'bg-amber-50 text-amber-500' :
+                                                    'bg-emerald-50 text-emerald-500'
+                                                }`}>
+                                                    {item.priority}
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {/* Nested Tasks Feed - Only for User Stories */}
-                                        {story.type === 'story' && (
-                                            <div className="space-y-1.5 mb-3">
-                                                {insights.tasks.filter(t => t.user_story_id === story._id).length > 0 ? (
-                                                    <div className="space-y-1 pl-1">
-                                                        {insights.tasks
-                                                            .filter(t => t.user_story_id === story._id)
-                                                            .map(task => (
-                                                                <div key={task._id} className="flex items-center justify-between group/task">
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <div className="w-1 h-1 rounded-full bg-[#eee] group-hover/task:bg-[#fa8029] transition-colors" />
-                                                                        <span className="text-[10px] font-bold text-[#888] group-hover/task:text-[#555] line-clamp-1">{task.title}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-1.5 shrink-0">
-                                                                        <div className="flex flex-col items-end gap-0">
-                                                                            <div className="w-3.5 h-3.5 rounded-full bg-[#f8f8f8] flex items-center justify-center text-[6px] font-black text-[#aaa] overflow-hidden border border-white shadow-sm" title={task.assign_to?.name || 'Unassigned'}>
-                                                                                {task.assign_to?.avatar ? <img src={task.assign_to.avatar} className="w-full h-full object-cover" /> : task.assign_to?.name?.charAt(0) || '?'}
+                                            {/* Nested Tasks Feed - Only for User Stories */}
+                                            {item.type === 'story' && (
+                                                <div className="space-y-2 mb-4">
+                                                    {insights.tasks.filter(t => t.issue_id === item._id).length > 0 ? (
+                                                        <div className="flex flex-col gap-1.5">
+                                                            {insights.tasks
+                                                                .filter(t => t.issue_id === item._id)
+                                                                .map(task => (
+                                                                    <div key={task._id} className="bg-gray-50/50 rounded-lg p-2 flex items-center justify-between group/task hover:bg-[#fff5ef] transition-colors border border-transparent hover:border-[#fa8029]/10">
+                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029]/30 group-hover/task:bg-[#fa8029] transition-colors shrink-0" />
+                                                                            <span className="text-[10px] font-bold text-[#555] line-clamp-1">{task.title}</span>
+                                                                        </div>
+                                                                        
+                                                                        <div className="flex items-center gap-2 shrink-0 ml-4">
+                                                                            <div className="flex flex-col items-end">
+                                                                                <span className="text-[9px] font-black text-[#1f2124] tracking-tight leading-none">
+                                                                                    {task.assign_to?.name || 'Unassigned'}
+                                                                                </span>
+                                                                                {task.assign_to?.team_name && (
+                                                                                    <span className="text-[7px] font-black text-[#fa8029] uppercase tracking-widest leading-none mt-1 opacity-70">
+                                                                                        {task.assign_to.team_name}
+                                                                                    </span>
+                                                                                )}
                                                                             </div>
-                                                                            {task.assign_to?.team_name && (
-                                                                                <span className="text-[6px] font-black text-[#fa8029]/50 uppercase tracking-tighter leading-none mt-0.5">{task.assign_to.team_name}</span>
-                                                                            )}
+                                                                            <div className="w-6 h-6 rounded-lg bg-white border border-[#eee] flex items-center justify-center text-[8px] font-black text-[#fa8029] shadow-sm">
+                                                                                {task.assign_to?.avatar ? 
+                                                                                    <img src={task.assign_to.avatar} className="w-full h-full object-cover rounded-lg" /> : 
+                                                                                    (task.assign_to?.name?.charAt(0) || <User size={10} />)
+                                                                                }
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            ))
-                                                        }
+                                                                ))
+                                                            }
+                                                        </div>
+                                                    ) : (
+                                                        <div className="py-4 border-2 border-dashed border-gray-50 rounded-xl flex items-center justify-center">
+                                                            <p className="text-[9px] text-[#ccc] font-black uppercase tracking-widest">No Sub-Tasks</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center justify-between pt-2 border-t border-[#fcfcfc]">
+                                                {/* Only show assignee for Tasks and Bugs, NOT for User Stories */}
+                                                {item.type !== 'story' ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-5 h-5 rounded-lg bg-[#f8f8f8] flex items-center justify-center text-[9px] font-black text-[#fa8029] border border-[#eee]">
+                                                            {item.assign_to?.avatar ? 
+                                                                <img src={item.assign_to.avatar} className="w-full h-full object-cover rounded-lg" /> : 
+                                                                (item.assign_to?.name?.charAt(0) || <User size={12} />)
+                                                            }
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] font-black text-[#1f2124] leading-none">{item.assign_to?.name || 'Unassigned'}</span>
+                                                            {item.team?.name && (
+                                                                <span className="text-[7px] font-black text-[#fa8029]/70 uppercase tracking-widest mt-0.5">{item.team.name}</span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-[9px] text-[#ddd] font-medium italic pl-1">No sub-tasks yet</p>
+                                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-[#ccc] uppercase tracking-widest">
+                                                        <Target size={10} /> Story Path
+                                                    </div>
                                                 )}
-                                            </div>
-                                        )}
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-[#fcfcfc]">
-                                            <div className="flex flex-col gap-0.5">
-                                                {story.type !== 'story' && (
-                                                    <>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="w-4 h-4 rounded-lg bg-[#f8f8f8] flex items-center justify-center text-[7px] font-black text-[#aaa]">
-                                                                {story.assign_to?.name?.charAt(0) || '?'}
-                                                            </div>
-                                                            <span className="text-[9px] font-bold text-[#555]">{story.assign_to?.name || 'Unassigned'}</span>
-                                                        </div>
-                                                        {story.team && (
-                                                            <span className="text-[8px] font-black text-[#fa8029]/60 uppercase tracking-widest pl-5">{story.team.name} Team</span>
-                                                        )}
-                                                    </>
-                                                )}
+                                                <span className={`text-[8px] font-black uppercase tracking-widest ${
+                                                    item.status === 'Done' ? 'text-emerald-500' :
+                                                    item.status === 'In Progress' ? 'text-blue-500' :
+                                                    item.status === 'Blocked' ? 'text-rose-500' :
+                                                    'text-[#ccc]'
+                                                }`}>
+                                                    {item.status}
+                                                </span>
                                             </div>
-                                            <span className={`text-[8px] font-black uppercase tracking-widest ${
-                                                story.status === 'DONE' ? 'text-emerald-500' :
-                                                story.status === 'IN_PROGRESS' ? 'text-blue-500' :
-                                                'text-[#ccc]'
-                                            }`}>
-                                                {story.status}
-                                            </span>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

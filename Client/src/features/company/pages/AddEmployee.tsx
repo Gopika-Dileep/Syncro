@@ -20,7 +20,7 @@ import { employeeSchema, getZodErrors, type EmployeeformInput } from "@/lib/sche
 const initialPermissions: EmployeePermissions = {
     project: { create: false, view: { all: false, assigned: false }, update: false, delete: false },
     issue: {
-        story: { create: false, view: false, update: false, delete: false, assign_to_sprint: false, comment: false, status_work: false, status_review: false, block: false },
+        story: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, comment: false, status_work: false, status_review: false, block: false },
         task: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
         bug: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
     },
@@ -324,6 +324,7 @@ export default function AddEmployee() {
                                 { label: "View", checked: permissions.issue.story.view, onClick: () => handlePermissionToggle('issue', 'story', 'view') },
                                 { label: "Update", checked: permissions.issue.story.update, onClick: () => handlePermissionToggle('issue', 'story', 'update') },
                                 { label: "Delete", checked: permissions.issue.story.delete, onClick: () => handlePermissionToggle('issue', 'story', 'delete') },
+                                { label: "Assign Employee", checked: permissions.issue.story.assign, onClick: () => handlePermissionToggle('issue', 'story', 'assign') },
                                 { label: "Assign to Sprint", checked: permissions.issue.story.assign_to_sprint, onClick: () => handlePermissionToggle('issue', 'story', 'assign_to_sprint') },
                                 { label: "Comment", checked: permissions.issue.story.comment, onClick: () => handlePermissionToggle('issue', 'story', 'comment') },
                                 { label: "Status: Work", checked: permissions.issue.story.status_work, onClick: () => handlePermissionToggle('issue', 'story', 'status_work') },

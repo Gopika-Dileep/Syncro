@@ -40,6 +40,7 @@ export class PermissionMapper {
       if (p.issue.story.view) keys.push('issue:story:view');
       if (p.issue.story.update) keys.push('issue:story:update');
       if (p.issue.story.delete) keys.push('issue:story:delete');
+      if (p.issue.story.assign) keys.push('issue:story:assign');
       if (p.issue.story.assign_to_sprint) keys.push('issue:story:assign_to_sprint');
       if (p.issue.story.comment) keys.push('issue:story:comment');
       if (p.issue.story.status_work) keys.push('issue:story:status:work');
@@ -81,7 +82,7 @@ export class PermissionMapper {
       task: { create: false, view: { assigned: false, team: false, all: false }, assign: false, update: false, delete: false, status_work: false, status_review: false, block: false },
       sprint: { create: false, view: { all: false }, update: false, delete: false, addStory: false, start: false, complete: false },
       issue: {
-        story: { create: false, view: false, update: false, delete: false, assign_to_sprint: false, comment: false, status_work: false, status_review: false, block: false },
+        story: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, comment: false, status_work: false, status_review: false, block: false },
         task: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
         bug: { create: false, view: false, update: false, delete: false, assign: false, assign_to_sprint: false, status_work: false, status_review: false, block: false },
       },
@@ -142,8 +143,7 @@ export class PermissionMapper {
         if (action === 'delete') p.issue[sub].delete = true;
         if (action === 'block') p.issue[sub].block = true;
         if (action === 'assign') {
-          if (sub === 'story') p.issue[sub].assign_to_sprint = true;
-          else p.issue[sub].assign = true;
+          p.issue[sub].assign = true;
         }
         if (action === 'assign_to_sprint') p.issue[sub].assign_to_sprint = true;
         if (action === 'comment' && sub === 'story') p.issue[sub].comment = true;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { 
     Users, Briefcase, Layout, PieChart, BarChart3,
-    Activity, Zap, Calendar, AlertCircle
+    Activity, Zap, Calendar
 } from "lucide-react";
 import { 
     getCompanyDashboardApi, 
@@ -125,7 +125,7 @@ export default function CompanyDashboard() {
                         </h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                        <div className="h-[240px] relative">
+                        <div className="h-[240px] relative min-w-0">
                             <ResponsiveContainer width="100%" height="100%">
                                 <RePieChart>
                                     <Pie
@@ -167,7 +167,7 @@ export default function CompanyDashboard() {
                     <h2 className="text-sm font-black text-[#1a1c1f] uppercase tracking-widest flex items-center gap-2 mb-6">
                         <BarChart3 size={16} className="text-[#fa8029]" /> Categories
                     </h2>
-                    <div className="flex-1 h-[200px]">
+                    <div className="flex-1 h-[200px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={barData} layout="vertical">
                                 <XAxis type="number" hide />

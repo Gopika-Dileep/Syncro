@@ -15,6 +15,7 @@ import { ISubmitSubTaskService } from '../interfaces/services/subTask/ISubmitSub
 import { IReviewSubTaskService } from '../interfaces/services/subTask/IReviewSubTaskService';
 import { IAddCommentToSubTaskService } from '../interfaces/services/subTask/IAddCommentToSubTaskService';
 import { IAddAttachmentToSubTaskService } from '../interfaces/services/subTask/IAddAttachmentToSubTaskService';
+import { IAutoAssignSubTaskService } from '../interfaces/services/subTask/IAutoAssignSubTaskService';
 import { TYPES } from '../di/types';
 import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';
@@ -37,6 +38,7 @@ export class SubTaskController {
     @inject(TYPES.IReviewSubTaskService) private _reviewSubTaskService: IReviewSubTaskService,
     @inject(TYPES.IAddCommentToSubTaskService) private _addCommentToSubTaskService: IAddCommentToSubTaskService,
     @inject(TYPES.IAddAttachmentToSubTaskService) private _addAttachmentToSubTaskService: IAddAttachmentToSubTaskService,
+    @inject(TYPES.IAutoAssignSubTaskService) private _autoAssignSubTaskService: IAutoAssignSubTaskService,
   ) {}
 
   createSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -96,6 +98,17 @@ export class SubTaskController {
       const userId = req.userId!;
       const subTask = await this._assignSubTaskService.execute(subTaskId as string, req.body, userId);
       success(res, subTask, SUBTASK_MESSAGES.ASSIGN_SUCCESS);
+    } catch (error) {
+      handleAsyncError(error, next);
+    }
+  };
+
+  autoAssignSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { subTaskId } = req.params;
+      const userId = req.userId!;
+      const subTask = await this._autoAssignSubTaskService.execute(subTaskId as string, userId);
+      success(res, subTask, 'Auto-assigned successfully using AI');
     } catch (error) {
       handleAsyncError(error, next);
     }

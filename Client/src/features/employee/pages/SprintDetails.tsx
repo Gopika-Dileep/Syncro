@@ -6,14 +6,15 @@ import {
     Layout, Users,
     Pencil, Trash2, UserPlus, Eye,
     Bug, BookOpen, CheckSquare, X, Activity,
-    ListTodo, Package, Flag, CheckCircle2, MessageSquare, ArrowRight, Play
+    ListTodo, Package, Flag, CheckCircle2, MessageSquare, Play
 } from "lucide-react";
 import { getSprintByIdApi, updateSprintApi, getSprintsApi, type Sprint, type SprintFormData } from "../api/sprintApi";
 import {
     getSubTasksByIssueApi, type SubTask,
-    createSubTaskApi, updateSubTaskApi, deleteSubTaskApi, assignSubTaskApi
+    createSubTaskApi, updateSubTaskApi, deleteSubTaskApi, assignSubTaskApi,
+    autoAssignSubTaskApi
 } from "../api/subTaskApi";
-import { getIssuesByProjectApi, type Issue, updateIssueApi } from "../api/issueApi";
+import { getIssuesByProjectApi, type Issue, updateIssueApi, autoAssignIssueApi } from "../api/issueApi";
 import { getProjectsApi, type Project } from "../api/projectApi";
 import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 import { usePermission } from "@/features/employee/hooks/usePermission";
@@ -28,9 +29,11 @@ import {
 } from 'recharts';
 import SubTaskModal, { type SubTaskFormData } from "../components/SubTaskModal";
 import ItemDetailsDrawer from "../components/ItemDetailsDrawer";
+import MemberSelectModal from "@/features/shared/components/MemberSelectModal";
 import CompleteSprintModal from "../components/CompleteSprintModal";
 import ConfirmModal from "@/features/shared/components/ConfirmModal";
 import MentionText from "@/features/shared/components/MentionText";
+import IssueModal, { type IssueFormData as IssueModalFormData } from "../components/IssueModal";
 
 const TypeIcon = ({ type, size = 16 }: { type: string; size?: number }) => {
     switch (type.toLowerCase()) {
@@ -73,6 +76,8 @@ export default function SprintDetails() {
     const [subTaskToAssign, setSubTaskToAssign] = useState<{ issueId: string, subTask: SubTask } | null>(null);
     const [itemToView, setItemToView] = useState<{ item: Issue | SubTask, type: 'issue' | 'subtask' } | null>(null);
     const [isDetailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+    const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
+    const [isSubmittingIssue, setIsSubmittingIssue] = useState(false);
 
     // Completion state
     const [isCompleteModalOpen, setCompleteModalOpen] = useState(false);
@@ -290,6 +295,20 @@ export default function SprintDetails() {
         }
     };
 
+    const handleAutoAssignSubmit = async () => {
+        if (!editingSubTask || !activeIssueId) return;
+        try {
+            const response = await autoAssignSubTaskApi(editingSubTask._id);
+            if (response.success) {
+                toast.success("AI Auto-assigned successfully");
+                fetchSubTasks(activeIssueId);
+                setSubTaskModalOpen(false);
+            }
+        } catch {
+            toast.error("Auto-assignment failed");
+        }
+    };
+
     const handleDeleteSubTask = async (e: React.MouseEvent, issueId: string, subTaskId: string) => {
         e.stopPropagation();
         setSubTaskToDelete({ issueId, subTaskId });
@@ -335,6 +354,62 @@ export default function SprintDetails() {
             }
         } catch {
             toast.error("Failed to assign sub-task");
+        }
+    };
+
+    const handleAutoAssignIssue = async () => {
+        if (!issueToAssign) return;
+        try {
+            const response = await autoAssignIssueApi(issueToAssign._id);
+            if (response.success) {
+                toast.success("Employee auto-assigned successfully via AI");
+                fetchSprintDetails();
+                setIssueToAssign(null);
+            }
+        } catch {
+            toast.error("AI Auto-assignment failed");
+        }
+    };
+
+    const handleAutoAssignSubTask = async () => {
+        if (!subTaskToAssign) return;
+        try {
+            const response = await autoAssignSubTaskApi(subTaskToAssign.subTask._id);
+            if (response.success) {
+                toast.success("Sub-task auto-assigned successfully via AI");
+                fetchSubTasks(subTaskToAssign.issueId);
+                setSubTaskToAssign(null);
+            }
+        } catch {
+            toast.error("AI Auto-assignment failed");
+        }
+    };
+
+    const handleUpdateIssue = async (data: IssueModalFormData) => {
+        if (!editingIssue) return;
+        setIsSubmittingIssue(true);
+        try {
+            const response = await updateIssueApi(editingIssue._id, {
+                title: data.title,
+                description: data.description,
+                priority: data.priority,
+                story_points: data.story_points,
+                estimated_hours: data.estimated_hours,
+                criteria: data.criteria,
+                reproduction_steps: data.reproduction_steps,
+                environment: data.environment,
+                mentions: data.mentions,
+            });
+            if (response.success) {
+                toast.success(`${editingIssue.type.charAt(0).toUpperCase() + editingIssue.type.slice(1)} updated successfully`);
+                setEditingIssue(null);
+                fetchSprintDetails();
+            }
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Failed to update issue");
+        } finally {
+            setIsSubmittingIssue(false);
         }
     };
 
@@ -801,7 +876,7 @@ export default function SprintDetails() {
                                                                     {issue.type} • {issue.priority} • {issue.estimated_hours || 0} hrs
                                                                 </p>
                                                             )}
-                                                            {(issue.type === 'bug' || issue.type === 'task') && issue.assignee_id && (
+                                                            {(['bug', 'task', 'story'].includes(issue.type?.toLowerCase() || '')) && issue.assignee_id && (
                                                                 <>
                                                                     <span className="w-1 h-1 rounded-full bg-[#eee]" />
                                                                     <p className="text-[11px] font-bold text-orange-500/70">
@@ -822,12 +897,12 @@ export default function SprintDetails() {
                                                         {issue.assignee_id ? (
                                                             <button
                                                                 onClick={(e) => {
-                                                                    if (can(`issue:${issue.type}:assign` as Parameters<typeof can>[0]) && sprint?.status?.toLowerCase() !== 'completed') {
+                                                                    if (can(`issue:${issue.type.toLowerCase()}:assign` as Parameters<typeof can>[0]) && sprint?.status?.toLowerCase() !== 'completed') {
                                                                         e.stopPropagation();
                                                                         setIssueToAssign(issue);
                                                                     }
                                                                 }}
-                                                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && sprint?.status?.toLowerCase() !== 'completed' ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
+                                                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can(`issue:${issue.type.toLowerCase()}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && sprint?.status?.toLowerCase() !== 'completed' ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
                                                                 title={issue.assignee_id.name}
                                                             >
                                                                 {(() => {
@@ -840,7 +915,7 @@ export default function SprintDetails() {
                                                                         : name.substring(0, 2).toUpperCase();
                                                                 })()}
                                                             </button>
-                                                        ) : can(`issue:${issue.type}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && sprint?.status?.toLowerCase() !== 'completed' && (
+                                                        ) : can(`issue:${issue.type.toLowerCase()}:assign` as "issue:story:assign" | "issue:bug:assign" | "issue:task:assign") && sprint?.status?.toLowerCase() !== 'completed' && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); setIssueToAssign(issue); }}
                                                                 className="w-8 h-8 rounded-full bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-[#fa8029] hover:text-[#fa8029] transition-all shadow-sm"
@@ -861,6 +936,19 @@ export default function SprintDetails() {
                                                     >
                                                         <MessageSquare size={18} />
                                                     </button>
+
+                                                    {can(`issue:${issue.type.toLowerCase()}:update` as Parameters<typeof can>[0]) && sprint?.status?.toLowerCase() !== 'completed' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setEditingIssue(issue);
+                                                            }}
+                                                            className="p-2 text-[#aaa] hover:text-amber-500 hover:bg-amber-50 rounded-xl transition-all"
+                                                            title={`Edit ${issue.type.charAt(0).toUpperCase() + issue.type.slice(1)}`}
+                                                        >
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                    )}
                                                     <div className="flex items-center gap-2 ml-4">
                                                         <div className="flex flex-col items-end gap-1">
                                                             <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${
@@ -1092,12 +1180,13 @@ export default function SprintDetails() {
                 isSubmitting={isSubmittingSubTask}
                 members={members}
                 isEditing={!!editingSubTask}
+                onAutoAssign={editingSubTask ? handleAutoAssignSubmit : undefined}
                 initialData={editingSubTask ? {
                     title: editingSubTask.title,
                     description: editingSubTask.description || "",
                     priority: editingSubTask.priority,
                     estimated_hours: editingSubTask.estimated_hours,
-                    assignee_id: editingSubTask.assignee_id?._id || "",
+                    assignee_id: typeof editingSubTask.assignee_id === 'object' ? editingSubTask.assignee_id?._id : editingSubTask.assignee_id || "",
                     status: editingSubTask.status,
                 } : undefined}
             />
@@ -1117,6 +1206,7 @@ export default function SprintDetails() {
                 onSelect={handleAssignEmployee}
                 members={members}
                 title={`Assign to ${issueToAssign?.type === 'bug' ? 'Bug' : 'Issue'}`}
+                onAutoAssign={handleAutoAssignIssue}
             />
 
             <MemberSelectModal
@@ -1125,8 +1215,46 @@ export default function SprintDetails() {
                 onSelect={handleAssignSubTaskEmployee}
                 members={members}
                 title="Assign Sub-Task"
+                onAutoAssign={handleAutoAssignSubTask}
             />
 
+            <IssueModal
+                isOpen={!!editingIssue}
+                onClose={() => setEditingIssue(null)}
+                onSubmit={handleUpdateIssue}
+                initialData={editingIssue ? {
+                    title: editingIssue.title,
+                    type: editingIssue.type,
+                    priority: editingIssue.priority,
+                    story_points: editingIssue.story_points || 0,
+                    estimated_hours: editingIssue.estimated_hours || 0,
+                    criteria: editingIssue.criteria || [],
+                    description: editingIssue.description || '',
+                    reproduction_steps: editingIssue.reproduction_steps || '',
+                    environment: editingIssue.environment || '',
+                    status: editingIssue.status,
+                    mentions: (editingIssue.mentions || []).map(m => typeof m === 'string' ? m : (m as { _id: string })._id),
+                    assignee_id: typeof editingIssue.assignee_id === 'object' ? editingIssue.assignee_id?._id : editingIssue.assignee_id || '',
+                } : undefined}
+                isEditing={true}
+                isSubmitting={isSubmittingIssue}
+                members={members}
+                onAutoAssign={editingIssue ? async () => {
+                    try {
+                        const response = await autoAssignIssueApi(editingIssue._id);
+                        if (response.success) {
+                            toast.success('Employee auto-assigned successfully via AI');
+                            fetchSprintDetails();
+                            const assignee = response.data.assignee_id;
+                            if (assignee && typeof assignee === 'object') return (assignee as { _id: string })._id;
+                            if (typeof assignee === 'string') return assignee;
+                        }
+                    } catch {
+                        toast.error('AI Auto-assignment failed');
+                    }
+                    return undefined;
+                } : undefined}
+            />
 
             <ItemDetailsDrawer
                 isOpen={isDetailsDrawerOpen}
@@ -1183,59 +1311,6 @@ export default function SprintDetails() {
     );
 }
 
-// Simple Member Select Modal Component
-function MemberSelectModal({ isOpen, onClose, onSelect, members, title }: {
-    isOpen: boolean;
-    onClose: () => void;
-    onSelect: (id: string) => void;
-    members: TeamMember[];
-    title: string;
-}) {
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative z-[2010] animate-in fade-in zoom-in duration-200 overflow-hidden">
-                <div className="p-5 border-b border-[#f0f0f0] flex items-center justify-between">
-                    <h3 className="text-[15px] font-bold text-[#1f2124]">{title}</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-[#aaa] hover:bg-[#f5f5f5] transition-colors">
-                        <X size={18} />
-                    </button>
-                </div>
-                <div className="p-2 max-h-[300px] overflow-y-auto custom-scrollbar">
-                    {members.length === 0 ? (
-                        <p className="p-4 text-center text-[12px] text-[#888]">No team members available</p>
-                    ) : (
-                        members.map(member => (
-                            <button
-                                key={member._id}
-                                onClick={() => onSelect(member._id)}
-                                className="w-full flex items-center gap-3 p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group"
-                            >
-                                <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center text-[11px] font-black uppercase">
-                                    {member.name?.substring(0, 2) || '??'}
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[13px] font-bold text-[#333] group-hover:text-orange-600 transition-colors">{member.name}</p>
-                                    <p className="text-[10px] text-[#888] font-medium">{member.designation}</p>
-                                </div>
-                                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <ArrowRight size={14} className="text-orange-500" />
-                                </div>
-                            </button>
-                        ))
-                    )}
-                </div>
-                <div className="p-4 bg-[#fdfdfd] border-t border-[#f0f0f0]">
-                    <button onClick={onClose} className="w-full py-2.5 text-[12px] font-bold text-[#555] bg-white border border-[#ddd] rounded-xl hover:bg-[#f7f7f7] transition-colors">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function AddIssueToSprintModal({ isOpen, onClose, onAdd, issues, loading, projects, selectedProjectId, onProjectChange, onDragEnd, sprintIssues }: {
     isOpen: boolean;

@@ -158,6 +158,22 @@ import { IAddAttachmentToSubTaskService } from '../interfaces/services/subTask/I
 import { AddAttachmentToSubTaskService } from '../service/subTask/AddAttachmentToSubTaskService';
 import { SubTaskController } from '../controller/subTask.controller';
 
+// Notification & Socket
+import { ISocketService } from '../interfaces/services/ISocketService';
+import { SocketService } from '../utils/socket.service';
+import { INotificationRepository } from '../interfaces/repositories/INotificationRepository';
+import { NotificationRepository } from '../repositories/notification.repository';
+import { INotificationService } from '../interfaces/services/INotificationService';
+import { NotificationService } from '../service/notification.service';
+import { NotificationController } from '../controller/notification.controller';
+import { IStorageProvider } from '../interfaces/providers/IStorageProvider';
+import { S3StorageProvider } from '../providers/S3StorageProvider';
+import { IAIService } from '../interfaces/services/ai/IAIService';
+import { AIService } from '../service/ai/ai.service';
+import { IAutoAssignSubTaskService } from '../interfaces/services/subTask/IAutoAssignSubTaskService';
+import { AutoAssignSubTaskService } from '../service/subTask/AutoAssignSubTaskService';
+import { IAutoAssignIssueService } from '../interfaces/services/issue/IAutoAssignIssueService';
+import { AutoAssignIssueService } from '../service/issue/AutoAssignIssueService';
 const container = new Container();
 
 container.bind<IAuthRepository>(TYPES.IAuthRepository).to(AuthRepository);
@@ -169,6 +185,9 @@ container.bind<IProjectRepository>(TYPES.IProjectRepository).to(ProjectRepositor
 container.bind<IIssueRepository>(TYPES.IIssueRepository).to(IssueRepository);
 container.bind<ISprintRepository>(TYPES.ISprintRepository).to(SprintRepository);
 container.bind<ISubTaskRepository>(TYPES.ISubTaskRepository).to(SubTaskRepository);
+container.bind<INotificationRepository>(TYPES.INotificationRepository).to(NotificationRepository);
+
+container.bind<ISocketService>(TYPES.ISocketService).to(SocketService).inSingletonScope();
 
 container.bind<IAddEmployeeService>(TYPES.IAddEmployeeService).to(AddEmployeeService);
 container.bind<IGetEmployeesService>(TYPES.IGetEmployeesService).to(GetEmployeesService);
@@ -225,6 +244,7 @@ container.bind<IAddCommentToSubTaskService>(TYPES.IAddCommentToSubTaskService).t
 container.bind<IAddAttachmentToSubTaskService>(TYPES.IAddAttachmentToSubTaskService).to(AddAttachmentToSubTaskService);
 container.bind<IGetCompanyDashboardService>(TYPES.IGetCompanyDashboardService).to(GetCompanyDashboardService);
 container.bind<IGetEmployeeDashboardService>(TYPES.IGetEmployeeDashboardService).to(GetEmployeeDashboardService);
+container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService);
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController);
 container.bind<EmployeeController>(TYPES.EmployeeController).to(EmployeeController);
@@ -236,6 +256,7 @@ container.bind<SprintController>(TYPES.SprintController).to(SprintController);
 container.bind<SubTaskController>(TYPES.SubTaskController).to(SubTaskController);
 container.bind<UploadController>(TYPES.UploadController).to(UploadController);
 container.bind<DashboardController>(TYPES.DashboardController).to(DashboardController);
+container.bind<NotificationController>(TYPES.NotificationController).to(NotificationController);
 
 container.bind<IRegisterService>(TYPES.IRegisterService).to(RegisterService);
 container.bind<IVerifyOtpService>(TYPES.IVerifyOtpService).to(VerifyOtpService);
@@ -245,5 +266,10 @@ container.bind<IRefreshService>(TYPES.IRefreshService).to(RefreshService);
 container.bind<ILogoutService>(TYPES.ILogoutService).to(LogoutService);
 container.bind<IForgotPasswordService>(TYPES.IForgotPasswordService).to(ForgotPasswordService);
 container.bind<IResetPasswordService>(TYPES.IResetPasswordService).to(ResetPasswordService);
+
+container.bind<IStorageProvider>(TYPES.IStorageProvider).to(S3StorageProvider);
+container.bind<IAIService>(TYPES.IAIService).to(AIService);
+container.bind<IAutoAssignSubTaskService>(TYPES.IAutoAssignSubTaskService).to(AutoAssignSubTaskService);
+container.bind<IAutoAssignIssueService>(TYPES.IAutoAssignIssueService).to(AutoAssignIssueService);
 
 export { container };

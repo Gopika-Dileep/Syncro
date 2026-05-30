@@ -37,6 +37,7 @@ export interface SubTask {
         status: string;
     } | null;
     comments?: {
+        _id: string;
         user: SubTaskPersonRef | null;
         text: string;
         created_at: string;
@@ -44,6 +45,7 @@ export interface SubTask {
         mentions?: string[];
     }[];
     attachments?: {
+        _id: string;
         file_url: string;
         file_name: string;
         uploaded_by: SubTaskPersonRef | null;
@@ -51,6 +53,7 @@ export interface SubTask {
         uploaded_at: string;
     }[];
     history?: {
+        _id: string;
         action: string;
         from?: string;
         to?: string;
@@ -106,6 +109,11 @@ export const deleteSubTaskApi = async (id: string): Promise<{ success: boolean; 
 
 export const assignSubTaskApi = async (id: string, employeeId: string): Promise<{ success: boolean; data: SubTask }> => {
     const response = await axiosInstance.patch(ENDPOINTS.SUBTASKS.ASSIGN(id), { assignee_id: employeeId });
+    return response.data;
+};
+
+export const autoAssignSubTaskApi = async (id: string): Promise<{ success: boolean; data: SubTask }> => {
+    const response = await axiosInstance.patch(ENDPOINTS.SUBTASKS.AUTO_ASSIGN(id));
     return response.data;
 };
 

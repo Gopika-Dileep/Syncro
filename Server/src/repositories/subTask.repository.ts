@@ -48,4 +48,5 @@ export class SubTaskRepository extends BaseRepository<ISubTask> implements ISubT
   override async updateById(id: string, update: Record<string, unknown>): Promise<ISubTask | null> {
     return await this._model.findByIdAndUpdate(id, update, { new: true }).populate(POPULATE_OPTS).exec();
   }
+  
 }

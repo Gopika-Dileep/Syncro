@@ -7,6 +7,8 @@ import { SubmitSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.d
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { INotificationService } from '../../interfaces/services/INotificationService';
+import { NotificationType } from '../../models/notification.model';
 
 @injectable()
 export class SubmitSubTaskService implements ISubmitSubTaskService {
@@ -14,10 +16,11 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
     @inject(TYPES.ISubTaskRepository) private _subTaskRepository: ISubTaskRepository,
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
   ) {}
 
   async execute(subTaskId: string, data: SubmitSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
-    const employee = await this._employeeRepository.findOne({ user_id: userId });
+    const employee = await this._employeeRepository.findByUserId(userId);
     const historyEntry = {
       action: 'status_change',
       from: SubTaskStatus.IN_PROGRESS,
@@ -34,6 +37,19 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
     } as unknown as Record<string, unknown>);
 
     if (subTask) {
+      // Notify Assigner
+      if (subTask.assigned_by) {
+        await this._notificationService.createNotification({
+          recipientId: subTask.assigned_by.toString(),
+          senderId: employee?._id.toString() || userId,
+          type: NotificationType.SUBTASK_SUBMITTED,
+          title: 'Sub-task Ready for Review',
+          message: `${employee?.user_id?.name || 'An employee'} submitted a sub-task for review: ${subTask.title}`,
+          link: `/employee/tasks?selectedTask=${subTask._id.toString()}`,
+          relatedEntityId: subTask._id.toString(),
+          relatedEntityType: 'SubTask',
+        });
+      }
       return SubTaskMapper.toResponseDTO(subTask);
     }
 

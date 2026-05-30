@@ -84,8 +84,9 @@ export class GetProjectInsightsService implements IGetProjectInsightsService {
       stats,
       team: Array.from(teamMap.values()),
       stories: IssueMapper.toResponseList(issues.filter((i) => i.type === 'story')),
+      standaloneTasks: IssueMapper.toResponseList(issues.filter((i) => i.type === 'task')),
       bugs: IssueMapper.toResponseList(issues.filter((i) => i.type === 'bug')),
-      subtasks: SubTaskMapper.toResponseList(subTasks),
+      tasks: SubTaskMapper.toResponseList(subTasks),
     };
   }
 }

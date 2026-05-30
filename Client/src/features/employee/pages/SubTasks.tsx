@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -10,7 +11,9 @@ import {
     assignSubTaskApi,
     reviewSubTaskApi, type SubTask, 
     getAssignedSubTasksApi,
-    getTeamSubTasksApi
+    getTeamSubTasksApi,
+    getSubTaskByIdApi,
+    autoAssignSubTaskApi
 } from "../api/subTaskApi";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
@@ -31,6 +34,7 @@ import { getTeamDirectoryApi, type TeamMember } from "../api/teamApi";
 const COLUMNS = ["To Do", "In Progress", "In Review", "Done"];
 
 export default function SubTasks() {
+    const [searchParams] = useSearchParams();
     const [subTasks, setSubTasks] = useState<SubTask[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchTerm = useDebounce(searchQuery, 500);
@@ -112,7 +116,33 @@ export default function SubTasks() {
         fetchEmployees();
     }, [fetchSubTasks, fetchEmployees]);
 
-    const handleStatusChange = async (subTaskId: string, newStatus: string, extraData: { rework_reason?: string; blocked_reason?: string; submission_link?: string; description?: string; branch_name?: string; mentions?: string[] } = {}) => {
+    // Handle deep linking for tasks
+    useEffect(() => {
+        const taskId = searchParams.get('selectedTask');
+        if (taskId) {
+            const found = subTasks.find(t => t._id === taskId);
+            if (found) {
+                setSelectedSubTask(found);
+                setShowDetailsDrawer(true);
+            } else if (!fetching) {
+                // If not found in current list and we are not fetching, try fetching specifically
+                const fetchSpecific = async () => {
+                    try {
+                        const res = await getSubTaskByIdApi(taskId as string);
+                        if (res.success) {
+                            setSelectedSubTask(res.data);
+                            setShowDetailsDrawer(true);
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch linked task", err);
+                    }
+                };
+                fetchSpecific();
+            }
+        }
+    }, [searchParams, subTasks, fetching]);
+
+    const handleStatusChange = async (subTaskId: string, newStatus: string, extraData: { rework_reason?: string; blocked_reason?: string; submission_link?: string; description?: string; branch_name?: string; mentions?: string[]; isUnblocking?: boolean } = {}) => {
         try {
             let response;
             if (newStatus === 'In Progress') {
@@ -121,6 +151,8 @@ export default function SubTasks() {
                         action: 'reject',
                         rework_reason: extraData.rework_reason
                     });
+                } else if (extraData.isUnblocking) {
+                    response = await updateSubTaskApi(subTaskId, { status: 'In Progress' });
                 } else {
                     response = await startSubTaskApi(subTaskId);
                 }
@@ -227,6 +259,20 @@ export default function SubTasks() {
             }
         } catch {
             toast.error("Assignment failed");
+        }
+    };
+
+    const handleAutoAssignSubmit = async () => {
+        if (!selectedSubTask) return;
+        try {
+            const response = await autoAssignSubTaskApi(selectedSubTask._id);
+            if (response.success) {
+                fetchSubTasks();
+                toast.success("AI Auto-assigned successfully");
+                setShowAssignModal(false);
+            }
+        } catch {
+            toast.error("AI Auto-assignment failed");
         }
     };
 
@@ -462,7 +508,7 @@ export default function SubTasks() {
                                                                                                     <button 
                                                                                                         onClick={(e) => {
                                                                                                             e.stopPropagation();
-                                                                                                            handleStatusChange(item._id, 'In Progress');
+                                                                                                            handleStatusChange(item._id, 'In Progress', { isUnblocking: true });
                                                                                                             setActiveMenuId(null);
                                                                                                         }}
                                                                                                         className="w-full px-3 py-2 text-left text-[11px] font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-2"
@@ -556,6 +602,7 @@ export default function SubTasks() {
                 isOpen={showAssignModal}
                 onClose={() => setShowAssignModal(false)}
                 onAssign={handleAssignSubmit}
+                onAutoAssign={handleAutoAssignSubmit}
                 subTaskTitle={selectedSubTask?.title || ""}
                 teamId={selectedSubTask?.team_id?._id}
             />
