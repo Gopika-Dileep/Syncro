@@ -10,6 +10,8 @@ import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
+import { NotFoundError } from '../../errors/AppError';
+import { TASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class SubmitSubTaskService implements ISubmitSubTaskService {
@@ -65,6 +67,6 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
       return SubTaskMapper.fromIssue(issue);
     }
 
-    throw new Error('Task not found');
+    throw new NotFoundError(TASK_MESSAGES.NOT_FOUND);
   }
 }

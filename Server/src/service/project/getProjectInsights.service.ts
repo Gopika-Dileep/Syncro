@@ -5,12 +5,9 @@ import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskReposi
 import { IGetProjectInsightsService } from '../../interfaces/services/project/IGetProjectInsightsService';
 import { ProjectInsightsDTO } from '../../dto/project.dto';
 import { ProjectMapper } from '../../mappers/project.mapper';
-import { IssueMapper } from '../../mappers/issue.mapper';
-import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { TYPES } from '../../di/types';
 import { NotFoundError } from '../../errors/AppError';
 import { PROJECT_MESSAGES } from '../../constants/messages';
-import { IssueStatus } from '../../enums/IssueEnums';
 
 @injectable()
 export class GetProjectInsightsService implements IGetProjectInsightsService {
@@ -31,62 +28,6 @@ export class GetProjectInsightsService implements IGetProjectInsightsService {
       const issueSubTasks = await this._subTaskRepo.findAllByIssueId(iid);
       subTasks.push(...issueSubTasks);
     }
-    const stats = {
-      total_stories: issues.filter((i) => i.type === 'story').length,
-      total_tasks: subTasks.length,
-      total_bugs: issues.filter((i) => i.type === 'bug').length,
-      completed_points: issues.filter((i) => i.status === IssueStatus.DONE).reduce((acc, i) => acc + (i.story_points || 0), 0),
-      total_points: issues.reduce((acc, i) => acc + (i.story_points || 0), 0),
-    };
-    const teamMap = new Map<string, { _id: string; name: string; role: string; avatar?: string }>();
-
-    if (project.created_by) {
-      const pm = project.created_by as unknown as Record<string, unknown>;
-      const user = pm.user_id as Record<string, unknown>;
-      if (user) {
-        teamMap.set(String(pm._id), {
-          _id: String(pm._id),
-          name: String(user.name || 'Project Manager'),
-          role: String(pm.designation || 'Project Manager'),
-          avatar: user.avatar ? String(user.avatar) : undefined,
-        });
-      }
-    }
-
-    issues.forEach((i) => {
-      const assignee = i.assignee_id as unknown as Record<string, unknown> | undefined;
-      const user = assignee?.user_id as Record<string, unknown> | undefined;
-      if (assignee && user) {
-        teamMap.set(String(assignee._id), {
-          _id: String(assignee._id),
-          name: String(user.name || 'Unknown'),
-          role: String(assignee.designation || 'Member'),
-          avatar: user.avatar ? String(user.avatar) : undefined,
-        });
-      }
-    });
-
-    subTasks.forEach((st) => {
-      const assignee = st.assignee_id as unknown as Record<string, unknown> | undefined;
-      const user = assignee?.user_id as Record<string, unknown> | undefined;
-      if (assignee && user) {
-        teamMap.set(String(assignee._id), {
-          _id: String(assignee._id),
-          name: String(user.name || 'Unknown'),
-          role: String(assignee.designation || 'Member'),
-          avatar: user.avatar ? String(user.avatar) : undefined,
-        });
-      }
-    });
-
-    return {
-      project: ProjectMapper.toResponseDTO(project),
-      stats,
-      team: Array.from(teamMap.values()),
-      stories: IssueMapper.toResponseList(issues.filter((i) => i.type === 'story')),
-      standaloneTasks: IssueMapper.toResponseList(issues.filter((i) => i.type === 'task')),
-      bugs: IssueMapper.toResponseList(issues.filter((i) => i.type === 'bug')),
-      tasks: SubTaskMapper.toResponseList(subTasks),
-    };
+    return ProjectMapper.toInsightsDTO(project, issues, subTasks);
   }
 }

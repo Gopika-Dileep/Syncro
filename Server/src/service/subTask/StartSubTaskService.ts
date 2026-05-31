@@ -9,7 +9,8 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { SprintStatus } from '../../enums/SprintEnums';
-import { BadRequestError } from '../../errors/AppError';
+import { BadRequestError, NotFoundError } from '../../errors/AppError';
+import { SPRINT_MESSAGES, TASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class StartSubTaskService implements IStartSubTaskService {
@@ -33,7 +34,7 @@ export class StartSubTaskService implements IStartSubTaskService {
     if (existingSubTask) {
       const sprint = existingSubTask.sprint_id as any;
       if (sprint && sprint.status !== SprintStatus.ACTIVE) {
-        throw new BadRequestError('Cannot start work on a task in a sprint that is not active.');
+        throw new BadRequestError(SPRINT_MESSAGES.CANNOT_START_INACTIVE_SPRINT);
       }
 
       const subTask = await this._subTaskRepository.updateWithHistory(
@@ -53,7 +54,7 @@ export class StartSubTaskService implements IStartSubTaskService {
     if (existingIssue) {
       const sprint = existingIssue.sprint_id as any;
       if (sprint && sprint.status !== SprintStatus.ACTIVE) {
-        throw new BadRequestError('Cannot start work on a task in a sprint that is not active.');
+        throw new BadRequestError(SPRINT_MESSAGES.CANNOT_START_INACTIVE_SPRINT);
       }
 
       const issue = await this._issueRepository.updateById(subTaskId, {
@@ -65,6 +66,6 @@ export class StartSubTaskService implements IStartSubTaskService {
       }
     }
 
-    throw new BadRequestError('Task not found');
+    throw new NotFoundError(TASK_MESSAGES.NOT_FOUND);
   }
 }

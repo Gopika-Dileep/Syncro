@@ -11,7 +11,8 @@ import { NotificationType } from '../../enums/NotificationEnums';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IssueType } from '../../enums/IssueEnums';
-import { BadRequestError } from '../../errors/AppError';
+import { BadRequestError, NotFoundError } from '../../errors/AppError';
+import { SUBTASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class UpdateSubTaskService implements IUpdateSubTaskService {
@@ -26,7 +27,7 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
   async execute(subTaskId: string, data: UpdateSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
     const oldSubTask = await this._subTaskRepository.findById(subTaskId);
-    if (!oldSubTask) throw new Error('Sub-task not found');
+    if (!oldSubTask) throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
 
     if (data.estimated_hours !== undefined && data.estimated_hours !== oldSubTask.estimated_hours) {
       const issue = await this._issueRepository.findById(oldSubTask.issue_id.toString());
@@ -55,7 +56,7 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
 
     if (data.status && data.status !== oldSubTask.status) {
       if (data.status === 'Blocked' && !data.blocked_reason) {
-        throw new Error('Blocked reason is required when blocking a task');
+        throw new BadRequestError(SUBTASK_MESSAGES.BLOCKED_REASON_REQUIRED);
       }
       historyEntry.action = 'status_change';
       historyEntry.from = oldSubTask.status;
@@ -63,7 +64,7 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
     }
 
     const subTask = await this._subTaskRepository.updateWithHistory(subTaskId, data, historyEntry);
-    if (!subTask) throw new Error('Sub-task not found');
+    if (!subTask) throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
 
     if (data.status === 'Blocked') {
       if (subTask.assigned_by) {

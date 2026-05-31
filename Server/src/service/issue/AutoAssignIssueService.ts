@@ -8,6 +8,7 @@ import { IAIService } from '../../interfaces/services/ai/IAIService';
 import { IAutoAssignIssueService } from '../../interfaces/services/issue/IAutoAssignIssueService';
 import { IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';
+import { AIMapper } from '../../mappers/ai.mapper';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
 import { EMPLOYEE_MESSAGES, ISSUE_MESSAGES } from '../../constants/messages';
@@ -34,37 +35,19 @@ export class AutoAssignIssueService implements IAutoAssignIssueService {
 
     const employeeData = await Promise.all(
       employees.map(async (emp) => {
-        const empId = emp._id.toString();
+        const assignedIssues = await this._issueRepository.findActiveByAssigneeId(emp._id.toString());
 
-        const assignedIssues = await this._issueRepository.find({
-          assignee_id: emp._id,
-          status: { $nin: ['Done'] },
-        });
+        const assignedSubTasks = await this._subTaskRepository.findActiveByAssigneeId(emp._id.toString());
 
-        const assignedSubTasks = await this._subTaskRepository.find({
-          assignee_id: emp._id,
-          status: { $nin: ['Done'] },
-        });
-
-        return {
-          id: empId,
-          name: emp.user_id?.name || 'Unknown',
-          skills: emp.skills || [],
-          designation: emp.designation || 'Employee',
-          team: (emp.team_id as any)?.name || 'Unassigned',
-          activeIssues: assignedIssues.length,
-          activeSubTasks: assignedSubTasks.length,
-          totalActiveWorkload: assignedIssues.length + assignedSubTasks.length,
-        };
+        return AIMapper.toEmployeeAIData(
+          emp,
+          assignedIssues.length,
+          assignedSubTasks.length
+        );
       }),
     );
 
-    const taskData = {
-      title: issue.title,
-      description: issue.description || '',
-      priority: issue.priority,
-      status: issue.status,
-    };
+    const taskData = AIMapper.toTaskAIDataFromIssue(issue);
 
     const aiDecision = await this._aiService.assignTask({ task: taskData, employees: employeeData });
 

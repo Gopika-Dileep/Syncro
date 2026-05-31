@@ -3,6 +3,7 @@ import { IIssueRepository } from '../interfaces/repositories/IIssueRepository';
 import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../dto/issue.dto';
 import { IIssue, issueModel } from '../models/issue.model';
 import { BaseRepository } from './base.repository';
+import { IssueType } from '../enums/IssueEnums';
 
 @injectable()
 export class IssueRepository extends BaseRepository<IIssue> implements IIssueRepository {
@@ -99,5 +100,33 @@ export class IssueRepository extends BaseRepository<IIssue> implements IIssueRep
       )
       .populate(this.POPULATE_OPTS)
       .exec();
+  }
+
+  async findActiveByAssigneeId(assigneeId: string): Promise<IIssue[]> {
+    return await this._model
+      .find({
+        assignee_id: assigneeId,
+        status: { $nin: ['Done'] },
+      })
+      .exec();
+  }
+
+  async findActiveTasksAndBugs(
+    companyId: string,
+    filters?: { assigneeId?: string; assigneeIds?: string[] }
+  ): Promise<IIssue[]> {
+    const query: Record<string, any> = {
+      company_id: companyId,
+      type: { $in: [IssueType.TASK, IssueType.BUG] },
+      status: { $ne: 'Backlog' },
+    };
+
+    if (filters?.assigneeId) {
+      query.assignee_id = filters.assigneeId;
+    } else if (filters?.assigneeIds) {
+      query.assignee_id = { $in: filters.assigneeIds };
+    }
+
+    return await this._model.find(query).populate(this.POPULATE_OPTS).exec();
   }
 }

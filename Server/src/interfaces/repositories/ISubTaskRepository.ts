@@ -12,4 +12,5 @@ export interface ISubTaskRepository extends IBaseRepository<ISubTask> {
   addComment(id: string, comment: ICreateCommentInput): Promise<ISubTask | null>;
   addAttachments(id: string, attachments: ICreateAttachmentInput[]): Promise<ISubTask | null>;
   updateWithHistory(id: string, update: Record<string, unknown>, history: ICreateHistoryInput | ICreateHistoryInput[]): Promise<ISubTask | null>;
+  findActiveByAssigneeId(assigneeId: string): Promise<ISubTask[]>;
 }

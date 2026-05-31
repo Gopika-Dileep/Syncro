@@ -9,4 +9,6 @@ export interface IIssueRepository extends IBaseRepository<IIssue> {
   addComment(id: string, comment: ICreateCommentInput): Promise<IIssue | null>;
   addAttachments(id: string, attachments: ICreateAttachmentInput[]): Promise<IIssue | null>;
   updateWithHistory(id: string, update: Record<string, unknown>, history: ICreateHistoryInput | ICreateHistoryInput[]): Promise<IIssue | null>;
+  findActiveByAssigneeId(assigneeId: string): Promise<IIssue[]>;
+  findActiveTasksAndBugs(companyId: string, filters?: { assigneeId?: string; assigneeIds?: string[] }): Promise<IIssue[]>;
 }

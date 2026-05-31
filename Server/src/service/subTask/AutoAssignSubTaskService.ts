@@ -8,8 +8,10 @@ import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IAutoAssignSubTaskService } from '../../interfaces/services/subTask/IAutoAssignSubTaskService';
 import { SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
+import { AIMapper } from '../../mappers/ai.mapper';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
+import { EMPLOYEE_MESSAGES, SUBTASK_MESSAGES } from '../../constants/messages';
 import mongoose from 'mongoose';
 
 @injectable()
@@ -24,46 +26,28 @@ export class AutoAssignSubTaskService implements IAutoAssignSubTaskService {
 
   async execute(subTaskId: string, userId: string): Promise<SubTaskResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
-    if (!assigner) throw new Error('Assigner not found');
+    if (!assigner) throw new Error(EMPLOYEE_MESSAGES.ASSIGNER_NOT_FOUND);
 
     const subTask = await this._subTaskRepository.findById(subTaskId);
-    if (!subTask) throw new Error('Sub-task not found');
+    if (!subTask) throw new Error(SUBTASK_MESSAGES.NOT_FOUND);
 
     const employees = await this._employeeRepository.findPopulated({ company_id: assigner.company_id });
 
     const employeeData = await Promise.all(
       employees.map(async (emp) => {
-        const empId = emp._id.toString();
+        const assignedIssues = await this._issueRepository.findActiveByAssigneeId(emp._id.toString());
 
-        const assignedIssues = await this._issueRepository.find({
-          assignee_id: emp._id,
-          status: { $nin: ['Done'] },
-        });
+        const assignedSubTasks = await this._subTaskRepository.findActiveByAssigneeId(emp._id.toString());
 
-        const assignedSubTasks = await this._subTaskRepository.find({
-          assignee_id: emp._id,
-          status: { $nin: ['Done'] },
-        });
-
-        return {
-          id: empId,
-          name: emp.user_id?.name || 'Unknown',
-          skills: emp.skills || [],
-          designation: emp.designation || 'Employee',
-          team: (emp.team_id as any)?.name || 'Unassigned',
-          activeIssues: assignedIssues.length,
-          activeSubTasks: assignedSubTasks.length,
-          totalActiveWorkload: assignedIssues.length + assignedSubTasks.length,
-        };
+        return AIMapper.toEmployeeAIData(
+          emp,
+          assignedIssues.length,
+          assignedSubTasks.length
+        );
       }),
     );
 
-    const taskData = {
-      title: subTask.title,
-      description: subTask.description,
-      priority: subTask.priority,
-      status: subTask.status,
-    };
+    const taskData = AIMapper.toTaskAIDataFromSubTask(subTask);
 
     const aiDecision = await this._aiService.assignTask({ task: taskData, employees: employeeData });
 
@@ -94,7 +78,7 @@ export class AutoAssignSubTaskService implements IAutoAssignSubTaskService {
       historyEntry,
     );
 
-    if (!updatedSubTask) throw new Error('Sub-task not found after update');
+    if (!updatedSubTask) throw new Error(SUBTASK_MESSAGES.NOT_FOUND_AFTER_UPDATE);
 
     if (chosenAssigneeId && String(chosenAssigneeId) !== String(subTask.assignee_id)) {
       await this._notificationService.createNotification({

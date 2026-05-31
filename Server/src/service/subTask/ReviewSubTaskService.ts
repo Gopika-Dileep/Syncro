@@ -13,6 +13,8 @@ import { ProjectStatus } from '../../enums/ProjectEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
+import { NotFoundError } from '../../errors/AppError';
+import { TASK_MESSAGES } from '../../constants/messages';
 
 interface IPopulatedId {
   _id: { toString(): string };
@@ -118,7 +120,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
       return SubTaskMapper.fromIssue(issue);
     }
 
-    throw new Error('Task not found');
+    throw new NotFoundError(TASK_MESSAGES.NOT_FOUND);
   }
 
   private async checkAndCompleteProject(projectId: string) {

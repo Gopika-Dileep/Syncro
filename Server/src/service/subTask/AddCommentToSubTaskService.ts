@@ -8,6 +8,7 @@ import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepo
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ISocketService } from '../../interfaces/services/socket/ISocketService';
 import { NotificationType } from '../../enums/NotificationEnums';
+import { SUBTASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class AddCommentToSubTaskService implements IAddCommentToSubTaskService {
@@ -29,7 +30,7 @@ export class AddCommentToSubTaskService implements IAddCommentToSubTaskService {
     });
 
     if (!updatedSubTask) {
-      throw new NotFoundError('Sub-task not found');
+      throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
     }
 
     this._socketService.emitToRoom(`subtask:${subTaskId}`, 'new_comment', {

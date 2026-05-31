@@ -7,7 +7,8 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
-import { IssueType } from '../../enums/IssueEnums';
+import { NotFoundError } from '../../errors/AppError';
+import { USER_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class GetAllSubTasksService implements IGetAllSubTasksService {
@@ -26,17 +27,13 @@ export class GetAllSubTasksService implements IGetAllSubTasksService {
       companyId = employee.company_id.toString();
     } else {
       const company = await this._companyRepository.findOne({ user_id: userId });
-      if (!company) throw new Error('User not found as employee or company admin');
+      if (!company) throw new NotFoundError(USER_MESSAGES.USER_NOT_FOUND_OR_ADMIN);
       companyId = company._id.toString();
     }
 
     const subTasks = await this._subTaskRepository.findAllByCompanyId(companyId);
 
-    const issues = await this._issueRepository.findPopulated({
-      company_id: companyId,
-      type: { $in: [IssueType.TASK, IssueType.BUG] },
-      status: { $ne: 'Backlog' },
-    });
+    const issues = await this._issueRepository.findActiveTasksAndBugs(companyId);
 
     let mappedSubTasks = SubTaskMapper.toResponseList(subTasks);
     let mappedIssues = issues.map((issue) => SubTaskMapper.fromIssue(issue));

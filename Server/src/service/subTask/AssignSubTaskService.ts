@@ -8,6 +8,8 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
+import { NotFoundError } from '../../errors/AppError';
+import { EMPLOYEE_MESSAGES, SUBTASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class AssignSubTaskService implements IAssignSubTaskService {
@@ -19,10 +21,10 @@ export class AssignSubTaskService implements IAssignSubTaskService {
 
   async execute(subTaskId: string, data: AssignSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
-    if (!assigner) throw new Error('Assigner not found');
+    if (!assigner) throw new NotFoundError(EMPLOYEE_MESSAGES.ASSIGNER_NOT_FOUND);
 
     const oldSubTask = await this._subTaskRepository.findById(subTaskId);
-    if (!oldSubTask) throw new Error('Sub-task not found');
+    if (!oldSubTask) throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
 
     const assignee = await this._employeeRepository.findPopulatedById(data.assignee_id);
     const oldAssignee = oldSubTask.assignee_id ? await this._employeeRepository.findPopulatedById(String(oldSubTask.assignee_id)) : null;
@@ -43,7 +45,7 @@ export class AssignSubTaskService implements IAssignSubTaskService {
       historyEntry,
     );
 
-    if (!subTask) throw new Error('Sub-task not found');
+    if (!subTask) throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
 
     if (data.assignee_id && String(data.assignee_id) !== String(oldSubTask.assignee_id)) {
       await this._notificationService.createNotification({

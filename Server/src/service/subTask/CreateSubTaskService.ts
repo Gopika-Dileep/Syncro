@@ -7,9 +7,10 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
-import { BadRequestError } from '../../errors/AppError';
+import { BadRequestError, NotFoundError } from '../../errors/AppError';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { IssueType } from '../../enums/IssueEnums';
+import { EMPLOYEE_MESSAGES, ISSUE_MESSAGES } from '../../constants/messages';
 
 import { ISubTask } from '../../models/subTask.model';
 
@@ -24,10 +25,10 @@ export class CreateSubTaskService implements ICreateSubTaskService {
 
   async execute(data: CreateSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const creator = await this._employeeRepository.findByUserId(userId);
-    if (!creator) throw new Error('Employee not found');
+    if (!creator) throw new NotFoundError(EMPLOYEE_MESSAGES.NOT_FOUND);
 
     const issue = await this._issueRepository.findById(data.issue_id);
-    if (!issue) throw new BadRequestError('Issue not found');
+    if (!issue) throw new BadRequestError(ISSUE_MESSAGES.NOT_FOUND);
 
     if (issue.type === IssueType.STORY) {
       const maxAllowedHours = (issue.story_points || 0) * 8;

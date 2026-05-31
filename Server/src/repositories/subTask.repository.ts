@@ -107,4 +107,13 @@ export class SubTaskRepository extends BaseRepository<ISubTask> implements ISubT
       .populate(POPULATE_OPTS)
       .exec();
   }
+
+  async findActiveByAssigneeId(assigneeId: string): Promise<ISubTask[]> {
+    return await this._model
+      .find({
+        assignee_id: assigneeId,
+        status: { $nin: ['Done'] },
+      })
+      .exec();
+  }
 }

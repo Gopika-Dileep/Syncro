@@ -68,6 +68,7 @@ export const USER_MESSAGES = {
   PASSWORD_CHANGE_SUCCESS: 'Password changed successfully',
   PASSWORD_CHANGE_FAILED: 'Failed to change password',
   USER_NOT_FOUND: 'User not found',
+  USER_NOT_FOUND_OR_ADMIN: 'User not found as employee or company admin',
   CURRENT_PASSWORD_MISMATCH: "Current password doesn't match",
   ALL_FIELDS_REQUIRED: 'All fields are required',
 };
@@ -128,6 +129,7 @@ export const SPRINT_MESSAGES = {
   NOT_FOUND: 'Sprint not found',
   COMPANY_CONTEXT_NOT_FOUND: 'Company context not found',
   VELOCITY_FETCH_SUCCESS: 'Velocity analytics fetched successfully',
+  CANNOT_START_INACTIVE_SPRINT: 'Cannot start work on a task in a sprint that is not active.',
 };
 
 export const SUBTASK_MESSAGES = {
@@ -147,6 +149,8 @@ export const SUBTASK_MESSAGES = {
   REVIEW_SUCCESS: 'Review completed',
   COMMENT_ADD_SUCCESS: 'Comment added successfully',
   ATTACHMENT_ADD_SUCCESS: 'Attachments added successfully',
+  NOT_FOUND_AFTER_UPDATE: 'Sub-task not found after update',
+  BLOCKED_REASON_REQUIRED: 'Blocked reason is required when blocking a task',
 };
 
 export const TASK_MESSAGES = {
