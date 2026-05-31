@@ -104,6 +104,7 @@ export const ISSUE_MESSAGES = {
 export const COMMON_MESSAGES = {
   INTERNAL_SERVER_ERROR: 'Internal server error',
   ACCESS_DENIED: (permission: string) => `Access denied. You don't have the permission: ${permission}`,
+  VALIDATION_FAILED: 'Validation failed',
 };
 
 export const SPRINT_MESSAGES = {
