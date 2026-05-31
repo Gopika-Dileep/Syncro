@@ -14,6 +14,7 @@ import { IssueType, IssueStatus } from '../../enums/IssueEnums';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IIssue } from '../../models/issue.model';
+import { DashboardMapper } from '../../mappers/dashboard.mapper';
 
 @injectable()
 export class GetCompanyDashboardService implements IGetCompanyDashboardService {
@@ -53,13 +54,7 @@ export class GetCompanyDashboardService implements IGetCompanyDashboardService {
       totalSprints,
       issueStats,
       statusDistribution: statusStats,
-      recentBlocked: (recentBlocked as IIssue[]).map((i) => ({
-        _id: i._id.toString(),
-        title: i.title,
-        priority: i.priority,
-        blocked_reason: i.blocked_reason,
-        updated_at: i.updated_at,
-      })),
+      recentBlocked: DashboardMapper.toCompanyRecentBlocked(recentBlocked as IIssue[]),
     };
   }
 

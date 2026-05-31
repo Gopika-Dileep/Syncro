@@ -16,6 +16,7 @@ import { ISprint } from '../../models/sprint.model';
 import { ITeam } from '../../models/team.model';
 import { IIssue } from '../../models/issue.model';
 import { ISubTask } from '../../models/subTask.model';
+import { DashboardMapper } from '../../mappers/dashboard.mapper';
 
 @injectable()
 export class GetEmployeeDashboardService implements IGetEmployeeDashboardService {
@@ -132,12 +133,7 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
       const projectStatus = await Promise.all(
         projectList.slice(0, 5).map(async (p) => {
           const [total, done] = await Promise.all([this._issueRepo.count({ project_id: p._id }), this._issueRepo.count({ project_id: p._id, status: 'Done' })]);
-          return {
-            name: p.name,
-            progress: total > 0 ? Math.round((done / total) * 100) : 0,
-            totalItems: total,
-            completedItems: done,
-          };
+          return DashboardMapper.toProjectProgress(p, total, done);
         }),
       );
 
@@ -166,17 +162,7 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
         this.getRecentBlockedItems({ team_id: teamId }),
       ]);
 
-      const workloadDistribution = teamMembers.map((m) => {
-        const mTasks = teamSubTasks.filter((s) => s.assignee_id?.toString() === m._id.toString());
-        const mIssues = teamIssues.filter((i) => i.assignee_id?.toString() === m._id.toString());
-        return {
-          assigneeName: m.user_id?.name || 'Unknown',
-          taskCount: mTasks.length + mIssues.length,
-          completedCount: mTasks.filter((s) => s.status === 'Done').length + mIssues.filter((i) => i.status === 'Done').length,
-          avatar: m.user_id?.avatar,
-          designation: m.designation,
-        };
-      });
+      const workloadDistribution = DashboardMapper.toWorkloadDistribution(teamMembers, teamSubTasks, teamIssues);
 
       const activeSprint = await this._sprintRepo.findOne({ team_id: teamId, status: 'Active' });
       let sprintData;
@@ -226,23 +212,14 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
       managerMetrics: managerMetricsData,
       upcomingDeadlines: upcomingTasks,
       recentActivity: [],
-      availableFilters: {
-        projects: availableProjects.map((p) => ({ _id: p._id.toString(), name: p.name })),
-        sprints: availableSprints.map((s) => ({ _id: s._id.toString(), name: s.name, sprint_number: s.sprint_number })),
-        teams: availableTeams.map((t) => ({ _id: t._id.toString(), name: t.name })),
-      },
+      availableFilters: DashboardMapper.toAvailableFilters(availableProjects, availableSprints, availableTeams),
     };
   }
 
   private async getUpcomingTasks(employeeId: mongoose.Types.ObjectId, filter: Record<string, unknown> = {}, stFilter: Record<string, unknown> = {}) {
     const [issues, subTasks] = await Promise.all([this._issueRepo.find({ assignee_id: employeeId, status: { $ne: 'Done' }, ...filter }, { sort: { due_date: 1 }, limit: 5 }), this._subTaskRepo.find({ assignee_id: employeeId, status: { $ne: 'Done' }, ...stFilter }, { limit: 5 })]);
 
-    return [
-      ...issues.map((i) => ({ _id: i._id.toString(), title: i.title, priority: i.priority, status: i.status, updated_at: i.updated_at.toISOString() })),
-      ...subTasks.map((s) => ({ _id: s._id.toString(), title: s.title, priority: s.priority, status: s.status, updated_at: s.updated_at.toISOString() })),
-    ]
-      .sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime())
-      .slice(0, 5);
+    return DashboardMapper.toUpcomingDeadlineItems(issues as IIssue[], subTasks as ISubTask[]);
   }
 
   private async getEmployeeTypeStats(employeeId: mongoose.Types.ObjectId, filter: Record<string, unknown> = {}, stFilter: Record<string, unknown> = {}) {
@@ -263,25 +240,6 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
   private async getRecentBlockedItems(filter: Record<string, unknown>) {
     const [issues, subTasks] = await Promise.all([this._issueRepo.find({ ...filter, status: 'Blocked' }, { sort: { updated_at: -1 }, limit: 5 }), this._subTaskRepo.find({ ...filter, status: 'Blocked' }, { sort: { updated_at: -1 }, limit: 5 })]);
 
-    return [
-      ...(issues as IIssue[]).map((i) => ({
-        _id: i._id.toString(),
-        title: i.title,
-        type: i.type,
-        priority: i.priority,
-        blocked_reason: i.blocked_reason,
-        updated_at: i.updated_at.toISOString(),
-      })),
-      ...(subTasks as ISubTask[]).map((s) => ({
-        _id: s._id.toString(),
-        title: s.title,
-        type: 'sub-task',
-        priority: s.priority,
-        blocked_reason: s.blocked_reason,
-        updated_at: s.updated_at.toISOString(),
-      })),
-    ]
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-      .slice(0, 5);
+    return DashboardMapper.toRecentBlockedItems(issues as IIssue[], subTasks as ISubTask[]);
   }
 }
