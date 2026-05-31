@@ -4,6 +4,7 @@ import { UploadController } from '../controller/upload.controller';
 import { TYPES } from '../di/types';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { upload } from '../middleware/upload.middleware';
+import { ENDPOINTS } from '../constants/endpoints';
 
 const uploadController = container.get<UploadController>(TYPES.UploadController);
 
@@ -16,7 +17,7 @@ export class UploadRouter {
   }
 
   private _initializeRoutes(): void {
-    this.router.post('/single', authMiddleware, upload.single('file'), uploadController.uploadFile);
-    this.router.post('/multiple', authMiddleware, upload.array('files', 10), uploadController.uploadMultipleFiles);
+    this.router.post(ENDPOINTS.UPLOAD.SINGLE, authMiddleware, upload.single('file'), uploadController.uploadFile);
+    this.router.post(ENDPOINTS.UPLOAD.MULTIPLE, authMiddleware, upload.array('files', 10), uploadController.uploadMultipleFiles);
   }
 }
