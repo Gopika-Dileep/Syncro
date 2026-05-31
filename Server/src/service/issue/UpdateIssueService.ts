@@ -11,7 +11,7 @@ import { ProjectStatus } from '../../enums/ProjectEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 
 @injectable()
 export class UpdateIssueService implements IUpdateIssueService {

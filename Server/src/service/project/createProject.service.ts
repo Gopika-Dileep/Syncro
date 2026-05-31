@@ -9,7 +9,7 @@ import { PROJECT_MESSAGES } from '../../constants/messages';
 import { NotFoundError } from '../../errors/AppError';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 
 @injectable()
 export class CreateProjectService implements ICreateProjectService {

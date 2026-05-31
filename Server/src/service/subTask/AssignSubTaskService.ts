@@ -7,7 +7,7 @@ import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 
 @injectable()
 export class AssignSubTaskService implements IAssignSubTaskService {

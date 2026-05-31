@@ -1,4 +1,4 @@
-import { NotificationType } from '../models/notification.model';
+import { NotificationType } from '../enums/NotificationEnums';
 
 export interface CreateNotificationDTO {
   recipientId: string;

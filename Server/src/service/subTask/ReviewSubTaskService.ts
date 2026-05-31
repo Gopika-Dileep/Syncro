@@ -12,7 +12,7 @@ import { IssueStatus } from '../../enums/IssueEnums';
 import { ProjectStatus } from '../../enums/ProjectEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 
 interface IPopulatedId {
   _id: { toString(): string };

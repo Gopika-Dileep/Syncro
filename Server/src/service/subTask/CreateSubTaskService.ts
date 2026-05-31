@@ -6,7 +6,7 @@ import { CreateSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.d
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 import { BadRequestError } from '../../errors/AppError';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { IssueType } from '../../enums/IssueEnums';

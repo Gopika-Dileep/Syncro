@@ -7,7 +7,7 @@ import { NotFoundError } from '../../errors/AppError';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ISocketService } from '../../interfaces/services/socket/ISocketService';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 
 @injectable()
 export class AddCommentToSubTaskService implements IAddCommentToSubTaskService {

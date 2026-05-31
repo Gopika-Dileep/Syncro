@@ -8,7 +8,7 @@ import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepo
 
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ISocketService } from '../../interfaces/services/socket/ISocketService';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 
 @injectable()
 export class AddCommentToIssueService implements IAddCommentToIssueService {

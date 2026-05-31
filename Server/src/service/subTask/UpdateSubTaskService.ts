@@ -7,7 +7,7 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
 import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IssueType } from '../../enums/IssueEnums';

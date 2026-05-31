@@ -9,7 +9,7 @@ import { IAutoAssignIssueService } from '../../interfaces/services/issue/IAutoAs
 import { IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 import mongoose from 'mongoose';
 
 @injectable()

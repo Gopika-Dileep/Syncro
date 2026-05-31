@@ -9,7 +9,7 @@ import { IAutoAssignSubTaskService } from '../../interfaces/services/subTask/IAu
 import { SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 import mongoose from 'mongoose';
 
 @injectable()
