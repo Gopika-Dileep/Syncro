@@ -1,11 +1,12 @@
 import { injectable } from 'inversify';
 import { llm } from '../../config/llm';
 import { IAIService } from '../../interfaces/services/ai/IAIService';
-import { AIAssignmentSchema } from '../../dto/ai.dto';
+import { AIAssignmentSchema, AIAssignTaskDTO } from '../../dto/ai.dto';
 
 @injectable()
 export class AIService implements IAIService {
-  async assignTask(task: Record<string, unknown>, employees: Record<string, unknown>[]) {
+  async assignTask(query: AIAssignTaskDTO) {
+    const { task, employees } = query;
     const structuredLlm = llm.withStructuredOutput(AIAssignmentSchema, {
       name: 'assign_task',
     });

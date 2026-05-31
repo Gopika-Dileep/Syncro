@@ -4,7 +4,8 @@ import { INotificationRepository } from '../../interfaces/repositories/INotifica
 import { ISocketService } from '../../interfaces/services/socket/ISocketService';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { TYPES } from '../../di/types';
-import { INotification, NotificationType } from '../../models/notification.model';
+import { INotification } from '../../models/notification.model';
+import { CreateNotificationDTO, GetNotificationsDTO } from '../../dto/notification.dto';
 import mongoose from 'mongoose';
 
 @injectable()
@@ -15,7 +16,7 @@ export class NotificationService implements INotificationService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
   ) { }
 
-  async createNotification(params: { recipientId: string; senderId?: string; type: NotificationType; title: string; message: string; link?: string; relatedEntityId?: string; relatedEntityType?: 'Issue' | 'SubTask' }): Promise<INotification> {
+  async createNotification(params: CreateNotificationDTO): Promise<INotification> {
     const notification = await this._notificationRepository.create({
       recipient: new mongoose.Types.ObjectId(params.recipientId),
       sender: params.senderId ? new mongoose.Types.ObjectId(params.senderId) : undefined,
@@ -37,7 +38,8 @@ export class NotificationService implements INotificationService {
     return notification;
   }
 
-  async getNotifications(userId: string, page: number, limit: number): Promise<{ notifications: INotification[]; total: number; unreadCount: number }> {
+  async getNotifications(query: GetNotificationsDTO): Promise<{ notifications: INotification[]; total: number; unreadCount: number }> {
+    const { userId, page, limit } = query;
     const employee = await this._employeeRepository.findOne({ user_id: userId });
     if (!employee) {
       return { notifications: [], total: 0, unreadCount: 0 };

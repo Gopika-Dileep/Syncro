@@ -8,3 +8,9 @@ export const AIAssignmentSchema = z.object({
 });
 
 export type AIAssignmentResponse = z.infer<typeof AIAssignmentSchema>;
+
+export interface AIAssignTaskDTO {
+  task: Record<string, unknown>;
+  employees: Record<string, unknown>[];
+}
+

@@ -65,7 +65,7 @@ export class AutoAssignIssueService implements IAutoAssignIssueService {
       status: issue.status,
     };
 
-    const aiDecision = await this._aiService.assignTask(taskData, employeeData);
+    const aiDecision = await this._aiService.assignTask({ task: taskData, employees: employeeData });
 
     const chosenAssigneeId = aiDecision.assignedEmployeeId;
     const assignee = await this._employeeRepository.findPopulatedById(chosenAssigneeId);

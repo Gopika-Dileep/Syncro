@@ -17,7 +17,7 @@ export class NotificationController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const result = await this._notificationService.getNotifications(userId, page, limit);
+      const result = await this._notificationService.getNotifications({ userId, page, limit });
       success(res, result, NOTIFICATION_MESSAGES.FETCH_SUCCESS);
     } catch (err) {
       next(err);

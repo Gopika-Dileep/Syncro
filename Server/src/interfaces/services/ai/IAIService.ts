@@ -1,11 +1,11 @@
+import { AIAssignTaskDTO } from '../../../dto/ai.dto';
+
 export interface IAIService {
-  assignTask(
-    task: Record<string, unknown>,
-    employees: Record<string, unknown>[],
-  ): Promise<{
+  assignTask(query: AIAssignTaskDTO): Promise<{
     assignedEmployeeId: string;
     assignedEmployeeName: string;
     reasoning: string;
     confidenceScore: number;
   }>;
 }
+
