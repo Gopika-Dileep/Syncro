@@ -43,6 +43,7 @@ export const EMPLOYEE_MESSAGES = {
   ASSIGN_TEAM_SUCCESS: 'Employee assigned to team successfully',
   CANNOT_ASSIGN_MANAGER: 'Cannot assign managers to a team',
   COMPANY_MISMATCH: 'Employee does not belong to your company',
+  ASSIGNER_NOT_FOUND: 'Assigner not found',
 };
 
 export const TEAM_MESSAGES = {
@@ -102,6 +103,11 @@ export const ISSUE_MESSAGES = {
   COMMENT_ADD_SUCCESS: 'Comment added successfully',
   ATTACHMENT_ADD_SUCCESS: 'Attachments added successfully',
   AUTO_ASSIGN_SUCCESS: 'Issue auto-assigned successfully',
+  NO_ASSIGN_PERMISSION: (type: string) => `You do not have permission to assign this ${type}`,
+  NO_SPRINT_PERMISSION: (type: string) => `You do not have permission to add this ${type} to a sprint`,
+  SPRINT_ADD_READY_ONLY: (type: string) => `Only items with status 'Ready' can be added to a sprint. Please mark this ${type} as ready first.`,
+  NOT_FOUND_AFTER_UPDATE: 'Issue not found after update',
+  BLOCKED_REASON_REQUIRED: 'Blocked reason is required when blocking an issue',
 };
 
 export const COMMON_MESSAGES = {

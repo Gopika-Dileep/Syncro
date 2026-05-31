@@ -12,6 +12,7 @@ import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepo
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
 import { NotificationType } from '../../enums/NotificationEnums';
+import { ISSUE_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class UpdateIssueService implements IUpdateIssueService {
@@ -26,7 +27,7 @@ export class UpdateIssueService implements IUpdateIssueService {
   async execute(issueId: string, data: UpdateIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
     const oldIssue = await this._issueRepository.findById(issueId);
-    if (!oldIssue) throw new Error('Issue not found');
+    if (!oldIssue) throw new Error(ISSUE_MESSAGES.NOT_FOUND);
 
     if (data.sprint_id && String(data.sprint_id) !== String(oldIssue.sprint_id)) {
       const isCompany = userRole === 'company';
@@ -34,11 +35,11 @@ export class UpdateIssueService implements IUpdateIssueService {
       const hasSprintPerm = permissions.includes(`issue:${type}:assign_to_sprint`);
 
       if (!isCompany && !hasSprintPerm) {
-        throw new Error(`You do not have permission to add this ${type} to a sprint`);
+        throw new Error(ISSUE_MESSAGES.NO_SPRINT_PERMISSION(type));
       }
 
       if (!oldIssue.sprint_id && oldIssue.status !== 'Ready') {
-        throw new Error(`Only items with status 'Ready' can be added to a sprint. Please mark this ${type} as ready first.`);
+        throw new Error(ISSUE_MESSAGES.SPRINT_ADD_READY_ONLY(type));
       }
     }
 
@@ -51,7 +52,7 @@ export class UpdateIssueService implements IUpdateIssueService {
 
     if (data.status && data.status !== oldIssue.status) {
       if (data.status === IssueStatus.BLOCKED && !data.blocked_reason) {
-        throw new Error('Blocked reason is required when blocking an issue');
+        throw new Error(ISSUE_MESSAGES.BLOCKED_REASON_REQUIRED);
       }
       historyEntry.action = 'status_change';
       historyEntry.from = oldIssue.status;
@@ -63,7 +64,7 @@ export class UpdateIssueService implements IUpdateIssueService {
     }
 
     const issue = await this._issueRepository.updateWithHistory(issueId, data, historyEntry);
-    if (!issue) throw new Error('Issue not found');
+    if (!issue) throw new Error(ISSUE_MESSAGES.NOT_FOUND);
 
     if (data.status === IssueStatus.DONE) {
       await this.checkAndCompleteProject(issue.project_id.toString(), employee?._id?.toString() || userId);

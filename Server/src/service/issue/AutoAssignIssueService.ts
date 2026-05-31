@@ -10,6 +10,7 @@ import { IssueResponseDTO } from '../../dto/issue.dto';
 import { IssueMapper } from '../../mappers/issue.mapper';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
+import { EMPLOYEE_MESSAGES, ISSUE_MESSAGES } from '../../constants/messages';
 import mongoose from 'mongoose';
 
 @injectable()
@@ -24,10 +25,10 @@ export class AutoAssignIssueService implements IAutoAssignIssueService {
 
   async execute(issueId: string, userId: string): Promise<IssueResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
-    if (!assigner) throw new Error('Assigner not found');
+    if (!assigner) throw new Error(EMPLOYEE_MESSAGES.ASSIGNER_NOT_FOUND);
 
     const issue = await this._issueRepository.findById(issueId);
-    if (!issue) throw new Error('Issue not found');
+    if (!issue) throw new Error(ISSUE_MESSAGES.NOT_FOUND);
 
     const employees = await this._employeeRepository.findPopulated({ company_id: assigner.company_id });
 
@@ -94,7 +95,7 @@ export class AutoAssignIssueService implements IAutoAssignIssueService {
       historyEntry,
     );
 
-    if (!updatedIssue) throw new Error('Issue not found after update');
+    if (!updatedIssue) throw new Error(ISSUE_MESSAGES.NOT_FOUND_AFTER_UPDATE);
 
     if (chosenAssigneeId && String(chosenAssigneeId) !== String(issue.assignee_id)) {
       await this._notificationService.createNotification({
