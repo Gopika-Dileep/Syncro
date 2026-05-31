@@ -40,6 +40,9 @@ export const EMPLOYEE_MESSAGES = {
   EMPLOYEE_ALREADY_EXISTS: 'Employee with this email already exists',
   USER_ID_REQUIRED: 'userId is required',
   FETCH_DATA_FAILED: 'Failed to get data',
+  ASSIGN_TEAM_SUCCESS: 'Employee assigned to team successfully',
+  CANNOT_ASSIGN_MANAGER: 'Cannot assign managers to a team',
+  COMPANY_MISMATCH: 'Employee does not belong to your company',
 };
 
 export const TEAM_MESSAGES = {
