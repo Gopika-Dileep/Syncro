@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - refactor/code-structure
 
 jobs:
   deploy-client:
@@ -28,6 +29,8 @@ jobs:
         run: |
           echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" > Client/.env
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> Client/.env
+          echo "=== Debug: Checking .env Casing and Content ==="
+          cat Client/.env
 
       - name: Build Client
         run: npm run build
