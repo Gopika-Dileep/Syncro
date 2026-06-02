@@ -157,6 +157,7 @@ On GitHub, navigate to **Settings** > **Secrets and variables** > **Actions** > 
 | `EC2_SSH_KEY` | Paste the **entire contents** of your private SSH key (`.pem` file) including headers (`-----BEGIN RSA PRIVATE KEY-----`, etc.). |
 | `VITE_API_BASE_URL` | The domain name of your EC2 backend (e.g. `https://api-syncro.gopikadileep.in` or `http://YOUR_EC2_IP:5000`). |
 | `VITE_API_URL` | The API path of your EC2 backend (e.g. `https://api-syncro.gopikadileep.in/api` or `http://YOUR_EC2_IP:5000/api`). |
+| `CLOUDFRONT_DISTRIBUTION_ID` | The ID of your CloudFront distribution (e.g. `E1A2B3C4D5E6F7`) to automate cache invalidation. |
 
 ---
 
