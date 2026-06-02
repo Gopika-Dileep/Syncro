@@ -1,0 +1,33 @@
+services:
+  # Redis Cache Database
+  redis:
+    image: redis:alpine
+    container_name: syncro-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Backend Server Application
+  server:
+    build:
+      context: ./Server
+      dockerfile: Dockerfile
+    container_name: syncro-server
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    env_file:
+      - ./Server/.env
+    environment:
+      # Override Redis host to use the container name within the docker network
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  redis_data:

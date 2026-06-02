@@ -40,6 +40,10 @@ export const EMPLOYEE_MESSAGES = {
   EMPLOYEE_ALREADY_EXISTS: 'Employee with this email already exists',
   USER_ID_REQUIRED: 'userId is required',
   FETCH_DATA_FAILED: 'Failed to get data',
+  ASSIGN_TEAM_SUCCESS: 'Employee assigned to team successfully',
+  CANNOT_ASSIGN_MANAGER: 'Cannot assign managers to a team',
+  COMPANY_MISMATCH: 'Employee does not belong to your company',
+  ASSIGNER_NOT_FOUND: 'Assigner not found',
 };
 
 export const TEAM_MESSAGES = {
@@ -64,6 +68,7 @@ export const USER_MESSAGES = {
   PASSWORD_CHANGE_SUCCESS: 'Password changed successfully',
   PASSWORD_CHANGE_FAILED: 'Failed to change password',
   USER_NOT_FOUND: 'User not found',
+  USER_NOT_FOUND_OR_ADMIN: 'User not found as employee or company admin',
   CURRENT_PASSWORD_MISMATCH: "Current password doesn't match",
   ALL_FIELDS_REQUIRED: 'All fields are required',
 };
@@ -95,11 +100,21 @@ export const ISSUE_MESSAGES = {
   DELETE_SUCCESS: 'Issue deleted successfully',
   DELETE_FAILED: 'Failed to delete issue',
   NOT_FOUND: 'Issue not found',
+  ASSIGN_UPDATE_SUCCESS: 'Assignment updated successfully',
+  COMMENT_ADD_SUCCESS: 'Comment added successfully',
+  ATTACHMENT_ADD_SUCCESS: 'Attachments added successfully',
+  AUTO_ASSIGN_SUCCESS: 'Issue auto-assigned successfully',
+  NO_ASSIGN_PERMISSION: (type: string) => `You do not have permission to assign this ${type}`,
+  NO_SPRINT_PERMISSION: (type: string) => `You do not have permission to add this ${type} to a sprint`,
+  SPRINT_ADD_READY_ONLY: (type: string) => `Only items with status 'Ready' can be added to a sprint. Please mark this ${type} as ready first.`,
+  NOT_FOUND_AFTER_UPDATE: 'Issue not found after update',
+  BLOCKED_REASON_REQUIRED: 'Blocked reason is required when blocking an issue',
 };
 
 export const COMMON_MESSAGES = {
   INTERNAL_SERVER_ERROR: 'Internal server error',
   ACCESS_DENIED: (permission: string) => `Access denied. You don't have the permission: ${permission}`,
+  VALIDATION_FAILED: 'Validation failed',
 };
 
 export const SPRINT_MESSAGES = {
@@ -113,6 +128,8 @@ export const SPRINT_MESSAGES = {
   DELETE_FAILED: 'Failed to delete sprint',
   NOT_FOUND: 'Sprint not found',
   COMPANY_CONTEXT_NOT_FOUND: 'Company context not found',
+  VELOCITY_FETCH_SUCCESS: 'Velocity analytics fetched successfully',
+  CANNOT_START_INACTIVE_SPRINT: 'Cannot start work on a task in a sprint that is not active.',
 };
 
 export const SUBTASK_MESSAGES = {
@@ -126,6 +143,14 @@ export const SUBTASK_MESSAGES = {
   DELETE_FAILED: 'Failed to delete sub-task',
   ASSIGN_SUCCESS: 'Sub-task assigned successfully',
   NOT_FOUND: 'Sub-task not found',
+  AUTO_ASSIGN_SUCCESS: 'Auto-assigned successfully using AI',
+  START_SUCCESS: 'Task started successfully',
+  SUBMIT_SUCCESS: 'Task submitted for review',
+  REVIEW_SUCCESS: 'Review completed',
+  COMMENT_ADD_SUCCESS: 'Comment added successfully',
+  ATTACHMENT_ADD_SUCCESS: 'Attachments added successfully',
+  NOT_FOUND_AFTER_UPDATE: 'Sub-task not found after update',
+  BLOCKED_REASON_REQUIRED: 'Blocked reason is required when blocking a task',
 };
 
 export const TASK_MESSAGES = {
@@ -146,4 +171,11 @@ export const UPLOAD_MESSAGES = {
   UPLOAD_FAILED: 'File upload failed',
   NO_FILE_UPLOADED: 'No file uploaded',
   NO_FILES_UPLOADED: 'No files uploaded',
+};
+
+export const NOTIFICATION_MESSAGES = {
+  FETCH_SUCCESS: 'Notifications fetched successfully',
+  MARK_READ_SUCCESS: 'Notification marked as read',
+  MARK_ALL_READ_SUCCESS: 'All notifications marked as read',
+  NO_EMPLOYEE_FOUND: 'No employee found',
 };

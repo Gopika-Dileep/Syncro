@@ -17,7 +17,6 @@ import { IAddCommentToSubTaskService } from '../interfaces/services/subTask/IAdd
 import { IAddAttachmentToSubTaskService } from '../interfaces/services/subTask/IAddAttachmentToSubTaskService';
 import { IAutoAssignSubTaskService } from '../interfaces/services/subTask/IAutoAssignSubTaskService';
 import { TYPES } from '../di/types';
-import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';
 import { SUBTASK_MESSAGES } from '../constants/messages';
 
@@ -47,7 +46,7 @@ export class SubTaskController {
       const subTask = await this._createSubTaskService.execute(req.body, userId);
       created(res, subTask, SUBTASK_MESSAGES.CREATE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -58,7 +57,7 @@ export class SubTaskController {
       const subTask = await this._updateSubTaskService.execute(subTaskId as string, req.body, userId);
       success(res, subTask, SUBTASK_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -68,7 +67,7 @@ export class SubTaskController {
       await this._deleteSubTaskService.execute(subTaskId as string);
       success(res, SUBTASK_MESSAGES.DELETE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -78,7 +77,7 @@ export class SubTaskController {
       const subTask = await this._getSubTaskByIdService.execute(subTaskId as string);
       success(res, subTask);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -88,7 +87,7 @@ export class SubTaskController {
       const subTasks = await this._getSubTasksByIssueService.execute(issueId as string);
       success(res, subTasks);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -99,7 +98,7 @@ export class SubTaskController {
       const subTask = await this._assignSubTaskService.execute(subTaskId as string, req.body, userId);
       success(res, subTask, SUBTASK_MESSAGES.ASSIGN_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -108,9 +107,9 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._autoAssignSubTaskService.execute(subTaskId as string, userId);
-      success(res, subTask, 'Auto-assigned successfully using AI');
+      success(res, subTask, SUBTASK_MESSAGES.AUTO_ASSIGN_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -119,9 +118,9 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._startSubTaskService.execute(subTaskId as string, userId);
-      success(res, subTask, 'Task started successfully');
+      success(res, subTask, SUBTASK_MESSAGES.START_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -130,9 +129,9 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._submitSubTaskService.execute(subTaskId as string, req.body, userId);
-      success(res, subTask, 'Task submitted for review');
+      success(res, subTask, SUBTASK_MESSAGES.SUBMIT_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -141,9 +140,9 @@ export class SubTaskController {
       const { subTaskId } = req.params;
       const userId = req.userId!;
       const subTask = await this._reviewSubTaskService.execute(subTaskId as string, req.body, userId);
-      success(res, subTask, 'Review completed');
+      success(res, subTask, SUBTASK_MESSAGES.REVIEW_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -154,7 +153,7 @@ export class SubTaskController {
       const subTasks = await this._getAssignedSubTasksService.execute(userId, search);
       success(res, subTasks);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -165,7 +164,7 @@ export class SubTaskController {
       const subTasks = await this._getTeamSubTasksService.execute(userId, search);
       success(res, subTasks);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -176,7 +175,7 @@ export class SubTaskController {
       const subTasks = await this._getAllSubTasksService.execute(userId, search);
       success(res, subTasks);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -187,9 +186,9 @@ export class SubTaskController {
       const userId = req.userId!;
       const subTask = await this._addCommentToSubTaskService.execute(subTaskId as string, userId, text, attachments);
       const mapped = SubTaskMapper.toResponseDTO(subTask);
-      success(res, mapped, 'Comment added successfully');
+      success(res, mapped, SUBTASK_MESSAGES.COMMENT_ADD_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -200,9 +199,9 @@ export class SubTaskController {
       const userId = req.userId!;
       const subTask = await this._addAttachmentToSubTaskService.execute(subTaskId as string, userId, attachments);
       const mapped = SubTaskMapper.toResponseDTO(subTask);
-      success(res, mapped, 'Attachments added successfully');
+      success(res, mapped, SUBTASK_MESSAGES.ATTACHMENT_ADD_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

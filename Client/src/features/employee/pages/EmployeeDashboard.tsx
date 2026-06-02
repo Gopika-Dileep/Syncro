@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type FC } from "react";
+import { useState, useEffect, useMemo, useCallback, type FC } from "react";
 import { 
     AlertCircle, Zap, 
     CheckCircle2,
@@ -11,7 +11,7 @@ import {
     getEmployeeDashboardApi,
     type EmployeeDashboardData,
     type DashboardFilters,
-    type RecentItem
+    type RecentBlockedItem
 } from "../api/dashboardApi";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -74,24 +74,25 @@ export default function EmployeeDashboard() {
         teams: [] as { _id: string; name: string }[]
     });
 
-    const fetchDashboard = async () => {
+    const fetchDashboard = useCallback(async () => {
         try {
-            // Clean filters: remove empty strings
+            
             const cleanFilters: DashboardFilters = Object.fromEntries(
-                Object.entries(filters).filter(([_, v]) => v !== "")
+                Object.entries(filters).filter(([, v]) => v !== "")
             );
             const res = await getEmployeeDashboardApi(cleanFilters);
             if (res.success) setData(res.data);
         } catch (err) {
+            console.error("Failed to load dashboard", err);
             toast.error("Failed to load dashboard");
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters]);
 
     useEffect(() => {
         fetchDashboard();
-    }, [filters]);
+    }, [fetchDashboard]);
 
     useEffect(() => {
         if (data?.availableFilters) {
@@ -116,8 +117,8 @@ export default function EmployeeDashboard() {
 
     const completionRate = useMemo(() => {
         if (!data) return 0;
-        const total = data.teamMetrics ? (data.teamMetrics as any).totalAssigned : data.myStats.totalAssigned;
-        const done = data.teamMetrics ? (data.teamMetrics as any).completed : data.myStats.completed;
+        const total = data.teamMetrics ? data.teamMetrics.totalAssigned : data.myStats.totalAssigned;
+        const done = data.teamMetrics ? data.teamMetrics.completed : data.myStats.completed;
         return total > 0 ? Math.round((done / total) * 100) : 0;
     }, [data]);
 
@@ -243,20 +244,20 @@ export default function EmployeeDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <MetricCard 
                     title={isManager ? "Total Projects" : isLead ? "Team Members" : "Total Tasks"}
-                    value={isManager ? (data.managerMetrics as any)?.totalActiveProjects || 0 : isLead ? data.teamStats?.totalMembers || 0 : data.myStats.totalAssigned}
-                    icon={isManager ? LayoutGrid : Users}
+                    value={isManager ? data.managerMetrics?.totalActiveProjects || 0 : isLead ? data.teamStats?.totalMembers || 0 : data.myStats.totalAssigned}
+                    icon={isManager ? LayoutGrid : isLead ? Users : CheckCircle2}
                     description="Active scope"
                 />
                 <MetricCard 
-                    title={isManager ? "Sprints" : isLead ? "Pending Review" : "In Progress"}
-                    value={isManager ? `${(data.managerMetrics as any)?.completedSprints || 0}/${(data.managerMetrics as any)?.totalSprints || 0}` : isLead ? (data.teamMetrics as any)?.statusDistribution?.inReview || 0 : data.myStats.inProgress}
-                    icon={Activity}
+                    title={isManager ? "Sprint Completion" : isLead ? "In Review" : "In Progress"}
+                    value={isManager ? `${data.managerMetrics?.completedSprints || 0}/${data.managerMetrics?.totalSprints || 0}` : isLead ? data.teamMetrics?.statusDistribution?.inReview || 0 : data.myStats.inProgress}
+                    icon={isManager ? Zap : isLead ? Activity : Activity}
                     description={isManager ? "Done / Total" : "Work flow"}
                 />
                 <MetricCard 
-                    title={isManager ? "Total Teams" : isLead ? "Team Progress" : "Completed Tasks"}
-                    value={isManager ? (data.managerMetrics as any)?.totalTeams || 0 : isLead ? `${(data.teamMetrics as any)?.completed || 0}/${(data.teamMetrics as any)?.totalAssigned || 0}` : data.myStats.completed}
-                    icon={isManager ? Users : CheckCircle2}
+                    title={isManager ? "Total Teams" : isLead ? "Completion" : "Finished"}
+                    value={isManager ? data.managerMetrics?.totalTeams || 0 : isLead ? `${data.teamMetrics?.completed || 0}/${data.teamMetrics?.totalAssigned || 0}` : data.myStats.completed}
+                    icon={isManager ? Users : isLead ? CheckCircle2 : CheckCircle2}
                     description="Current status"
                 />
                 <MetricCard 
@@ -296,7 +297,7 @@ export default function EmployeeDashboard() {
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-bold text-gray-700">{project.name}</p>
-                                                            <p className="text-[9px] text-gray-400 font-medium">{(project as any).completedItems} / {(project as any).totalItems} Items</p>
+                                                            <p className="text-[9px] text-gray-400 font-medium">{project.completedItems} / {project.totalItems} Items</p>
                                                         </div>
                                                     </div>
                                                     <span className="text-[10px] font-black text-indigo-500">
@@ -312,7 +313,7 @@ export default function EmployeeDashboard() {
                                             </div>
                                         ))
                                     ) : (
-                                        (data.teamMetrics as any)?.workloadDistribution?.slice(0, 5).map((member: any, idx: number) => {
+                                        data.teamMetrics?.workloadDistribution?.slice(0, 5).map((member, idx: number) => {
                                             const isLeadership = member.designation?.toLowerCase().includes('manager') || member.designation?.toLowerCase().includes('lead');
                                             return (
                                                 <div key={idx} className="group">
@@ -383,14 +384,14 @@ export default function EmployeeDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
-                                                {(isManager ? data.managerMetrics?.recentBlocked : data.teamMetrics?.recentBlocked)?.map((issue: RecentItem) => (
+                                                {(isManager ? data.managerMetrics?.recentBlocked : data.teamMetrics?.recentBlocked)?.map((issue: RecentBlockedItem) => (
                                                     <tr key={issue._id} className="group hover:bg-gray-50/50 transition-colors">
                                                         <td className="py-3">
                                                             <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
-                                                                (issue as any).type === 'bug' ? 'bg-rose-50 text-rose-500' :
-                                                                (issue as any).type === 'sub-task' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-500'
+                                                                issue.type === 'bug' ? 'bg-rose-50 text-rose-500' :
+                                                                issue.type === 'sub-task' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-500'
                                                             }`}>
-                                                                {(issue as any).type || 'Item'}
+                                                                {issue.type || 'Item'}
                                                             </span>
                                                         </td>
                                                         <td className="py-3">
@@ -405,7 +406,7 @@ export default function EmployeeDashboard() {
                                                             </span>
                                                         </td>
                                                         <td className="py-3">
-                                                            <p className="text-[11px] text-gray-500 italic line-clamp-1">"{(issue as any).blocked_reason || 'Unknown'}"</p>
+                                                            <p className="text-[11px] text-gray-500 italic line-clamp-1">"{issue.blocked_reason || 'Unknown'}"</p>
                                                         </td>
                                                         <td className="py-3 text-right">
                                                             <p className="text-[10px] font-bold text-gray-400">
@@ -437,37 +438,37 @@ export default function EmployeeDashboard() {
                                 <>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Stories</span>
-                                        <span className="text-xs font-black text-[#1a1c1f]">{(data.managerMetrics as any)?.globalTypeStats?.stories || 0}</span>
+                                        <span className="text-xs font-black text-[#1a1c1f]">{data.managerMetrics?.globalTypeStats?.stories || 0}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Bugs</span>
-                                        <span className="text-xs font-black text-rose-500">{(data.managerMetrics as any)?.globalTypeStats?.bugs || 0}</span>
+                                        <span className="text-xs font-black text-rose-500">{data.managerMetrics?.globalTypeStats?.bugs || 0}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Tasks</span>
-                                        <span className="text-xs font-black text-[#1a1c1f]">{(data.managerMetrics as any)?.globalTypeStats?.tasks || 0}</span>
+                                        <span className="text-xs font-black text-[#1a1c1f]">{data.managerMetrics?.globalTypeStats?.tasks || 0}</span>
                                     </div>
                                     <div className="pt-4 mt-4 border-t border-gray-50 flex items-center justify-between font-black">
-                                        <span className="text-[11px] uppercase tracking-widest text-gray-400">Total Work</span>
-                                        <span className="text-sm text-[#fa8029]">{data.teamMetrics ? (data.teamMetrics as any).totalAssigned : data.myStats.totalAssigned}</span>
+                                        <span className="text-[11px] font-bold text-[#fa8029] uppercase tracking-wider">Scope</span>
+                                        <span className="text-sm text-[#fa8029]">{data.teamMetrics ? data.teamMetrics.totalAssigned : data.myStats.totalAssigned}</span>
                                     </div>
                                 </>
                             ) : isLead ? (
                                 <>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-bold text-gray-400">Team Total</span>
-                                        <span className="text-xs font-black text-[#1a1c1f]">{(data.teamMetrics as any)?.totalAssigned || 0}</span>
+                                        <span className="text-[11px] font-bold text-gray-400">Total Scope</span>
+                                        <span className="text-xs font-black text-[#1a1c1f]">{data.teamMetrics?.totalAssigned || data.myStats.totalAssigned}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Working On</span>
-                                        <span className="text-xs font-black text-[#fa8029]">{(data.teamMetrics as any)?.inProgress || 0}</span>
+                                        <span className="text-xs font-black text-[#fa8029]">{data.teamMetrics?.inProgress || data.myStats.inProgress}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[11px] font-bold text-gray-400">Finished</span>
-                                        <span className="text-xs font-black text-emerald-500">{(data.teamMetrics as any)?.completed || 0}</span>
+                                        <span className="text-xs font-black text-emerald-500">{data.teamMetrics?.completed || data.myStats.completed}</span>
                                     </div>
                                     <div className="pt-4 mt-4 border-t border-gray-50 flex items-center justify-between font-black">
-                                        <span className="text-[11px] uppercase tracking-widest text-gray-400">Team Success</span>
+                                        <span className="text-[11px] uppercase tracking-widest text-gray-400">Success</span>
                                         <span className="text-sm text-[#fa8029]">{completionRate}%</span>
                                     </div>
                                 </>
@@ -494,24 +495,24 @@ export default function EmployeeDashboard() {
                     <div className="bg-[#1a1c1f] rounded-2xl p-6 text-white overflow-hidden relative">
                         <div className="relative z-10">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 opacity-60">
-                                {data.teamMetrics && (data.teamMetrics as any).activeSprint ? "Active Sprint Deadline" : "Upcoming Deadlines"}
+                                {data.teamMetrics && data.teamMetrics.activeSprint ? "Active Sprint Deadline" : "Upcoming Deadlines"}
                             </h3>
                             <div className="space-y-5">
-                                {data.teamMetrics && (data.teamMetrics as any).activeSprint ? (
+                                {data.teamMetrics && data.teamMetrics.activeSprint ? (
                                     <>
                                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                                             <span className="text-[11px] font-bold opacity-80 uppercase tracking-wider">End Date</span>
                                             <span className="text-[10px] font-black px-2 py-0.5 bg-[#fa8029] rounded uppercase shadow-lg shadow-orange-900/20">
-                                                {new Date((data.teamMetrics as any).activeSprint.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                {new Date(data.teamMetrics.activeSprint.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-[11px] font-bold opacity-60">Completed</span>
-                                            <span className="text-xs font-black text-emerald-400">{(data.teamMetrics as any).activeSprint.completedTasks} Tasks</span>
+                                            <span className="text-xs font-black text-emerald-400">{data.teamMetrics.activeSprint.completedTasks} Tasks</span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-[11px] font-bold opacity-60">Incomplete</span>
-                                            <span className="text-xs font-black text-rose-400">{(data.teamMetrics as any).activeSprint.incompleteTasks} Tasks</span>
+                                            <span className="text-xs font-black text-rose-400">{data.teamMetrics.activeSprint.incompleteTasks} Tasks</span>
                                         </div>
                                     </>
                                 ) : (
@@ -519,7 +520,7 @@ export default function EmployeeDashboard() {
                                         <div key={idx} className="flex items-center justify-between">
                                             <span className="text-[11px] font-bold opacity-80 truncate max-w-[120px]">{task.title}</span>
                                             <span className="text-[9px] font-black px-2 py-0.5 bg-white/10 rounded uppercase">
-                                                {new Date((task as any).due_date || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                {new Date(task.due_date || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                             </span>
                                         </div>
                                     ))

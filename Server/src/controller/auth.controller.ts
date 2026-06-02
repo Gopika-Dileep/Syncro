@@ -4,8 +4,7 @@ import { HttpStatus } from '../enums/HttpStatus';
 import { AUTH_MESSAGES } from '../constants/messages';
 import { TYPES } from '../di/types';
 import { cookieUtils } from '../utils/cookie.utils';
-import { handleAsyncError } from '../utils/error.utils';
-import { success, created, sendSuccessResponse } from '../utils/response.utils';
+import { success, created } from '../utils/response.utils';
 
 import { IRegisterService } from '../interfaces/services/auth/IRegisterService';
 import { IVerifyOtpService } from '../interfaces/services/auth/IVerifyOtpService';
@@ -27,14 +26,14 @@ export class AuthController {
     @inject(TYPES.ILogoutService) private _logoutService: ILogoutService,
     @inject(TYPES.IForgotPasswordService) private _forgotPasswordService: IForgotPasswordService,
     @inject(TYPES.IResetPasswordService) private _resetPasswordService: IResetPasswordService,
-  ) {}
+  ) { }
 
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const result = await this._registerService.execute(req.body);
       created(res, result.message);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -42,9 +41,9 @@ export class AuthController {
     try {
       const result = await this._verifyOtpService.execute(req.body);
       cookieUtils.setRefreshToken(res, result.refreshToken);
-      sendSuccessResponse(res, '', { user: result.user, permissions: result.permissions }, result.accessToken);
+      success(res, { user: result.user, permissions: result.permissions }, { token: result.accessToken });
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -53,7 +52,7 @@ export class AuthController {
       const result = await this._resendOtpService.execute(req.body);
       success(res, result.message);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -61,9 +60,9 @@ export class AuthController {
     try {
       const result = await this._loginService.execute(req.body);
       cookieUtils.setRefreshToken(res, result.refreshToken);
-      sendSuccessResponse(res, AUTH_MESSAGES.LOGIN_SUCCESS || 'Login successful', { user: result.user, permissions: result.permissions }, result.accessToken);
+      success(res, { user: result.user, permissions: result.permissions }, { message: AUTH_MESSAGES.LOGIN_SUCCESS, token: result.accessToken });
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -75,9 +74,9 @@ export class AuthController {
         return;
       }
       const result = await this._refreshService.execute(refreshToken);
-      sendSuccessResponse(res, '', { user: result.user, permissions: result.permissions }, result.accessToken);
+      success(res, { user: result.user, permissions: result.permissions }, { token: result.accessToken });
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -88,7 +87,7 @@ export class AuthController {
       cookieUtils.clearRefreshToken(res);
       success(res, AUTH_MESSAGES.LOGGED_OUT);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -97,7 +96,7 @@ export class AuthController {
       const result = await this._forgotPasswordService.execute(req.body);
       success(res, result.message);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -106,7 +105,7 @@ export class AuthController {
       const result = await this._resetPasswordService.execute(req.body);
       success(res, result.message);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

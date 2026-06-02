@@ -68,7 +68,7 @@ export default function DataTable<T>({
     const from = totalRows === 0 ? 0 : (page - 1) * limit + 1;
     const to = Math.min(page * limit, totalRows);
 
-    // Always render at least 5 rows so table height is stable
+
     const MIN_ROWS = 5;
     const ghostCount = Math.max(0, MIN_ROWS - rows.length);
 

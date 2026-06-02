@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IProjectRepository } from '../../interfaces/repositories/IProjectRepository';
 import { IReviewSubTaskService } from '../../interfaces/services/subTask/IReviewSubTaskService';
 import { ReviewSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
@@ -10,8 +11,10 @@ import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IssueStatus } from '../../enums/IssueEnums';
 import { ProjectStatus } from '../../enums/ProjectEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
-import { NotificationType } from '../../models/notification.model';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
+import { NotificationType } from '../../enums/NotificationEnums';
+import { NotFoundError } from '../../errors/AppError';
+import { TASK_MESSAGES } from '../../constants/messages';
 
 interface IPopulatedId {
   _id: { toString(): string };
@@ -34,19 +37,21 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
 
     const status = data.action === 'approve' ? SubTaskStatus.DONE : SubTaskStatus.IN_PROGRESS;
 
-    const historyEntry = {
+    const historyEntry: ICreateHistoryInput = {
       action: 'status_change',
       from: SubTaskStatus.IN_REVIEW,
       to: status,
       user: actorId,
-      created_at: new Date(),
     };
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      status,
-      rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
-      $push: { history: historyEntry },
-    } as Record<string, unknown>);
+    const subTask = await this._subTaskRepository.updateWithHistory(
+      subTaskId,
+      {
+        status,
+        rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
+      },
+      historyEntry,
+    );
 
     if (subTask) {
       if (status === SubTaskStatus.DONE) {
@@ -71,9 +76,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
           senderId: actorId.toString(),
           type: status === SubTaskStatus.DONE ? NotificationType.SUBTASK_APPROVED : NotificationType.SUBTASK_REJECTED,
           title: status === SubTaskStatus.DONE ? 'Sub-task Approved' : 'Rework Requested',
-          message: status === SubTaskStatus.DONE 
-            ? `Your sub-task "${subTask.title}" has been approved.` 
-            : `Rework requested for "${subTask.title}". Reason: ${data.rework_reason || 'See details'}`,
+          message: status === SubTaskStatus.DONE ? `Your sub-task "${subTask.title}" has been approved.` : `Rework requested for "${subTask.title}". Reason: ${data.rework_reason || 'See details'}`,
           link: `/employee/tasks?selectedTask=${subTask._id.toString()}`,
           relatedEntityId: subTask._id.toString(),
           relatedEntityType: 'SubTask',
@@ -82,11 +85,14 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
       return SubTaskMapper.toResponseDTO(subTask);
     }
 
-    const issue = await this._issueRepository.updateById(subTaskId, {
-      status: status === SubTaskStatus.DONE ? IssueStatus.DONE : IssueStatus.IN_PROGRESS,
-      rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
-      $push: { history: historyEntry },
-    } as Record<string, unknown>);
+    const issue = await this._issueRepository.updateWithHistory(
+      subTaskId,
+      {
+        status: status === SubTaskStatus.DONE ? IssueStatus.DONE : IssueStatus.IN_PROGRESS,
+        rework_reason: status === SubTaskStatus.DONE ? undefined : data.rework_reason,
+      },
+      historyEntry,
+    );
 
     if (issue) {
       if (status === SubTaskStatus.DONE) {
@@ -105,9 +111,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
           senderId: actorId.toString(),
           type: status === SubTaskStatus.DONE ? NotificationType.SUBTASK_APPROVED : NotificationType.SUBTASK_REJECTED,
           title: status === SubTaskStatus.DONE ? 'Task Approved' : 'Rework Requested',
-          message: status === SubTaskStatus.DONE 
-            ? `Your task "${issue.title}" has been approved.` 
-            : `Rework requested for "${issue.title}". Reason: ${data.rework_reason || 'See details'}`,
+          message: status === SubTaskStatus.DONE ? `Your task "${issue.title}" has been approved.` : `Rework requested for "${issue.title}". Reason: ${data.rework_reason || 'See details'}`,
           link: `/employee/backlogs?selectedIssue=${issue._id.toString()}`,
           relatedEntityId: issue._id.toString(),
           relatedEntityType: 'Issue',
@@ -116,7 +120,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
       return SubTaskMapper.fromIssue(issue);
     }
 
-    throw new Error('Task not found');
+    throw new NotFoundError(TASK_MESSAGES.NOT_FOUND);
   }
 
   private async checkAndCompleteProject(projectId: string) {

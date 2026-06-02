@@ -90,3 +90,11 @@ export interface VelocityAnalyticsResponse {
   sprintWise: VelocityDataPoint[];
   multipleTeam: TeamVelocity[];
 }
+
+export interface GetSprintsRepositoryDTO {
+  companyId: string;
+  page: number;
+  limit: number;
+  search: string;
+  status?: string;
+}

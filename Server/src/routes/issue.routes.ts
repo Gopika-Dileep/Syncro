@@ -31,12 +31,7 @@ export class IssueRouter {
       validateRequest(AssignIssueRequestSchema),
       issueController.assignIssue,
     );
-    this.router.patch(
-      ENDPOINTS.ISSUES.AUTO_ASSIGN,
-      authMiddleware,
-      checkPermission(['issue:story:assign', 'issue:task:assign', 'issue:bug:assign', 'issue:story:assign_to_sprint', 'issue:task:assign_to_sprint', 'issue:bug:assign_to_sprint']),
-      issueController.autoAssignIssue,
-    );
+    this.router.patch(ENDPOINTS.ISSUES.AUTO_ASSIGN, authMiddleware, checkPermission(['issue:story:assign', 'issue:task:assign', 'issue:bug:assign', 'issue:story:assign_to_sprint', 'issue:task:assign_to_sprint', 'issue:bug:assign_to_sprint']), issueController.autoAssignIssue);
     this.router.post(ENDPOINTS.ISSUES.COMMENT, authMiddleware, validateRequest(AddCommentRequestSchema), issueController.addComment);
     this.router.post(ENDPOINTS.ISSUES.ATTACHMENT, authMiddleware, validateRequest(AddAttachmentRequestSchema), issueController.addAttachment);
     this.router.delete(ENDPOINTS.ISSUES.BY_ISSUE_ID, authMiddleware, checkPermission(['issue:story:delete', 'issue:task:delete', 'issue:bug:delete']), issueController.deleteIssue);

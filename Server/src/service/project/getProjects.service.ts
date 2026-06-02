@@ -29,7 +29,13 @@ export class GetProjectsService implements IGetProjectsService {
 
   async execute(userId: string, query: GetProjectsRequestDTO): Promise<PaginatedProjectResponseDTO> {
     const companyId = await this.resolveCompanyId(userId);
-    const { projects, total } = await this._projectRepository.getProjectsWithPagination(companyId, query.page, query.limit, query.search, query.status);
+    const { projects, total } = await this._projectRepository.getProjectsWithPagination({
+      companyId,
+      page: query.page,
+      limit: query.limit,
+      search: query.search,
+      status: query.status,
+    });
 
     return {
       projects: ProjectMapper.toResponseList(projects),

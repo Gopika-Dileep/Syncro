@@ -109,14 +109,14 @@ export default function SubTasks() {
         } finally {
             setFetching(false);
         }
-    }, [debouncedSearchTerm, isPM, activeTab]);
+    }, [debouncedSearchTerm, isPM, activeTab, canViewTeam]);
 
     useEffect(() => {
         fetchSubTasks();
         fetchEmployees();
     }, [fetchSubTasks, fetchEmployees]);
 
-    // Handle deep linking for tasks
+  
     useEffect(() => {
         const taskId = searchParams.get('selectedTask');
         if (taskId) {
@@ -125,7 +125,7 @@ export default function SubTasks() {
                 setSelectedSubTask(found);
                 setShowDetailsDrawer(true);
             } else if (!fetching) {
-                // If not found in current list and we are not fetching, try fetching specifically
+               
                 const fetchSpecific = async () => {
                     try {
                         const res = await getSubTaskByIdApi(taskId as string);
@@ -320,12 +320,12 @@ export default function SubTasks() {
     }, [isPM, subTasks]);
 
     const filteredSubTasks = useMemo(() => {
-        if (selectedTeamFilter === 'all') return subTasks;
+        if (!isPM || selectedTeamFilter === 'all') return subTasks;
         return subTasks.filter(t => {
             const teamId = (t.team_id as { _id: string })?._id || (t.team_id as unknown as string);
             return teamId === selectedTeamFilter;
         });
-    }, [subTasks, selectedTeamFilter]);
+    }, [subTasks, selectedTeamFilter, isPM]);
 
     if (fetching) {
         return (
@@ -484,8 +484,8 @@ export default function SubTasks() {
                                                                                                 
                                                                                                 {!isReadOnly && col === 'In Progress' && item.status === 'In Progress' && (
                                                                                                     (item.subtask_type === 'sub-task' ? can('task:block') :
-                                                                                                    item.subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                                                                                                    item.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                                                                                    item.subtask_type === 'bug' ? can('issue:bug:block') :
+                                                                                                    item.subtask_type === 'task' ? can('issue:task:block') :
                                                                                                     can('task:block')) && (
                                                                                                     <button 
                                                                                                         onClick={(e) => {
@@ -502,8 +502,8 @@ export default function SubTasks() {
 
                                                                                                 {!isReadOnly && col === 'In Progress' && item.status === 'Blocked' && (
                                                                                                     (item.subtask_type === 'sub-task' ? can('task:block') :
-                                                                                                    item.subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                                                                                                    item.subtask_type === 'task' ? can('issue:task:block' as any) :
+                                                                                                    item.subtask_type === 'bug' ? can('issue:bug:block') :
+                                                                                                    item.subtask_type === 'task' ? can('issue:task:block') :
                                                                                                     can('task:block')) && (
                                                                                                     <button 
                                                                                                         onClick={(e) => {

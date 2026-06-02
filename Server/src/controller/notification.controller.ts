@@ -1,31 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { injectable, inject } from 'inversify';
-import { INotificationService } from '../interfaces/services/INotificationService';
+import { INotificationService } from '../interfaces/services/notification/INotificationService';
 import { TYPES } from '../di/types';
 import { success } from '../utils/response.utils';
-
-import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
+import { NOTIFICATION_MESSAGES } from '../constants/messages';
 
 @injectable()
 export class NotificationController {
   constructor(
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository
-  ) {}
+  ) { }
 
   getNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.userId!;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const employee = await this._employeeRepository.findOne({ user_id: userId });
-      if (!employee) {
-        return success(res, { notifications: [], total: 0, unreadCount: 0 }, 'No employee found');
-      }
-
-      const result = await this._notificationService.getNotifications(employee._id.toString(), page, limit);
-      success(res, result, 'Notifications fetched successfully');
+      const result = await this._notificationService.getNotifications({ userId, page, limit });
+      success(res, result, NOTIFICATION_MESSAGES.FETCH_SUCCESS);
     } catch (err) {
       next(err);
     }
@@ -35,7 +28,7 @@ export class NotificationController {
     try {
       const { id } = req.params;
       const notification = await this._notificationService.markAsRead(id as string);
-      success(res, notification, 'Notification marked as read');
+      success(res, notification, NOTIFICATION_MESSAGES.MARK_READ_SUCCESS);
     } catch (err) {
       next(err);
     }
@@ -43,12 +36,9 @@ export class NotificationController {
 
   markAllAsRead = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = (req as any).userId;
-      const employee = await this._employeeRepository.findOne({ user_id: userId });
-      if (employee) {
-        await this._notificationService.markAllAsRead(employee._id.toString());
-      }
-      success(res, null, 'All notifications marked as read');
+      const userId = req.userId!;
+      await this._notificationService.markAllAsRead(userId);
+      success(res, null, NOTIFICATION_MESSAGES.MARK_ALL_READ_SUCCESS);
     } catch (err) {
       next(err);
     }

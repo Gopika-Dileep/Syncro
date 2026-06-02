@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { BaseRepository } from './base.repository';
 import { ISprint, sprintModel } from '../models/sprint.model';
 import { ISprintRepository } from '../interfaces/repositories/ISprintRepository';
+import { GetSprintsRepositoryDTO } from '../dto/sprint.dto';
 
 @injectable()
 export class SprintRepository extends BaseRepository<ISprint> implements ISprintRepository {
@@ -9,7 +10,8 @@ export class SprintRepository extends BaseRepository<ISprint> implements ISprint
     super(sprintModel);
   }
 
-  async getSprintsWithPagination(companyId: string, page: number, limit: number, search: string, status?: string): Promise<{ sprints: ISprint[]; total: number }> {
+  async getSprintsWithPagination(query: GetSprintsRepositoryDTO): Promise<{ sprints: ISprint[]; total: number }> {
+    const { companyId, page, limit, search, status } = query;
     const filter: Record<string, unknown> = { company_id: companyId };
 
     if (search) {

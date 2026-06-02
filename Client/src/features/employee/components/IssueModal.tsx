@@ -1,11 +1,10 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect } from "react";
+ 
+import React, { useState, useEffect, useRef } from "react";
 import { X, Plus, Trash2, Bug, BookOpen, CheckSquare } from "lucide-react";
 import { createPortal } from "react-dom";
 import { usePermission } from "@/features/employee/hooks/usePermission";
 import MentionTextArea from "@/features/shared/components/MentionTextArea";
-import MemberSelectModal from "@/features/shared/components/MemberSelectModal";
-import { ChevronDown, UserPlus, Sparkles, Loader2, Bot } from "lucide-react";
+import { ChevronDown, Sparkles, Loader2, Bot } from "lucide-react";
 
 export interface IssueFormData {
     title: string;
@@ -44,7 +43,7 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
     
     const availableTypes = React.useMemo(() => 
         ISSUE_TYPES.filter(it => isEditing ? true : can(`issue:${it.id}:create`)),
-        [isEditing, can]
+        [isEditing]
     );
 
     const [title, setTitle] = useState("");
@@ -58,11 +57,24 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
     const [environment, setEnvironment] = useState("");
     const [mentions, setMentions] = useState<string[]>([]);
     const [assigneeId, setAssigneeId] = useState("");
-    const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
     const [isAutoAssigning, setIsAutoAssigning] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown on clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
+            setIsDropdownOpen(false);
             if (initialData) {
                 setTitle(initialData.title);
                 setType(initialData.type || "story");
@@ -91,7 +103,7 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                 setAssigneeId("");
             }
         }
-    }, [isOpen, initialData]); // Remove availableTypes to prevent reset-on-render
+    }, [isOpen, initialData, availableTypes]); 
 
     if (!isOpen) return null;
 
@@ -123,8 +135,8 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
         try {
             const newId = await onAutoAssign();
             if (newId) setAssigneeId(newId);
-        } catch {
-            // Error handled by parent
+        } catch (err) {
+            console.error("Auto assign failed", err);
         } finally {
             setIsAutoAssigning(false);
         }
@@ -281,38 +293,57 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                          </div>
  
                          {/* Removed redundant Mention Employees button list as we now have inline tagging */}
-
                          {can(`issue:${type.toLowerCase()}:assign`) && (
                              <div>
                                  <label className="block text-[12px] font-bold text-[#555] mb-1.5">Assign To</label>
                                  <div className="flex items-center gap-2">
-                                     <button
-                                         type="button"
-                                         onClick={() => setIsMemberModalOpen(true)}
-                                         className="flex-1 flex items-center justify-between px-4 py-2.5 bg-white border-2 border-[#f0f0f0] hover:border-[#fa8029]/50 rounded-2xl transition-all group"
-                                     >
-                                         <div className="flex items-center gap-3">
-                                             {assigneeId ? (
-                                                 <>
-                                                     <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-[11px] font-black uppercase border border-orange-100">
-                                                         {members.find(m => m._id === assigneeId)?.name.substring(0, 2) || '??'}
-                                                     </div>
-                                                     <div className="text-left">
-                                                         <p className="text-[13px] font-bold text-[#1f2124]">{members.find(m => m._id === assigneeId)?.name}</p>
-                                                         <p className="text-[10px] text-[#aaa] font-bold uppercase tracking-wider">{members.find(m => m._id === assigneeId)?.designation || 'Team Member'}</p>
-                                                     </div>
-                                                 </>
-                                             ) : (
-                                                 <>
-                                                     <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-orange-400 transition-colors">
-                                                         <UserPlus size={16} />
-                                                     </div>
-                                                     <span className="text-[13px] font-bold text-[#aaa] group-hover:text-orange-500 transition-colors">Select Assignee</span>
-                                                 </>
-                                             )}
-                                         </div>
-                                         <ChevronDown size={18} className="text-[#ccc] group-hover:text-orange-500 transition-colors" />
-                                     </button>
+                                     <div className="relative flex-1" ref={dropdownRef}>
+                                         <button
+                                             type="button"
+                                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                             className="w-full px-4 h-[52px] text-[13px] font-bold text-[#1f2124] bg-white border-2 border-[#fa8029] hover:border-[#fa8029]/80 rounded-[20px] outline-none focus:ring-2 focus:ring-[#fa8029]/20 transition-all flex items-center justify-between cursor-pointer shadow-sm active:scale-[0.98]"
+                                         >
+                                             <span className="truncate">
+                                                 {assigneeId 
+                                                     ? `${members.find(m => m._id === assigneeId)?.name} ${members.find(m => m._id === assigneeId)?.designation ? `(${members.find(m => m._id === assigneeId)?.designation})` : ''}`
+                                                     : "Select Assignee"
+                                                 }
+                                             </span>
+                                             <ChevronDown size={18} className="text-[#fa8029] shrink-0" />
+                                         </button>
+                                         
+                                         {isDropdownOpen && (
+                                             <div className="absolute left-0 right-0 mt-1 bg-white border border-[#fa8029]/20 rounded-[20px] shadow-xl max-h-[200px] overflow-y-auto z-[1100] py-1.5 animate-in fade-in slide-in-from-top-2 duration-150 custom-scrollbar">
+                                                 <button
+                                                     type="button"
+                                                     onClick={() => {
+                                                         setAssigneeId("");
+                                                         setIsDropdownOpen(false);
+                                                     }}
+                                                     className="w-full text-left px-4 py-2.5 text-[13px] font-bold text-[#737373] hover:bg-orange-50 hover:text-[#fa8029] transition-colors cursor-pointer"
+                                                 >
+                                                     Select Assignee
+                                                 </button>
+                                                 {members.map(member => (
+                                                     <button
+                                                         key={member._id}
+                                                         type="button"
+                                                         onClick={() => {
+                                                             setAssigneeId(member._id);
+                                                             setIsDropdownOpen(false);
+                                                         }}
+                                                         className={`w-full text-left px-4 py-2.5 text-[13px] font-bold transition-colors cursor-pointer ${
+                                                             assigneeId === member._id 
+                                                                 ? 'bg-[#fa8029] text-white' 
+                                                                 : 'text-[#1f2124] hover:bg-orange-50 hover:text-[#fa8029]'
+                                                         }`}
+                                                     >
+                                                         {member.name} {member.designation ? `(${member.designation})` : ''}
+                                                     </button>
+                                                 ))}
+                                             </div>
+                                         )}
+                                     </div>
 
                                      {/* AI Auto Assign Button */}
                                      <button
@@ -322,7 +353,7 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                                          title="Auto-assign using AI"
                                          className="w-12 h-[52px] shrink-0 flex items-center justify-center bg-[#f9f9f9] border border-gray-100 rounded-2xl text-[#a855f7] hover:bg-white hover:border-[#a855f7]/30 hover:shadow-sm hover:shadow-purple-500/10 transition-all active:scale-[0.96] disabled:opacity-50"
                                      >
-                                         {isAutoAssigning ? <Loader2 size={20} className="animate-spin" /> : <Bot size={22} />}
+                                         {isAutoAssigning ? <Loader2 size={20} className="animate-spin text-purple-600" /> : <Bot size={22} />}
                                      </button>
                                  </div>
                                  <div className="flex items-center gap-2 mt-2 ml-1">
@@ -399,17 +430,6 @@ export default function IssueModal({ isOpen, onClose, onSubmit, initialData, isE
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ddd; }
             `}</style>
-            <MemberSelectModal
-                isOpen={isMemberModalOpen}
-                onClose={() => setIsMemberModalOpen(false)}
-                onSelect={(id) => setAssigneeId(id)}
-                members={members}
-                title={`Assign ${type.charAt(0).toUpperCase() + type.slice(1)}`}
-                onAutoAssign={onAutoAssign ? async () => {
-                    const newId = await onAutoAssign();
-                    if (newId) setAssigneeId(newId);
-                } : undefined}
-            />
         </div>
     );
 

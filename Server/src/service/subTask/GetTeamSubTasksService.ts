@@ -6,7 +6,6 @@ import { SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
-import { IssueType } from '../../enums/IssueEnums';
 
 @injectable()
 export class GetTeamSubTasksService implements IGetTeamSubTasksService {
@@ -25,11 +24,8 @@ export class GetTeamSubTasksService implements IGetTeamSubTasksService {
     const teamEmployees = await this._employeeRepository.find({ team_id: employee.team_id });
     const employeeIds = teamEmployees.map((emp) => emp._id);
 
-    const issues = await this._issueRepository.findPopulated({
-      company_id: employee.company_id,
-      assignee_id: { $in: employeeIds },
-      type: { $in: [IssueType.TASK, IssueType.BUG] },
-      status: { $ne: 'Backlog' },
+    const issues = await this._issueRepository.findActiveTasksAndBugs(employee.company_id.toString(), {
+      assigneeIds: employeeIds.map((id) => id.toString()),
     });
 
     let mappedSubTasks = SubTaskMapper.toResponseList(subTasks);

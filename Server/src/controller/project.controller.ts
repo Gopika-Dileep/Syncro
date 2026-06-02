@@ -7,7 +7,6 @@ import { IUpdateProjectService } from '../interfaces/services/project/IUpdatePro
 import { IDeleteProjectService } from '../interfaces/services/project/IDeleteProjectService';
 import { IGetProjectInsightsService } from '../interfaces/services/project/IGetProjectInsightsService';
 import { TYPES } from '../di/types';
-import { handleAsyncError } from '../utils/error.utils';
 import { success, created } from '../utils/response.utils';
 import { PROJECT_MESSAGES } from '../constants/messages';
 import { GetProjectsRequestDTO } from '../dto/project.dto';
@@ -28,7 +27,7 @@ export class ProjectController {
       const result = await this._createProjectService.execute(req.userId!, req.body);
       created(res, result.project, result.message);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -38,7 +37,7 @@ export class ProjectController {
       const { projects, total } = await this._getProjectsService.execute(req.userId!, query);
       success(res, { projects, total, page: query.page, limit: query.limit }, PROJECT_MESSAGES.FETCH_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -48,7 +47,7 @@ export class ProjectController {
       const project = await this._updateProjectService.execute(projectId as string, req.body);
       success(res, project, PROJECT_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -58,7 +57,7 @@ export class ProjectController {
       await this._deleteProjectService.execute(projectId as string);
       success(res, PROJECT_MESSAGES.DELETE_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -68,7 +67,7 @@ export class ProjectController {
       const project = await this._getProjectByIdService.execute(projectId as string);
       success(res, project, PROJECT_MESSAGES.FETCH_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -78,7 +77,7 @@ export class ProjectController {
       const insights = await this._getProjectInsightsService.execute(projectId as string);
       success(res, insights, PROJECT_MESSAGES.FETCH_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

@@ -97,7 +97,6 @@ export default function Employees() {
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [error, setError] = useState("");
 
-    // Dropdown state
     const [openId, setOpenId] = useState<string | null>(null);
     const [dropPos, setDropPos] = useState<DropdownPos>({ top: 0, right: 0 });
     const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});

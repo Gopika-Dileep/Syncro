@@ -14,6 +14,7 @@ import { IssueType, IssueStatus } from '../../enums/IssueEnums';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IIssue } from '../../models/issue.model';
+import { DashboardMapper } from '../../mappers/dashboard.mapper';
 
 @injectable()
 export class GetCompanyDashboardService implements IGetCompanyDashboardService {
@@ -31,19 +32,10 @@ export class GetCompanyDashboardService implements IGetCompanyDashboardService {
     const company = await this._companyRepo.findOne({ user_id: userId });
     if (!company) throw new NotFoundError('Company not found');
 
-    const companyId = company._id; // Keep as ObjectId
+    const companyId = company._id;
     const companyIdStr = companyId.toString();
 
-    const [
-      totalEmployees,
-      totalProjects,
-      totalTeams,
-      completedSprints,
-      totalSprints,
-      issueStats,
-      statusStats,
-      recentBlocked
-    ] = await Promise.all([
+    const [totalEmployees, totalProjects, totalTeams, completedSprints, totalSprints, issueStats, statusStats, recentBlocked] = await Promise.all([
       this._employeeRepo.count({ company_id: companyId }),
       this._projectRepo.count({ company_id: companyId }),
       this._teamRepo.count({ company_id: companyId }),
@@ -51,7 +43,7 @@ export class GetCompanyDashboardService implements IGetCompanyDashboardService {
       this._sprintRepo.count({ company_id: companyId }),
       this.getIssueStats(companyIdStr),
       this.getStatusStats(companyIdStr),
-      this._issueRepo.find({ company_id: companyId, status: IssueStatus.BLOCKED }, { sort: { updated_at: -1 }, limit: 5 })
+      this._issueRepo.find({ company_id: companyId, status: IssueStatus.BLOCKED }, { sort: { updated_at: -1 }, limit: 5 }),
     ]);
 
     return {
@@ -62,13 +54,7 @@ export class GetCompanyDashboardService implements IGetCompanyDashboardService {
       totalSprints,
       issueStats,
       statusDistribution: statusStats,
-      recentBlocked: (recentBlocked as IIssue[]).map((i) => ({
-        _id: i._id,
-        title: i.title,
-        priority: i.priority,
-        blocked_reason: i.blocked_reason,
-        updated_at: i.updated_at
-      }))
+      recentBlocked: DashboardMapper.toCompanyRecentBlocked(recentBlocked as IIssue[]),
     };
   }
 
@@ -86,10 +72,7 @@ export class GetCompanyDashboardService implements IGetCompanyDashboardService {
 
   private async getStatusStats(companyId: string) {
     const objId = new mongoose.Types.ObjectId(companyId);
-    const [
-      issueTodo, issueIP, issueIR, issueBlocked, issueDone,
-      stTodo, stIP, stIR, stBlocked, stDone
-    ] = await Promise.all([
+    const [issueTodo, issueIP, issueIR, issueBlocked, issueDone, stTodo, stIP, stIR, stBlocked, stDone] = await Promise.all([
       this._issueRepo.count({ company_id: objId, status: { $in: [IssueStatus.NEW, IssueStatus.READY, IssueStatus.TODO] } }),
       this._issueRepo.count({ company_id: objId, status: IssueStatus.IN_PROGRESS }),
       this._issueRepo.count({ company_id: objId, status: IssueStatus.IN_REVIEW }),

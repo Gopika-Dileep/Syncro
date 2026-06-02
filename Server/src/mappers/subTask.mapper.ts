@@ -53,8 +53,8 @@ export class SubTaskMapper {
     return {
       _id: subTask._id.toString(),
       issue_id: typeof t.issue_id === 'object' && t.issue_id !== null ? String((t.issue_id as IPopulatedIssue)._id) : String(t.issue_id),
-      sprint_id: typeof t.sprint_id === 'object' && t.sprint_id !== null ? String((t.sprint_id as { _id: string })._id) : String(t.sprint_id),
-      sprint_status: typeof t.sprint_id === 'object' && t.sprint_id !== null ? String((t.sprint_id as { status: string }).status) : undefined,
+      sprint_id: t.sprint_id && String(t.sprint_id) !== 'null' && String(t.sprint_id) !== 'undefined' ? (typeof t.sprint_id === 'object' && 'status' in (t.sprint_id as Record<string, unknown>) ? String((t.sprint_id as { _id: string })._id) : String(t.sprint_id)) : undefined,
+      sprint_status: typeof t.sprint_id === 'object' && t.sprint_id !== null && 'status' in (t.sprint_id as Record<string, unknown>) && (t.sprint_id as Record<string, unknown>).status !== undefined ? String((t.sprint_id as { status: string }).status) : undefined,
       company_id: subTask.company_id?.toString() ?? '',
       team_id: extractRef(t.team_id),
       created_by: extractRef(t.created_by),
@@ -76,11 +76,11 @@ export class SubTaskMapper {
       parent_issue:
         t.issue_id && typeof t.issue_id === 'object'
           ? {
-            _id: String((t.issue_id as IPopulatedIssue)._id),
-            title: String((t.issue_id as IPopulatedIssue).title),
-            type: String((t.issue_id as IPopulatedIssue).type),
-            status: String((t.issue_id as IPopulatedIssue).status),
-          }
+              _id: String((t.issue_id as IPopulatedIssue)._id),
+              title: String((t.issue_id as IPopulatedIssue).title),
+              type: String((t.issue_id as IPopulatedIssue).type),
+              status: String((t.issue_id as IPopulatedIssue).status),
+            }
           : null,
       comments: (subTask.comments || []).map((c) => ({
         user: extractRef(c.user),
@@ -114,7 +114,7 @@ export class SubTaskMapper {
     return {
       _id: issue._id.toString(),
       issue_id: issue._id.toString(),
-      sprint_id: issue.sprint_id?.toString() ?? '',
+      sprint_id: i.sprint_id && String(i.sprint_id) !== 'null' && String(i.sprint_id) !== 'undefined' ? (typeof i.sprint_id === 'object' && 'status' in (i.sprint_id as Record<string, unknown>) ? String((i.sprint_id as { _id: string })._id) : String(i.sprint_id)) : undefined,
       company_id: issue.company_id.toString(),
       team_id: assigneeTeam ? { _id: String(assigneeTeam._id), name: String(assigneeTeam.name || '') } : null,
       created_by: extractRef(i.created_by),

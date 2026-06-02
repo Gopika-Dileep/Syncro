@@ -1,10 +1,11 @@
-import { Document } from "mongoose";
+import { AIAssignTaskDTO } from '../../../dto/ai.dto';
 
 export interface IAIService {
-    assignTask(task: any, employees: any[]): Promise<{
-        assignedEmployeeId: string;
-        assignedEmployeeName: string;
-        reasoning: string;
-        confidenceScore: number;
-    }>;
+  assignTask(query: AIAssignTaskDTO): Promise<{
+    assignedEmployeeId: string;
+    assignedEmployeeName: string;
+    reasoning: string;
+    confidenceScore: number;
+  }>;
 }
+

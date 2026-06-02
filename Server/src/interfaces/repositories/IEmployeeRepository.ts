@@ -6,4 +6,6 @@ export interface IEmployeeRepository extends IBaseRepository<IEmployee> {
   findByUserId(userId: string): Promise<IPopulatedEmployee | null>;
   getTeamDirectoryMembers(companyId: string, teamId: string | null, search: string): Promise<IPopulatedEmployee[]>;
   findUnassignedByCompanyId(companyId: string, search?: string): Promise<IPopulatedEmployee[]>;
+  findPopulated(filter: Record<string, unknown>): Promise<IPopulatedEmployee[]>;
+  findPopulatedById(id: string): Promise<IPopulatedEmployee | null>;
 }

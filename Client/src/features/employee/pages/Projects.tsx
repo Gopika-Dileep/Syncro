@@ -71,7 +71,7 @@ export default function Projects() {
             const response = await getProjectsApi(page, limit, debouncedSearchTerm);
             setProjects(response.data || []);
             setTotal(response.total || 0);
-            setError(""); // Ensure error is cleared on success
+            setError(""); 
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
                 if (err.response?.status === 403) {

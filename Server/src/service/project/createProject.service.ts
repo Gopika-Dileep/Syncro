@@ -7,9 +7,9 @@ import { ProjectMapper } from '../../mappers/project.mapper';
 import { TYPES } from '../../di/types';
 import { PROJECT_MESSAGES } from '../../constants/messages';
 import { NotFoundError } from '../../errors/AppError';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 
 @injectable()
 export class CreateProjectService implements ICreateProjectService {
@@ -18,7 +18,7 @@ export class CreateProjectService implements ICreateProjectService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(userId: string, data: CreateProjectRequestDTO): Promise<{ message: string; project: ProjectResponseDTO }> {
     const employee = await this._employeeRepo.findByUserId(userId);
@@ -34,24 +34,23 @@ export class CreateProjectService implements ICreateProjectService {
 
     const project = await this._projectRepository.create(projectData);
 
-    // Notify Admin
     try {
-        const company = await this._companyRepo.findById(companyId);
-        if (company) {
-            const adminEmployee = await this._employeeRepo.findOne({ user_id: company.user_id });
-            if (adminEmployee) {
-                await this._notificationService.createNotification({
-                    recipientId: adminEmployee._id.toString(),
-                    senderId: creatorId,
-                    type: NotificationType.PROJECT_CREATED,
-                    title: 'New Project Created',
-                    message: `${employee.user_id?.name || 'Someone'} created a new project: ${project.name}`,
-                    link: `/employee/projects`
-                });
-            }
+      const company = await this._companyRepo.findById(companyId);
+      if (company) {
+        const adminEmployee = await this._employeeRepo.findOne({ user_id: company.user_id });
+        if (adminEmployee) {
+          await this._notificationService.createNotification({
+            recipientId: adminEmployee._id.toString(),
+            senderId: creatorId,
+            type: NotificationType.PROJECT_CREATED,
+            title: 'New Project Created',
+            message: `${employee.user_id?.name || 'Someone'} created a new project: ${project.name}`,
+            link: `/employee/projects`,
+          });
         }
+      }
     } catch (err) {
-        console.error('Failed to send project creation notification to admin', err);
+      console.error('Failed to send project creation notification to admin', err);
     }
 
     return {

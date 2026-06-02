@@ -28,7 +28,6 @@ export default function Sprints() {
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-    // Completion modal state
     const [isCompleteModalOpen, setCompleteModalOpen] = useState(false);
     const [sprintToComplete, setSprintToComplete] = useState<Sprint | null>(null);
     const [isFetchingCompleteData, setIsFetchingCompleteData] = useState(false);

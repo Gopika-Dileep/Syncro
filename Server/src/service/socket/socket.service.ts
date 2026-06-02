@@ -1,12 +1,12 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { injectable, inject } from 'inversify';
-import { ISocketService } from '../interfaces/services/ISocketService';
-import { verifyAccessToken } from './token.utils';
-import { env } from '../config/env';
-import logger from '../config/logger';
-import { TYPES } from '../di/types';
-import { IEmployeeRepository } from '../interfaces/repositories/IEmployeeRepository';
+import { ISocketService } from '../../interfaces/services/socket/ISocketService';
+import { verifyAccessToken } from '../../utils/token.utils';
+import { env } from '../../config/env';
+import logger from '../../config/logger';
+import { TYPES } from '../../di/types';
+import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -17,9 +17,7 @@ interface AuthenticatedSocket extends Socket {
 export class SocketService implements ISocketService {
   private io: SocketIOServer | null = null;
 
-  constructor(
-    @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository
-  ) {}
+  constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository) { }
 
   initialize(server: HttpServer): void {
     this.io = new SocketIOServer(server, {
@@ -40,6 +38,7 @@ export class SocketService implements ISocketService {
         (socket as AuthenticatedSocket).userId = decoded.id;
         next();
       } catch (err) {
+        logger.error('Socket authentication failed:', err);
         return next(new Error('Authentication error'));
       }
     });
@@ -48,10 +47,9 @@ export class SocketService implements ISocketService {
       const authSocket = socket as AuthenticatedSocket;
       const userId = authSocket.userId;
       if (!userId) return;
-      
+
       logger.info(`User connected to socket: ${userId}`);
 
-      // Find employee ID for this user
       const employee = await this._employeeRepository.findOne({ user_id: userId });
       if (employee) {
         const employeeId = employee._id.toString();
@@ -88,14 +86,5 @@ export class SocketService implements ISocketService {
     if (this.io) {
       this.io.to(room).emit(event, data);
     }
-  }
-
-  joinRoom(userId: string, room: string): void {
-    // Note: This is harder to do from server-side without socket instance
-    // Usually handled by client emitting 'join_room'
-  }
-
-  leaveRoom(userId: string, room: string): void {
-    // Usually handled by client emitting 'leave_room'
   }
 }

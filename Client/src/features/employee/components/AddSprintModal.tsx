@@ -20,8 +20,7 @@ export default function AddSprintModal({ isOpen, onClose, onSubmit, isSubmitting
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     
-    // const [projects, setProjects] = useState<Project[]>([]);
-    // const [projectsLoading, setProjectsLoading] = useState(false);
+
 
     useEffect(() => {
         if (isOpen) {

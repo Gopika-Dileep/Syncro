@@ -2,11 +2,15 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IStartSubTaskService } from '../../interfaces/services/subTask/IStartSubTaskService';
 import { SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { SprintStatus } from '../../enums/SprintEnums';
+import { BadRequestError, NotFoundError } from '../../errors/AppError';
+import { SPRINT_MESSAGES, TASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class StartSubTaskService implements IStartSubTaskService {
@@ -18,31 +22,50 @@ export class StartSubTaskService implements IStartSubTaskService {
 
   async execute(subTaskId: string, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    const historyEntry = {
+    const actorId = employee?._id ? String(employee._id) : userId;
+    const historyEntry: ICreateHistoryInput = {
       action: 'status_change',
       from: 'To Do',
       to: SubTaskStatus.IN_PROGRESS,
-      user: employee?._id,
-      created_at: new Date(),
+      user: actorId,
     };
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      status: SubTaskStatus.IN_PROGRESS,
-      $push: { history: historyEntry },
-    } as unknown as Record<string, unknown>);
+    const existingSubTask = await this._subTaskRepository.findById(subTaskId);
+    if (existingSubTask) {
+      const sprint = existingSubTask.sprint_id as any;
+      if (sprint && sprint.status !== SprintStatus.ACTIVE) {
+        throw new BadRequestError(SPRINT_MESSAGES.CANNOT_START_INACTIVE_SPRINT);
+      }
 
-    if (subTask) {
-      return SubTaskMapper.toResponseDTO(subTask);
+      const subTask = await this._subTaskRepository.updateWithHistory(
+        subTaskId,
+        {
+          status: SubTaskStatus.IN_PROGRESS,
+        },
+        historyEntry,
+      );
+
+      if (subTask) {
+        return SubTaskMapper.toResponseDTO(subTask);
+      }
     }
 
-    const issue = await this._issueRepository.updateById(subTaskId, {
-      status: 'In Progress',
-    });
+    const existingIssue = await this._issueRepository.findById(subTaskId);
+    if (existingIssue) {
+      const sprint = existingIssue.sprint_id as any;
+      if (sprint && sprint.status !== SprintStatus.ACTIVE) {
+        throw new BadRequestError(SPRINT_MESSAGES.CANNOT_START_INACTIVE_SPRINT);
+      }
 
-    if (issue) {
-      return SubTaskMapper.fromIssue(issue);
+      const issue = await this._issueRepository.updateById(subTaskId, {
+        status: 'In Progress',
+      });
+
+      if (issue) {
+        return SubTaskMapper.fromIssue(issue);
+      }
     }
 
-    throw new Error('Task not found');
+    throw new NotFoundError(TASK_MESSAGES.NOT_FOUND);
   }
 }

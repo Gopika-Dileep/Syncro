@@ -28,5 +28,5 @@ export const env = {
   COOKIE_SECURE: getEnv('COOKIE_SECURE') === 'true',
   COOKIE_SAME_SITE: getEnv('COOKIE_SAME_SITE') as 'lax' | 'strict' | 'none',
   LOG_RETENTION_DAYS: getEnv('LOG_RETENTION_DAYS'),
-  GROQ_API_KEY:getEnv('GROQ_API_KEY'),
+  GROQ_API_KEY: getEnv('GROQ_API_KEY'),
 };

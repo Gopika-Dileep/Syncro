@@ -69,7 +69,6 @@ import { IGetEmployeeDashboardService } from '../interfaces/services/dashboard/I
 import { GetEmployeeDashboardService } from '../service/dashboard/GetEmployeeDashboardService';
 import { DashboardController } from '../controller/dashboard.controller';
 
-// Issue Services
 import { ICreateIssueService } from '../interfaces/services/issue/ICreateIssueService';
 import { IGetIssuesByProjectService } from '../interfaces/services/issue/IGetIssuesByProjectService';
 import { IGetIssuesBySprintService } from '../interfaces/services/issue/IGetIssuesBySprintService';
@@ -90,7 +89,6 @@ import { AddCommentToIssueService } from '../service/issue/AddCommentToIssueServ
 import { IAddAttachmentToIssueService } from '../interfaces/services/issue/IAddAttachmentToIssueService';
 import { AddAttachmentToIssueService } from '../service/issue/AddAttachmentToIssueService';
 
-// Auth Services
 import { IRegisterService } from '../interfaces/services/auth/IRegisterService';
 import { IVerifyOtpService } from '../interfaces/services/auth/IVerifyOtpService';
 import { IResendOtpService } from '../interfaces/services/auth/IResendOtpService';
@@ -108,7 +106,6 @@ import { LogoutService } from '../service/auth/logout.service';
 import { ForgotPasswordService } from '../service/auth/forgotPassword.service';
 import { ResetPasswordService } from '../service/auth/resetPassword.service';
 
-// Sprint Services
 import { ISprintRepository } from '../interfaces/repositories/ISprintRepository';
 import { SprintRepository } from '../repositories/sprint.repository';
 import { ICreateSprintService } from '../interfaces/services/sprint/ICreateSprintService';
@@ -125,7 +122,6 @@ import { IVelocityService } from '../interfaces/services/sprint/IVelocityService
 import { VelocityService } from '../service/sprint/VelocityService';
 import { SprintController } from '../controller/sprint.controller';
 
-// SubTask Services
 import { ISubTaskRepository } from '../interfaces/repositories/ISubTaskRepository';
 import { SubTaskRepository } from '../repositories/subTask.repository';
 import { ICreateSubTaskService } from '../interfaces/services/subTask/ICreateSubTaskService';
@@ -158,13 +154,12 @@ import { IAddAttachmentToSubTaskService } from '../interfaces/services/subTask/I
 import { AddAttachmentToSubTaskService } from '../service/subTask/AddAttachmentToSubTaskService';
 import { SubTaskController } from '../controller/subTask.controller';
 
-// Notification & Socket
-import { ISocketService } from '../interfaces/services/ISocketService';
-import { SocketService } from '../utils/socket.service';
+import { ISocketService } from '../interfaces/services/socket/ISocketService';
+import { SocketService } from '../service/socket/socket.service';
 import { INotificationRepository } from '../interfaces/repositories/INotificationRepository';
 import { NotificationRepository } from '../repositories/notification.repository';
-import { INotificationService } from '../interfaces/services/INotificationService';
-import { NotificationService } from '../service/notification.service';
+import { INotificationService } from '../interfaces/services/notification/INotificationService';
+import { NotificationService } from '../service/notification/notification.service';
 import { NotificationController } from '../controller/notification.controller';
 import { IStorageProvider } from '../interfaces/providers/IStorageProvider';
 import { S3StorageProvider } from '../providers/S3StorageProvider';

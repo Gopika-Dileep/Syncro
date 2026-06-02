@@ -61,9 +61,9 @@ export default function SprintPlanning() {
         try {
             const res = await getIssuesByProjectApi(projectId);
             const allIssues = res.data || [];
-            // Filter items not in any active sprint and in a 'plannable' status
+            
             setBacklogIssues(allIssues.filter(i => 
-                !i.sprint_id && 
+                (!i.sprint_id || i.sprint_id === 'null' || i.sprint_id === 'undefined') && 
                 i.status === 'Ready'
             ));
         } catch {
@@ -85,7 +85,7 @@ export default function SprintPlanning() {
             setSprint(currentSprint);
             setProjects(projectsRes.data || []);
 
-            // Fetch sprint issues once and backlog for initial project
+           
             if (sprintId) fetchSprintIssues(sprintId);
             
             if (projectsRes.data?.length > 0) {
@@ -192,7 +192,7 @@ export default function SprintPlanning() {
         const issue = [...backlogIssues, ...sprintIssues].find(i => i._id === draggableId);
         if (!issue) return;
 
-        // PERMISSION CHECK FOR DRAG-AND-DROP
+    
         const type = (issue.type || 'task').toLowerCase();
         const canAssign = can('sprint:update') || can(`issue:${type}:assign_to_sprint`);
 

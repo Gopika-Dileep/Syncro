@@ -5,12 +5,14 @@ import { IUpdateSubTaskService } from '../../interfaces/services/subTask/IUpdate
 import { UpdateSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
-import { NotificationType } from '../../models/notification.model';
+import { NotificationType } from '../../enums/NotificationEnums';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IssueType } from '../../enums/IssueEnums';
-import { BadRequestError } from '../../errors/AppError';
+import { BadRequestError, NotFoundError } from '../../errors/AppError';
+import { SUBTASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class UpdateSubTaskService implements IUpdateSubTaskService {
@@ -25,7 +27,7 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
   async execute(subTaskId: string, data: UpdateSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
     const oldSubTask = await this._subTaskRepository.findById(subTaskId);
-    if (!oldSubTask) throw new Error('Sub-task not found');
+    if (!oldSubTask) throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
 
     if (data.estimated_hours !== undefined && data.estimated_hours !== oldSubTask.estimated_hours) {
       const issue = await this._issueRepository.findById(oldSubTask.issue_id.toString());
@@ -33,7 +35,7 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
         const maxAllowedHours = (issue.story_points || 0) * 8;
 
         const existingSubTasks = await this._subTaskRepository.findAllByIssueId(oldSubTask.issue_id.toString());
-        const otherSubTasks = existingSubTasks.filter(st => st._id.toString() !== subTaskId);
+        const otherSubTasks = existingSubTasks.filter((st) => st._id.toString() !== subTaskId);
         const totalOtherEstimatedHours = otherSubTasks.reduce((sum, st) => sum + (st.estimated_hours || 0), 0);
 
         const remainingHours = maxAllowedHours - totalOtherEstimatedHours;
@@ -44,28 +46,25 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
       }
     }
 
-    const historyEntry = {
-      user: employee?._id,
-      created_at: new Date(),
-      action: 'updated' as string,
-      from: undefined as string | undefined,
-      to: undefined as string | undefined,
+    const actorId = employee?._id ? String(employee._id) : userId;
+    const historyEntry: ICreateHistoryInput = {
+      user: actorId,
+      action: 'updated',
+      from: undefined,
+      to: undefined,
     };
 
     if (data.status && data.status !== oldSubTask.status) {
       if (data.status === 'Blocked' && !data.blocked_reason) {
-        throw new Error('Blocked reason is required when blocking a task');
+        throw new BadRequestError(SUBTASK_MESSAGES.BLOCKED_REASON_REQUIRED);
       }
       historyEntry.action = 'status_change';
       historyEntry.from = oldSubTask.status;
       historyEntry.to = data.status;
     }
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      ...data,
-      $push: { history: historyEntry },
-    } as unknown as Partial<import('../../models/subTask.model').ISubTask>);
-    if (!subTask) throw new Error('Sub-task not found');
+    const subTask = await this._subTaskRepository.updateWithHistory(subTaskId, data, historyEntry);
+    if (!subTask) throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
 
     if (data.status === 'Blocked') {
       if (subTask.assigned_by) {
@@ -80,7 +79,6 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
           relatedEntityType: 'SubTask',
         });
       }
-
 
       try {
         const companyId = employee?.company_id?._id?.toString() || employee?.company_id?.toString();
@@ -97,7 +95,7 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
                 message: `${employee?.user_id?.name || 'Someone'} blocked sub-task "${subTask.title}". Reason: ${data.blocked_reason || 'No reason'}`,
                 link: `/employee/tasks?selectedTask=${subTask._id.toString()}`,
                 relatedEntityId: subTask._id.toString(),
-                relatedEntityType: 'SubTask'
+                relatedEntityType: 'SubTask',
               });
             }
           }
@@ -106,7 +104,6 @@ export class UpdateSubTaskService implements IUpdateSubTaskService {
         console.error('Failed to notify admin of blocked sub-task', err);
       }
     }
-
 
     if (data.blocked_reason) {
       const mentionRegex = /@\[([a-f\d]{24})\]\(([^)]+)\)/g;

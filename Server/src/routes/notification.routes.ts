@@ -3,6 +3,7 @@ import { container } from '../di/inversify.config';
 import { TYPES } from '../di/types';
 import { NotificationController } from '../controller/notification.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { ENDPOINTS } from '../constants/endpoints';
 
 export class NotificationRouter {
   public router: Router;
@@ -15,8 +16,8 @@ export class NotificationRouter {
   }
 
   private _initializeRoutes(): void {
-    this.router.get('/', authMiddleware, this._notificationController.getNotifications);
-    this.router.patch('/:id/read', authMiddleware, this._notificationController.markAsRead);
-    this.router.patch('/read-all', authMiddleware, this._notificationController.markAllAsRead);
+    this.router.get(ENDPOINTS.NOTIFICATIONS.ROOT, authMiddleware, this._notificationController.getNotifications);
+    this.router.patch(ENDPOINTS.NOTIFICATIONS.MARK_AS_READ, authMiddleware, this._notificationController.markAsRead);
+    this.router.patch(ENDPOINTS.NOTIFICATIONS.MARK_ALL_READ, authMiddleware, this._notificationController.markAllAsRead);
   }
 }

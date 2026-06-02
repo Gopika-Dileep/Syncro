@@ -16,7 +16,6 @@ import { SubTaskRouter } from './routes/subTask.routes';
 import { UploadRouter } from './routes/upload.routes';
 import { DashboardRouter } from './routes/dashboard.routes';
 import { NotificationRouter } from './routes/notification.routes';
-import path from 'path';
 export default class App {
   public app: Application;
   constructor() {
@@ -37,7 +36,6 @@ export default class App {
     this.app.use('/api/upload', new UploadRouter().router);
     this.app.use('/api/dashboard', new DashboardRouter().router);
     this.app.use('/api/notifications', new NotificationRouter().router);
-    this.app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
   }
   private _configureMiddleware(): void {
     this.app.use(morganMiddleware);

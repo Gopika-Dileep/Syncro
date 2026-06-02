@@ -5,6 +5,7 @@ import { ISubTask } from '../../models/subTask.model';
 import { TYPES } from '../../di/types';
 import { NotFoundError } from '../../errors/AppError';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
+import { EMPLOYEE_MESSAGES, SUBTASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class AddAttachmentToSubTaskService implements IAddAttachmentToSubTaskService {
@@ -15,31 +16,22 @@ export class AddAttachmentToSubTaskService implements IAddAttachmentToSubTaskSer
 
   async execute(subTaskId: string, userId: string, attachments: { file_url: string; file_name: string }[]): Promise<ISubTask> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
+    if (!employee) {
+      throw new NotFoundError(EMPLOYEE_MESSAGES.NOT_FOUND);
+    }
+
     const formattedAttachments = attachments.map((att) => ({
       ...att,
-      uploaded_by: employee?._id as unknown as import('mongoose').Types.ObjectId,
+      uploaded_by: String(employee._id),
       uploaded_at: new Date(),
     }));
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      $push: {
-        attachments: { $each: formattedAttachments },
-      },
-    });
+    const updatedSubTask = await this._subTaskRepository.addAttachments(subTaskId, formattedAttachments);
 
-    if (!subTask) {
-      throw new NotFoundError('Sub-task not found');
+    if (!updatedSubTask) {
+      throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
     }
 
-    return (await this._subTaskRepository.findById(subTaskId, {
-      populate: [
-        { path: 'comments.user', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'attachments.uploaded_by', populate: { path: 'user_id', select: 'name avatar' } },
-        { path: 'team_id', select: 'name' },
-        { path: 'assignee_id', populate: [{ path: 'user_id' }, { path: 'team_id' }] },
-        { path: 'created_by', populate: { path: 'user_id' } },
-        { path: 'assigned_by', populate: { path: 'user_id' } },
-      ],
-    })) as ISubTask;
+    return updatedSubTask;
   }
 }

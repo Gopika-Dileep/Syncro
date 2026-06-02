@@ -1,8 +1,6 @@
 import { injectable } from 'inversify';
 import { Request, Response, NextFunction } from 'express';
 import { success } from '../utils/response.utils';
-import { handleAsyncError } from '../utils/error.utils';
-import { env } from '../config/env';
 import { UPLOAD_MESSAGES } from '../constants/messages';
 
 interface S3File extends Express.Multer.File {
@@ -32,7 +30,7 @@ export class UploadController {
         UPLOAD_MESSAGES.UPLOAD_SUCCESS,
       );
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 
@@ -55,7 +53,7 @@ export class UploadController {
 
       success(res, uploadedFiles, UPLOAD_MESSAGES.UPLOAD_SUCCESS);
     } catch (error) {
-      handleAsyncError(error, next);
+      next(error);
     }
   };
 }

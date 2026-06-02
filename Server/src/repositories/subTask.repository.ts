@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import { ISubTaskRepository } from '../interfaces/repositories/ISubTaskRepository';
+import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../dto/issue.dto';
 import { ISubTask, subTaskModel } from '../models/subTask.model';
 import { BaseRepository } from './base.repository';
 
@@ -41,12 +42,78 @@ export class SubTaskRepository extends BaseRepository<ISubTask> implements ISubT
     return await this._model.find({ assignee_id: assigneeId }).populate(POPULATE_OPTS).sort({ created_at: -1 }).exec();
   }
 
-  override async findById(id: string): Promise<ISubTask | null> {
-    return await this._model.findById(id).populate(POPULATE_OPTS).exec();
+  override async findById(id: string, options?: Record<string, unknown>): Promise<ISubTask | null> {
+    return await this._model.findById(id, null, options).populate(POPULATE_OPTS).exec();
   }
 
-  override async updateById(id: string, update: Record<string, unknown>): Promise<ISubTask | null> {
-    return await this._model.findByIdAndUpdate(id, update, { new: true }).populate(POPULATE_OPTS).exec();
+  override async updateById(id: string, update: Record<string, unknown>, options?: Record<string, unknown>): Promise<ISubTask | null> {
+    return await this._model
+      .findByIdAndUpdate(id, update, { new: true, ...options })
+      .populate(POPULATE_OPTS)
+      .exec();
   }
-  
+
+  async addComment(id: string, comment: ICreateCommentInput): Promise<ISubTask | null> {
+    return await this._model
+      .findByIdAndUpdate(
+        id,
+        {
+          $push: {
+            comments: {
+              ...comment,
+              created_at: new Date(),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate(POPULATE_OPTS)
+      .exec();
+  }
+
+  async addAttachments(id: string, attachments: ICreateAttachmentInput[]): Promise<ISubTask | null> {
+    return await this._model
+      .findByIdAndUpdate(
+        id,
+        {
+          $push: {
+            attachments: { $each: attachments },
+          },
+        },
+        { new: true },
+      )
+      .populate(POPULATE_OPTS)
+      .exec();
+  }
+
+  async updateWithHistory(id: string, update: Record<string, unknown>, history: ICreateHistoryInput | ICreateHistoryInput[]): Promise<ISubTask | null> {
+    const historyArray = Array.isArray(history) ? history : [history];
+    if (historyArray.length === 0) {
+      return await this.updateById(id, update);
+    }
+    return await this._model
+      .findByIdAndUpdate(
+        id,
+        {
+          ...update,
+          $push: {
+            history: {
+              $each: historyArray.map((h) => ({ ...h, created_at: new Date() })),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate(POPULATE_OPTS)
+      .exec();
+  }
+
+  async findActiveByAssigneeId(assigneeId: string): Promise<ISubTask[]> {
+    return await this._model
+      .find({
+        assignee_id: assigneeId,
+        status: { $nin: ['Done'] },
+      })
+      .exec();
+  }
 }

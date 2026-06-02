@@ -28,8 +28,8 @@ export const IssueBaseSchema = z.object({
   assignee_id: z.string().nullable().optional(),
   title: z.string().min(2, 'Title must be at least 2 characters'),
   description: z.string().optional(),
-  reproduction_steps: z.string().optional(), // For Bugs
-  environment: z.string().optional(), // For Bugs
+  reproduction_steps: z.string().optional(),
+  environment: z.string().optional(),
   criteria: z.array(z.string().min(1, 'Criteria string cannot be empty')).optional(),
   story_points: z.number().min(0, 'Story points must be non-negative').optional(),
   estimated_hours: z.number().min(0, 'Estimated hours must be non-negative').optional(),
@@ -146,4 +146,24 @@ export interface IssueResponseDTO {
   }[];
   created_at: string;
   updated_at: string;
+}
+
+export interface ICreateCommentInput {
+  user: string;
+  text: string;
+  attachments?: { file_url: string; file_name: string }[];
+}
+
+export interface ICreateAttachmentInput {
+  file_url: string;
+  file_name: string;
+  uploaded_by: string;
+  uploaded_at: Date;
+}
+
+export interface ICreateHistoryInput {
+  action: string;
+  from?: string;
+  to?: string;
+  user: string;
 }

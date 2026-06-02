@@ -20,12 +20,10 @@ export class GetTeamsService implements IGetTeamsService {
   async execute(userId: string, query: GetTeamsRequestDTO): Promise<PaginatedTeamResponseDTO> {
     let companyId: string;
 
-    // Check if user is a company
     const company = await this._companyRepo.findOne({ user_id: userId });
     if (company) {
       companyId = company._id.toString();
     } else {
-      // Check if user is an employee
       const employee = await this._employeeRepo.findOne({ user_id: userId });
       if (!employee) throw new NotFoundError(TEAM_MESSAGES.COMPANY_NOT_FOUND);
       companyId = employee.company_id.toString();

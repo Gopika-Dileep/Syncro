@@ -2,13 +2,16 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { ISubmitSubTaskService } from '../../interfaces/services/subTask/ISubmitSubTaskService';
 import { SubmitSubTaskRequestDTO, SubTaskResponseDTO } from '../../dto/subTask.dto';
 import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
-import { INotificationService } from '../../interfaces/services/INotificationService';
-import { NotificationType } from '../../models/notification.model';
+import { INotificationService } from '../../interfaces/services/notification/INotificationService';
+import { NotificationType } from '../../enums/NotificationEnums';
+import { NotFoundError } from '../../errors/AppError';
+import { TASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
 export class SubmitSubTaskService implements ISubmitSubTaskService {
@@ -17,27 +20,29 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) {}
+  ) { }
 
   async execute(subTaskId: string, data: SubmitSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
-    const historyEntry = {
+    const actorId = employee?._id ? String(employee._id) : userId;
+    const historyEntry: ICreateHistoryInput = {
       action: 'status_change',
       from: SubTaskStatus.IN_PROGRESS,
       to: SubTaskStatus.IN_REVIEW,
-      user: employee?._id,
-      created_at: new Date(),
+      user: actorId,
     };
 
-    const subTask = await this._subTaskRepository.updateById(subTaskId, {
-      ...data,
-      status: SubTaskStatus.IN_REVIEW,
-      rework_reason: undefined,
-      $push: { history: historyEntry },
-    } as unknown as Record<string, unknown>);
+    const subTask = await this._subTaskRepository.updateWithHistory(
+      subTaskId,
+      {
+        ...data,
+        status: SubTaskStatus.IN_REVIEW,
+        rework_reason: undefined,
+      },
+      historyEntry,
+    );
 
     if (subTask) {
-      // Notify Assigner
       if (subTask.assigned_by) {
         await this._notificationService.createNotification({
           recipientId: subTask.assigned_by.toString(),
@@ -62,6 +67,6 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
       return SubTaskMapper.fromIssue(issue);
     }
 
-    throw new Error('Task not found');
+    throw new NotFoundError(TASK_MESSAGES.NOT_FOUND);
   }
 }

@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodError } from 'zod';
+import { HttpStatus } from '../enums/HttpStatus';
+import { COMMON_MESSAGES } from '../constants/messages';
 
 export const validateRequest = (schema: z.Schema) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -21,11 +23,11 @@ export const validateRequest = (schema: z.Schema) => {
         const errorMessages = issues.map((issue: z.ZodIssue) => {
           return `${issue.path.join('.')} - ${issue.message}`;
         });
-        res.status(400).json({ success: false, error: 'Validation failed', details: errorMessages });
+        res.status(HttpStatus.BAD_REQUEST).json({ success: false, error: COMMON_MESSAGES.VALIDATION_FAILED, details: errorMessages });
         return;
       }
-      const message = error instanceof Error ? error.message : 'Internal server error';
-      res.status(500).json({ success: false, error: 'Internal server error', message });
+      const message = error instanceof Error ? error.message : COMMON_MESSAGES.INTERNAL_SERVER_ERROR;
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, error: COMMON_MESSAGES.INTERNAL_SERVER_ERROR, message });
     }
   };
 };

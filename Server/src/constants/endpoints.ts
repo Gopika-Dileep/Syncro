@@ -75,4 +75,20 @@ export const ENDPOINTS = {
     COMMENT: '/comment/:subTaskId',
     ATTACHMENT: '/attachment/:subTaskId',
   },
+  DASHBOARD: {
+    BASE: '/dashboard',
+    COMPANY: '/company',
+    EMPLOYEE: '/employee',
+  },
+  NOTIFICATIONS: {
+    BASE: '/notifications',
+    ROOT: '/',
+    MARK_AS_READ: '/:id/read',
+    MARK_ALL_READ: '/read-all',
+  },
+  UPLOAD: {
+    BASE: '/upload',
+    SINGLE: '/single',
+    MULTIPLE: '/multiple',
+  },
 };

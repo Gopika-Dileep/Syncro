@@ -18,7 +18,7 @@ export function createErrorResponse<T>(message: string, data: T) {
   };
 }
 
-export function sendSuccessResponse<T>(res: Response, message: string, data: T, token?: string, statusCode: number = HttpStatus.OK): void {
+function sendSuccessResponse<T>(res: Response, message: string, data: T, token?: string, statusCode: number = HttpStatus.OK): void {
   res.status(statusCode).json(createSuccessResponse(message, data, token));
 }
 
@@ -30,16 +30,37 @@ export function sendNotFoundResponse(res: Response, message: string): void {
   res.status(HttpStatus.NOT_FOUND).json(createErrorResponse(message, null));
 }
 
-export function success<T>(res: Response, dataOrMessage?: T | string, message: string = '', statusCode: number = HttpStatus.OK): void {
-  let finalMessage = message;
+export function success<T>(
+  res: Response,
+  dataOrMessage?: T | string,
+  optionsOrMessage?: string | { message?: string; statusCode?: number; token?: string },
+  statusCode: number = HttpStatus.OK
+): void {
+  let finalMessage = '';
   let finalData: T | undefined = dataOrMessage as T;
+  let finalStatusCode = statusCode;
+  let finalToken: string | undefined = undefined;
 
-  if (typeof dataOrMessage === 'string' && message === '') {
+  if (typeof dataOrMessage === 'string') {
     finalMessage = dataOrMessage;
     finalData = undefined;
   }
 
-  sendSuccessResponse(res, finalMessage, finalData as T, undefined, statusCode);
+  if (typeof optionsOrMessage === 'string') {
+    finalMessage = optionsOrMessage;
+  } else if (optionsOrMessage && typeof optionsOrMessage === 'object') {
+    if (optionsOrMessage.message !== undefined) {
+      finalMessage = optionsOrMessage.message;
+    }
+    if (optionsOrMessage.statusCode !== undefined) {
+      finalStatusCode = optionsOrMessage.statusCode;
+    }
+    if (optionsOrMessage.token !== undefined) {
+      finalToken = optionsOrMessage.token;
+    }
+  }
+
+  sendSuccessResponse(res, finalMessage, finalData as T, finalToken, finalStatusCode);
 }
 
 export function created<T>(res: Response, dataOrMessage?: T | string, message: string = ''): void {

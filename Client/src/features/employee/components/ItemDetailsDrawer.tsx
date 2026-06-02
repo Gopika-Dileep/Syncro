@@ -112,7 +112,6 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             setInternalType(type);
             fetchFullDetails();
             
-            // Join real-time room
             const roomName = `${type}:${item._id}`;
             joinRoom(roomName);
 
@@ -125,7 +124,6 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             }
             fetchEmployees();
 
-            // Listen for real-time comments
             if (socket) {
                 const handleNewComment = (data: SocketUpdateData) => {
                     const id = data.issueId || data.subTaskId;
@@ -133,7 +131,6 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                         setFullItem(prev => {
                             if (!prev) return null;
                             const comments = prev.comments || [];
-                            // Check if comment already exists to prevent duplicates
                             const exists = comments.some((c: { _id: string }) => c._id === data.comment._id);
                             if (exists) return prev;
                             
@@ -177,7 +174,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             setComment("");
             setPendingAttachments([]);
             toast.success("Comment added");
-            fetchFullDetails(); // Refresh the drawer content immediately
+            fetchFullDetails(); 
             onUpdate?.();
         } catch {
             toast.error("Failed to add comment");
@@ -976,13 +973,13 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                     {fullItem.status === 'In Progress' && !showBlockInput && !isReadOnly && (
                         internalType === 'issue' ? (
-                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block' as any) :
-                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block' as any) :
-                            can('issue:task:block' as any)
+                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block') :
+                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block') :
+                            can('issue:task:block')
                         ) : (
                             (fullItem as SubTask).subtask_type === 'sub-task' ? can('task:block') :
-                            (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                            can('issue:task:block' as any)
+                            (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block') :
+                            can('issue:task:block')
                         )
                     ) && (
                         <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">
@@ -998,13 +995,13 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                     {fullItem.status === 'Blocked' && !showBlockInput && !isReadOnly && (
                         internalType === 'issue' ? (
-                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block' as any) :
-                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block' as any) :
-                            can('issue:task:block' as any)
+                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block') :
+                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block') :
+                            can('issue:task:block')
                         ) : (
                             (fullItem as SubTask).subtask_type === 'sub-task' ? can('task:block') :
-                            (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block' as any) :
-                            can('issue:task:block' as any)
+                            (fullItem as SubTask).subtask_type === 'bug' ? can('issue:bug:block') :
+                            can('issue:task:block')
                         )
                     ) && (
                         <div className="flex gap-3 animate-in slide-in-from-bottom-2 duration-300">

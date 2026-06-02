@@ -26,7 +26,7 @@ export class S3StorageProvider implements IStorageProvider {
       key: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, 'uploads/' + file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-      }
+      },
     });
   }
 }

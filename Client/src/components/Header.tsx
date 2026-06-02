@@ -7,7 +7,7 @@ import type { RootState } from "@/store/store";
 import { useState, useEffect } from "react";
 import { getNotificationsApi } from "@/features/employee/api/notificationApi";
 
-// Map route segments to readable page titles
+
 const pageTitles: Record<string, string> = {
     dashboard: "Dashboard",
     projects:  "Projects",
@@ -32,7 +32,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
     const user       = useSelector((state: RootState) => state.auth.user);
     const [unreadCount, setUnreadCount] = useState(0);
 
-    // Derive page title from URL
+
     const segment    = location.pathname.split("/").filter(Boolean).pop() ?? "";
     const pageTitle  = pageTitles[segment] ?? "Syncro";
 
