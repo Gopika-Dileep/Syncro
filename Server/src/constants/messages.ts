@@ -9,7 +9,7 @@ export const AUTH_MESSAGES = {
   USER_NOT_FOUND: 'User not found',
   USER_NOT_VERIFIED: 'User is not verified',
   ACCOUNT_BLOCKED: 'Your account has been blocked. Please contact support.',
-  INVALID_PASSWORD: 'Password is wrong',
+  INVALID_PASSWORD: 'Invalid Credentials',
   INVALID_REFRESH_TOKEN: 'Invalid refresh token',
   EMAIL_ALREADY_EXISTS: 'Email already exists',
   INVALID_OR_EXPIRED_OTP: 'Invalid or expired OTP',
