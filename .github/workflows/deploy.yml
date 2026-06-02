@@ -41,7 +41,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Sync Client to S3 Bucket
-        run: aws s3 sync Client/dist s3://syncro.gopikadileep.in --delete
+        run: aws s3 sync Client/dist s3://syncro.com --delete
 
   deploy-server:
     name: Deploy Server (EC2)
