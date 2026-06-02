@@ -1,0 +1,59 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-client:
+    name: Build & Deploy Client (S3)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: Client/package-lock.json
+
+      - name: Install Client Dependencies
+        run: npm ci
+        working-directory: Client
+
+      - name: Create Production .env File
+        run: |
+          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" > Client/.env
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> Client/.env
+
+      - name: Build Client
+        run: npm run build
+        working-directory: Client
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync Client to S3 Bucket
+        run: aws s3 sync Client/dist s3://syncro.gopikadileep.in --delete
+
+  deploy-server:
+    name: Deploy Server (EC2)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/Syncro
+            git pull origin main
+            docker compose up -d --build
