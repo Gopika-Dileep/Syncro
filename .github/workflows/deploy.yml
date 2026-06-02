@@ -60,5 +60,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/Syncro
+            git checkout main
             git pull origin main
+            docker compose down
             docker compose up -d --build
