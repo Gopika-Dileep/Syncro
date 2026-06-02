@@ -133,6 +133,11 @@ AWS_S3_BUCKET_NAME=syncro-pm
 
 # Groq API
 GROQ_API_KEY=YOUR_GROQ_API_KEY
+
+# Email / SMTP Configuration
+EMAIL_USER=YOUR_EMAIL_USER
+EMAIL_PASS=YOUR_EMAIL_PASS
+EMAIL_FROM_NAME=Syncro
 ```
 Press `Ctrl+O` and then `Enter` to save, and `Ctrl+X` to exit.
 
