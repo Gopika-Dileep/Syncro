@@ -17,7 +17,7 @@ interface AuthenticatedSocket extends Socket {
 export class SocketService implements ISocketService {
   private io: SocketIOServer | null = null;
 
-  constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository) { }
+  constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository) {}
 
   initialize(server: HttpServer): void {
     this.io = new SocketIOServer(server, {

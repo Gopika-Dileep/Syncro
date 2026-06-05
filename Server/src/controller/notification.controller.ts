@@ -7,9 +7,7 @@ import { NOTIFICATION_MESSAGES } from '../constants/messages';
 
 @injectable()
 export class NotificationController {
-  constructor(
-    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  constructor(@inject(TYPES.INotificationService) private _notificationService: INotificationService) {}
 
   getNotifications = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

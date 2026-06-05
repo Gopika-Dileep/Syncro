@@ -2,8 +2,9 @@ import { AuthResponseDTO, AuthUserDTO } from '../dto/auth.dto';
 import { IUser } from '../models/user.model';
 
 export class AuthMapper {
-  static toUserDTO(user: IUser, designation: string | null, companyName: string | null, team_id?: string, team?: { _id: string; name: string } | null): AuthUserDTO {
+  static toUserDTO(user: IUser, designation: string | null, companyName: string | null, team_id?: string, team?: { _id: string; name: string } | null, employee_id?: string): AuthUserDTO {
     return {
+      _id: employee_id || user._id.toString(),
       id: user._id.toString(),
       name: user.name,
       role: user.role,
@@ -35,7 +36,7 @@ export class AuthMapper {
     return {
       accessToken,
       refreshToken,
-      user: this.toUserDTO(user, designation, companyName),
+      user: this.toUserDTO(user, designation, companyName, undefined, null, user._id.toString()),
       permissions,
     };
   }

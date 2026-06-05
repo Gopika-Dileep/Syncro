@@ -28,7 +28,7 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
     @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  ) {}
 
   async execute(subTaskId: string, data: ReviewSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
@@ -71,8 +71,11 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
         }
       }
       if (subTask.assignee_id) {
+        const assigneeObj = subTask.assignee_id as unknown as { _id?: { toString(): string } };
+        const recipientId = assigneeObj?._id ? assigneeObj._id.toString() : subTask.assignee_id.toString();
+
         await this._notificationService.createNotification({
-          recipientId: subTask.assignee_id.toString(),
+          recipientId,
           senderId: actorId.toString(),
           type: status === SubTaskStatus.DONE ? NotificationType.SUBTASK_APPROVED : NotificationType.SUBTASK_REJECTED,
           title: status === SubTaskStatus.DONE ? 'Sub-task Approved' : 'Rework Requested',
@@ -106,8 +109,11 @@ export class ReviewSubTaskService implements IReviewSubTaskService {
         }
       }
       if (issue.assignee_id) {
+        const assigneeObj = issue.assignee_id as unknown as { _id?: { toString(): string } };
+        const recipientId = assigneeObj?._id ? assigneeObj._id.toString() : issue.assignee_id.toString();
+
         await this._notificationService.createNotification({
-          recipientId: issue.assignee_id.toString(),
+          recipientId,
           senderId: actorId.toString(),
           type: status === SubTaskStatus.DONE ? NotificationType.SUBTASK_APPROVED : NotificationType.SUBTASK_REJECTED,
           title: status === SubTaskStatus.DONE ? 'Task Approved' : 'Rework Requested',

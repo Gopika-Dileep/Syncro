@@ -66,6 +66,7 @@ export interface ProjectResponseDTO {
     _id: string;
     name: string;
     avatar?: string;
+    designation?: string;
   };
 }
 

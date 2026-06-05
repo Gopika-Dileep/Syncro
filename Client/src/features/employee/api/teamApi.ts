@@ -6,6 +6,7 @@ export interface TeamMember {
     name: string;
     email: string;
     designation?: string;
+    teamName?: string;
 }
 
 export interface TeamDirectory {

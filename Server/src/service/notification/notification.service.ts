@@ -14,7 +14,7 @@ export class NotificationService implements INotificationService {
     @inject(TYPES.INotificationRepository) private _notificationRepository: INotificationRepository,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
-  ) { }
+  ) {}
 
   async createNotification(params: CreateNotificationDTO): Promise<INotification> {
     const notification = await this._notificationRepository.create({
@@ -41,10 +41,7 @@ export class NotificationService implements INotificationService {
   async getNotifications(query: GetNotificationsDTO): Promise<{ notifications: INotification[]; total: number; unreadCount: number }> {
     const { userId, page, limit } = query;
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    if (!employee) {
-      return { notifications: [], total: 0, unreadCount: 0 };
-    }
-    const recipientId = employee._id.toString();
+    const recipientId = employee ? employee._id.toString() : userId;
     const skip = (page - 1) * limit;
     const notifications = await this._notificationRepository.findByRecipient(recipientId, limit, skip);
     const unreadCount = await this._notificationRepository.getUnreadCount(recipientId);
@@ -63,10 +60,8 @@ export class NotificationService implements INotificationService {
 
   async markAllAsRead(userId: string): Promise<void> {
     const employee = await this._employeeRepository.findOne({ user_id: userId });
-    if (employee) {
-      const recipientId = employee._id.toString();
-      await this._notificationRepository.markAllAsRead(recipientId);
-      this._socketService.emitToUser(recipientId, 'unread_count_update', { unreadCount: 0 });
-    }
+    const recipientId = employee ? employee._id.toString() : userId;
+    await this._notificationRepository.markAllAsRead(recipientId);
+    this._socketService.emitToUser(recipientId, 'unread_count_update', { unreadCount: 0 });
   }
 }

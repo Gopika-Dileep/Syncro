@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, AlertCircle, ArrowRight, Package, Target, CheckCircle2 } from 'lucide-react';
+import { X, AlertCircle, ArrowRight, Package, Target, CheckCircle2, ChevronDown } from 'lucide-react';
 
 interface Sprint {
     _id: string;
@@ -25,6 +25,7 @@ const CompleteSprintModal: React.FC<CompleteSprintModalProps> = ({
     isSubmitting = false
 }) => {
     const [moveTarget, setMoveTarget] = useState<string>('backlog');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     if (!isOpen) return null;
 
@@ -88,11 +89,19 @@ const CompleteSprintModal: React.FC<CompleteSprintModalProps> = ({
                                     </button>
 
                                     {availableSprints.length > 0 ? (
-                                        <div className={`p-4 rounded-2xl border-2 transition-all ${
-                                            moveTarget !== 'backlog' 
-                                            ? 'border-[#fa8029] bg-[#fff5ef]/30' 
-                                            : 'border-gray-100 bg-gray-50/30'
-                                        }`}>
+                                        <div 
+                                            onClick={() => {
+                                                if (moveTarget === 'backlog') {
+                                                    setMoveTarget(availableSprints[0]?._id || '');
+                                                    setIsDropdownOpen(true);
+                                                }
+                                            }}
+                                            className={`p-4 rounded-2xl border-2 transition-all text-left cursor-pointer ${
+                                                moveTarget !== 'backlog' 
+                                                ? 'border-[#fa8029] bg-[#fff5ef]/30' 
+                                                : 'border-gray-100 hover:border-gray-200 bg-gray-50/30'
+                                            }`}
+                                        >
                                             <div className="flex items-center gap-4 mb-4">
                                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${moveTarget !== 'backlog' ? 'bg-[#fa8029] text-white' : 'bg-white text-gray-400 border border-gray-100'}`}>
                                                     <Target size={20} />
@@ -103,20 +112,73 @@ const CompleteSprintModal: React.FC<CompleteSprintModalProps> = ({
                                                 </div>
                                             </div>
                                             
-                                            <select 
-                                                value={moveTarget === 'backlog' ? '' : moveTarget}
-                                                onChange={(e) => setMoveTarget(e.target.value)}
-                                                className={`w-full p-3 rounded-xl border outline-none text-[13px] font-bold transition-all ${
-                                                    moveTarget !== 'backlog'
-                                                    ? 'bg-white border-[#fa8029]/20 text-[#1f2124]'
-                                                    : 'bg-gray-100/50 border-gray-100 text-gray-400'
-                                                }`}
-                                            >
-                                                <option value="" disabled>Select a sprint...</option>
-                                                {availableSprints.map(s => (
-                                                    <option key={s._id} value={s._id}>{s.name}</option>
-                                                ))}
-                                            </select>
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (moveTarget === 'backlog') {
+                                                            setMoveTarget(availableSprints[0]?._id || '');
+                                                            setIsDropdownOpen(true);
+                                                        } else {
+                                                            setIsDropdownOpen(!isDropdownOpen);
+                                                        }
+                                                    }}
+                                                    className={`w-full p-3.5 rounded-xl border outline-none text-[13px] font-black transition-all flex items-center justify-between ${
+                                                        moveTarget !== 'backlog'
+                                                        ? 'bg-white border-[#fa8029]/20 text-[#1f2124] hover:border-[#fa8029]/40 shadow-sm'
+                                                        : 'bg-gray-50 border-gray-100 hover:border-gray-200 text-gray-400'
+                                                    }`}
+                                                >
+                                                    <span className="truncate">
+                                                        {moveTarget === 'backlog'
+                                                            ? 'Select a sprint...'
+                                                            : availableSprints.find(s => s._id === moveTarget)?.name || 'Select a sprint...'
+                                                        }
+                                                    </span>
+                                                    <ChevronDown 
+                                                        size={16} 
+                                                        className={`transition-transform duration-200 shrink-0 ${
+                                                            isDropdownOpen && moveTarget !== 'backlog' ? 'rotate-180 text-[#fa8029]' : 'text-gray-400'
+                                                        }`} 
+                                                    />
+                                                </button>
+
+                                                {isDropdownOpen && moveTarget !== 'backlog' && (
+                                                    <>
+                                                        <div 
+                                                            className="fixed inset-0 z-[100]" 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsDropdownOpen(false);
+                                                            }} 
+                                                        />
+                                                        <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-[110] max-h-48 overflow-y-auto p-1.5 animate-in fade-in slide-in-from-top-2 duration-200 custom-scrollbar">
+                                                            {availableSprints.map(s => (
+                                                                <button
+                                                                    key={s._id}
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setMoveTarget(s._id);
+                                                                        setIsDropdownOpen(false);
+                                                                    }}
+                                                                    className={`w-full px-4 py-3 rounded-xl text-left text-[13px] font-black transition-all flex items-center justify-between ${
+                                                                        moveTarget === s._id
+                                                                        ? 'bg-[#fff5ef] text-[#fa8029]'
+                                                                        : 'text-[#555] hover:bg-gray-50 hover:text-[#1f2124]'
+                                                                    }`}
+                                                                >
+                                                                    <span className="truncate">{s.name}</span>
+                                                                    {moveTarget === s._id && (
+                                                                        <div className="w-1.5 h-1.5 rounded-full bg-[#fa8029] shrink-0" />
+                                                                    )}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200">

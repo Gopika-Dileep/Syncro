@@ -7,5 +7,5 @@ export interface IAIService {
     reasoning: string;
     confidenceScore: number;
   }>;
+  determineTeamForTask(query: { task: Record<string, unknown>; teams: string[] }): Promise<{ matchedTeamName: string }>;
 }
-

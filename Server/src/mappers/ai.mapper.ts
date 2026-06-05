@@ -3,17 +3,13 @@ import { IIssue } from '../models/issue.model';
 import { ISubTask } from '../models/subTask.model';
 
 export class AIMapper {
-  static toEmployeeAIData(
-    emp: IPopulatedEmployee,
-    activeIssues: number,
-    activeSubTasks: number
-  ) {
+  static toEmployeeAIData(emp: IPopulatedEmployee, activeIssues: number, activeSubTasks: number) {
     return {
       id: emp._id.toString(),
       name: emp.user_id?.name || 'Unknown',
       skills: emp.skills || [],
       designation: emp.designation || 'Employee',
-      team: (emp.team_id as any)?.name || 'Unassigned',
+      team: emp.team_id?.name || 'Unassigned',
       activeIssues,
       activeSubTasks,
       totalActiveWorkload: activeIssues + activeSubTasks,

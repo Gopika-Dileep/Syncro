@@ -10,7 +10,7 @@ import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
-import { NotFoundError } from '../../errors/AppError';
+import { NotFoundError, ForbiddenError } from '../../errors/AppError';
 import { TASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
@@ -20,11 +20,32 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  ) {}
 
   async execute(subTaskId: string, data: SubmitSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
     const actorId = employee?._id ? String(employee._id) : userId;
+
+    const existingSubTask = await this._subTaskRepository.findById(subTaskId);
+    if (existingSubTask) {
+      const assigneeObj = existingSubTask.assignee_id as unknown as { _id?: { toString(): string } };
+      const assigneeId = assigneeObj?._id ? assigneeObj._id.toString() : existingSubTask.assignee_id?.toString();
+
+      if (assigneeId !== actorId) {
+        throw new ForbiddenError('You can only submit work for subtasks assigned to you');
+      }
+    } else {
+      const existingIssue = await this._issueRepository.findById(subTaskId);
+      if (existingIssue) {
+        const assigneeObj = existingIssue.assignee_id as unknown as { _id?: { toString(): string } };
+        const assigneeId = assigneeObj?._id ? assigneeObj._id.toString() : existingIssue.assignee_id?.toString();
+
+        if (assigneeId !== actorId) {
+          throw new ForbiddenError('You can only submit work for issues assigned to you');
+        }
+      }
+    }
+
     const historyEntry: ICreateHistoryInput = {
       action: 'status_change',
       from: SubTaskStatus.IN_PROGRESS,
@@ -44,8 +65,11 @@ export class SubmitSubTaskService implements ISubmitSubTaskService {
 
     if (subTask) {
       if (subTask.assigned_by) {
+        const assignedByObj = subTask.assigned_by as unknown as { _id?: { toString(): string } };
+        const recipientId = assignedByObj?._id ? assignedByObj._id.toString() : subTask.assigned_by.toString();
+
         await this._notificationService.createNotification({
-          recipientId: subTask.assigned_by.toString(),
+          recipientId,
           senderId: employee?._id.toString() || userId,
           type: NotificationType.SUBTASK_SUBMITTED,
           title: 'Sub-task Ready for Review',

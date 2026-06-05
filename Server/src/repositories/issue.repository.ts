@@ -111,11 +111,8 @@ export class IssueRepository extends BaseRepository<IIssue> implements IIssueRep
       .exec();
   }
 
-  async findActiveTasksAndBugs(
-    companyId: string,
-    filters?: { assigneeId?: string; assigneeIds?: string[] }
-  ): Promise<IIssue[]> {
-    const query: Record<string, any> = {
+  async findActiveTasksAndBugs(companyId: string, filters?: { assigneeId?: string; assigneeIds?: string[] }): Promise<IIssue[]> {
+    const query: Record<string, unknown> = {
       company_id: companyId,
       type: { $in: [IssueType.TASK, IssueType.BUG] },
       status: { $ne: 'Backlog' },

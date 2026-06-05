@@ -13,6 +13,8 @@ import { INotificationService } from '../../interfaces/services/notification/INo
 import { NotificationType } from '../../enums/NotificationEnums';
 import { EMPLOYEE_MESSAGES, SUBTASK_MESSAGES } from '../../constants/messages';
 import mongoose from 'mongoose';
+import { NotFoundError, ForbiddenError, BadRequestError } from '../../errors/AppError';
+import { IssueType } from '../../enums/IssueEnums';
 
 @injectable()
 export class AutoAssignSubTaskService implements IAutoAssignSubTaskService {
@@ -22,36 +24,65 @@ export class AutoAssignSubTaskService implements IAutoAssignSubTaskService {
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IAIService) private _aiService: IAIService,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  ) {}
 
-  async execute(subTaskId: string, userId: string): Promise<SubTaskResponseDTO> {
+  async execute(subTaskId: string, userId: string, permissions: string[], userRole?: string): Promise<SubTaskResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
-    if (!assigner) throw new Error(EMPLOYEE_MESSAGES.ASSIGNER_NOT_FOUND);
+    if (!assigner) throw new NotFoundError(EMPLOYEE_MESSAGES.ASSIGNER_NOT_FOUND);
 
     const subTask = await this._subTaskRepository.findById(subTaskId);
-    if (!subTask) throw new Error(SUBTASK_MESSAGES.NOT_FOUND);
+    if (!subTask) throw new NotFoundError(SUBTASK_MESSAGES.NOT_FOUND);
 
-    const employees = await this._employeeRepository.findPopulated({ company_id: assigner.company_id });
+    const issueIdObj = subTask.issue_id as unknown as { _id?: { toString(): string } };
+    const parentIssueId = issueIdObj?._id ? issueIdObj._id.toString() : subTask.issue_id.toString();
 
-    const employeeData = await Promise.all(
-      employees.map(async (emp) => {
-        const assignedIssues = await this._issueRepository.findActiveByAssigneeId(emp._id.toString());
+    const parentIssue = await this._issueRepository.findById(parentIssueId);
+    if (!parentIssue) throw new NotFoundError('Parent issue not found');
 
-        const assignedSubTasks = await this._subTaskRepository.findActiveByAssigneeId(emp._id.toString());
+    let chosenAssigneeId: string;
 
-        return AIMapper.toEmployeeAIData(
-          emp,
-          assignedIssues.length,
-          assignedSubTasks.length
-        );
-      }),
-    );
+    if (parentIssue.type === IssueType.STORY) {
+      const assigneeObj = parentIssue.assignee_id as unknown as { _id?: { toString(): string } };
+      const assigneeId = assigneeObj?._id ? assigneeObj._id.toString() : parentIssue.assignee_id?.toString();
 
-    const taskData = AIMapper.toTaskAIDataFromSubTask(subTask);
+      const isAssignee = assigneeId && assigneeId === assigner._id.toString();
+      const isCompanyAdmin = userRole === 'company';
 
-    const aiDecision = await this._aiService.assignTask({ task: taskData, employees: employeeData });
+      if (!isAssignee && !isCompanyAdmin) {
+        throw new ForbiddenError('Only the assignee of the parent User Story can assign its subtasks');
+      }
 
-    const chosenAssigneeId = aiDecision.assignedEmployeeId;
+      if (!assigneeId) {
+        throw new BadRequestError('Parent User Story must be assigned to auto-assign its subtasks');
+      }
+
+      chosenAssigneeId = assigneeId;
+    } else {
+      const hasTaskAssignPermission = permissions.includes('task:assign');
+      const isCompanyAdmin = userRole === 'company';
+
+      if (!hasTaskAssignPermission && !isCompanyAdmin) {
+        throw new ForbiddenError('You do not have permission to assign subtasks under this issue type');
+      }
+
+      const employees = await this._employeeRepository.findPopulated({ company_id: assigner.company_id });
+
+      const employeeData = await Promise.all(
+        employees.map(async (emp) => {
+          const assignedIssues = await this._issueRepository.findActiveByAssigneeId(emp._id.toString());
+
+          const assignedSubTasks = await this._subTaskRepository.findActiveByAssigneeId(emp._id.toString());
+
+          return AIMapper.toEmployeeAIData(emp, assignedIssues.length, assignedSubTasks.length);
+        }),
+      );
+
+      const taskData = AIMapper.toTaskAIDataFromSubTask(subTask);
+
+      const aiDecision = await this._aiService.assignTask({ task: taskData, employees: employeeData });
+
+      chosenAssigneeId = aiDecision.assignedEmployeeId;
+    }
     const assignee = await this._employeeRepository.findPopulatedById(chosenAssigneeId);
 
     let oldAssigneeIdStr: string | null = null;

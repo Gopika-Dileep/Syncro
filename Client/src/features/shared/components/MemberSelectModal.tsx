@@ -7,6 +7,7 @@ export interface Member {
     name: string;
     designation?: string;
     email?: string;
+    teamName?: string;
 }
 
 interface MemberSelectModalProps {
@@ -82,10 +83,14 @@ export default function MemberSelectModal({ isOpen, onClose, onSelect, members, 
                                 className="w-full h-12 px-4 bg-white border-2 border-[#fa8029] rounded-[20px] text-[14px] text-[#1f2124] font-bold flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-[0.98]"
                             >
                                 <span className="truncate">
-                                    {selectedMember 
-                                        ? `${selectedMember.name} ${selectedMember.designation ? `(${selectedMember.designation})` : ''}`
-                                        : "Select member"
-                                    }
+                                     {selectedMember 
+                                         ? (() => {
+                                               const teamStr = selectedMember.teamName ? ` - ${selectedMember.teamName}` : "";
+                                               const roleStr = selectedMember.designation ? `${selectedMember.designation}${teamStr}` : selectedMember.teamName || "";
+                                               return roleStr ? `${selectedMember.name} (${roleStr})` : selectedMember.name;
+                                           })()
+                                         : "Select member"
+                                     }
                                 </span>
                                 <ChevronDown size={18} className="text-[#fa8029] shrink-0" />
                             </button>
@@ -117,7 +122,11 @@ export default function MemberSelectModal({ isOpen, onClose, onSelect, members, 
                                                     : 'text-[#1f2124] hover:bg-orange-50 hover:text-[#fa8029]'
                                             }`}
                                         >
-                                            {member.name} {member.designation ? `(${member.designation})` : ''}
+                                             {(() => {
+                                                 const teamStr = member.teamName ? ` - ${member.teamName}` : "";
+                                                 const roleStr = member.designation ? `${member.designation}${teamStr}` : member.teamName || "";
+                                                 return roleStr ? `${member.name} (${roleStr})` : member.name;
+                                             })()}
                                         </button>
                                     ))}
                                 </div>

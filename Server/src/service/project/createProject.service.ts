@@ -18,7 +18,7 @@ export class CreateProjectService implements ICreateProjectService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  ) {}
 
   async execute(userId: string, data: CreateProjectRequestDTO): Promise<{ message: string; project: ProjectResponseDTO }> {
     const employee = await this._employeeRepo.findByUserId(userId);
@@ -37,17 +37,14 @@ export class CreateProjectService implements ICreateProjectService {
     try {
       const company = await this._companyRepo.findById(companyId);
       if (company) {
-        const adminEmployee = await this._employeeRepo.findOne({ user_id: company.user_id });
-        if (adminEmployee) {
-          await this._notificationService.createNotification({
-            recipientId: adminEmployee._id.toString(),
-            senderId: creatorId,
-            type: NotificationType.PROJECT_CREATED,
-            title: 'New Project Created',
-            message: `${employee.user_id?.name || 'Someone'} created a new project: ${project.name}`,
-            link: `/employee/projects`,
-          });
-        }
+        await this._notificationService.createNotification({
+          recipientId: company.user_id.toString(),
+          senderId: creatorId,
+          type: NotificationType.PROJECT_CREATED,
+          title: 'New Project Created',
+          message: `${employee.user_id?.name || 'Someone'} created a new project: ${project.name}`,
+          link: `/company/projects`,
+        });
       }
     } catch (err) {
       console.error('Failed to send project creation notification to admin', err);

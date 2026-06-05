@@ -27,6 +27,7 @@ import GetEmployee from '@/features/company/pages/GetEmployee'
 import EmployeeProjects from '@/features/employee/pages/Projects'
 import AddProject from '@/features/employee/pages/AddProject'
 import SubTasks from '@/features/employee/pages/SubTasks'
+import EmployeeProjectDetails from '@/features/employee/pages/ProjectDetails'
 import Team from './features/employee/pages/Team'
 import SprintPlanning from '@/features/employee/pages/SprintPlanning'
 import SprintDetails from '@/features/employee/pages/SprintDetails'
@@ -73,6 +74,7 @@ function App() {
             >
               <Route path='dashboard' element={<EmployeeDashboard />} />
               <Route path='projects' element={<EmployeeProjects />} />
+              <Route path='projects/:projectId' element={<EmployeeProjectDetails />} />
               <Route path='projects/add' element={<AddProject />} />
               <Route path='projects/edit/:projectId' element={<AddProject />} />
               

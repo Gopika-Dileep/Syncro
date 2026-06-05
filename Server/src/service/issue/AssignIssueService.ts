@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { IssueStatus } from '../../enums/IssueEnums';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ISprintRepository } from '../../interfaces/repositories/ISprintRepository';
 import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IAssignIssueService } from '../../interfaces/services/issue/IAssignIssueService';
 import { AssignIssueRequestDTO, IssueResponseDTO } from '../../dto/issue.dto';
@@ -10,14 +11,16 @@ import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepo
 import { INotificationService } from '../../interfaces/services/notification/INotificationService';
 import { NotificationType } from '../../enums/NotificationEnums';
 import { EMPLOYEE_MESSAGES, ISSUE_MESSAGES } from '../../constants/messages';
+import { BadRequestError } from '../../errors/AppError';
 
 @injectable()
 export class AssignIssueService implements IAssignIssueService {
   constructor(
     @inject(TYPES.IIssueRepository) private _issueRepository: IIssueRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
+    @inject(TYPES.ISprintRepository) private _sprintRepository: ISprintRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  ) {}
 
   async execute(data: AssignIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
     const assigner = await this._employeeRepository.findOne({ user_id: userId });
@@ -43,6 +46,9 @@ export class AssignIssueService implements IAssignIssueService {
       if (!issueToUpdate.sprint_id && issueToUpdate.status !== 'Ready') {
         throw new Error(ISSUE_MESSAGES.SPRINT_ADD_READY_ONLY(type));
       }
+
+      const issuePoints = issueToUpdate.story_points || 0;
+      await this.validateSprintPointsLimit(String(data.sprint_id), issuePoints, data.issue_id);
     }
 
     const updateData: Record<string, unknown> = {
@@ -99,5 +105,21 @@ export class AssignIssueService implements IAssignIssueService {
     }
 
     return IssueMapper.toResponseDTO(updatedIssue);
+  }
+
+  private async validateSprintPointsLimit(sprintId: string, issuePoints: number, excludeIssueId?: string): Promise<void> {
+    const sprint = await this._sprintRepository.findById(sprintId);
+    if (!sprint) return;
+
+    const filter: Record<string, unknown> = { sprint_id: sprintId };
+    if (excludeIssueId) {
+      filter._id = { $ne: excludeIssueId };
+    }
+    const sprintIssues = await this._issueRepository.find(filter);
+    const currentPoints = sprintIssues.reduce((sum, issue) => sum + (issue.story_points || 0), 0);
+
+    if (currentPoints + issuePoints > sprint.total_points) {
+      throw new BadRequestError(`Cannot assign user story. Adding this issue of ${issuePoints} story points would exceed the sprint's remaining points limit. Sprint Limit: ${sprint.total_points} points, Currently assigned: ${currentPoints} points.`);
+    }
   }
 }

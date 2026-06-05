@@ -30,12 +30,7 @@ export function sendNotFoundResponse(res: Response, message: string): void {
   res.status(HttpStatus.NOT_FOUND).json(createErrorResponse(message, null));
 }
 
-export function success<T>(
-  res: Response,
-  dataOrMessage?: T | string,
-  optionsOrMessage?: string | { message?: string; statusCode?: number; token?: string },
-  statusCode: number = HttpStatus.OK
-): void {
+export function success<T>(res: Response, dataOrMessage?: T | string, optionsOrMessage?: string | { message?: string; statusCode?: number; token?: string }, statusCode: number = HttpStatus.OK): void {
   let finalMessage = '';
   let finalData: T | undefined = dataOrMessage as T;
   let finalStatusCode = statusCode;

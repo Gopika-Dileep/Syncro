@@ -1,5 +1,5 @@
 import { AssignSubTaskRequestDTO, SubTaskResponseDTO } from '../../../dto/subTask.dto';
 
 export interface IAssignSubTaskService {
-  execute(subTaskId: string, data: AssignSubTaskRequestDTO, userId: string): Promise<SubTaskResponseDTO>;
+  execute(subTaskId: string, data: AssignSubTaskRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<SubTaskResponseDTO>;
 }

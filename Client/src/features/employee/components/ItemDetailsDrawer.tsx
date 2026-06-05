@@ -97,7 +97,13 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
         try {
             const res = await getTeamDirectoryApi();
             if (res.success) {
-                const allMembers = res.data.flatMap(team => team.members);
+                const activeTeams = (res.data || []).filter(t => t._id !== 'unassigned' && t.name !== 'Unassigned');
+                const allMembers = activeTeams.flatMap(team => 
+                    (team.members || []).map(m => ({
+                        ...m,
+                        teamName: team.name
+                    }))
+                );
                 const uniqueMembers = Array.from(new Map(allMembers.map(m => [m._id, m])).values());
                 setEmployees(uniqueMembers);
             }
@@ -333,16 +339,21 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     const isInReview = fullItem.status.toLowerCase() === 'in review' || fullItem.status.toLowerCase() === 'submitted';
     const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') &&
         (fullItem.status.toLowerCase() === 'rework' || !!(internalType === 'subtask' ? (fullItem as SubTask).rework_reason : null));
-    const isReviewer = can('task:view:all') || can('task:update') || can('task:status:review') || currentUser?.role === 'company';
+    const isReviewer = can('task:status:review') || currentUser?.role === 'company';
     const canAssign = (
-        (internalType === 'subtask' ? can('task:assign') : (
-            (fullItem as Issue).type?.toLowerCase() === 'story' ? can('issue:story:assign') :
-            (fullItem as Issue).type?.toLowerCase() === 'bug' ? can('issue:bug:assign') :
-            can('issue:task:assign')
-        )) || 
-        can('task:view:all') || 
-        can('project:update') || 
-        currentUser?.role === 'company'
+        currentUser?.role === 'company' ||
+        (internalType === 'subtask' && parentIssue?.type === 'story'
+            ? parentIssue.assignee_id?._id === currentUser?._id
+            : (
+                (internalType === 'subtask' ? can('task:assign') : (
+                    (fullItem as Issue).type?.toLowerCase() === 'story' ? can('issue:story:assign') :
+                    (fullItem as Issue).type?.toLowerCase() === 'bug' ? can('issue:bug:assign') :
+                    can('issue:task:assign')
+                )) ||
+                can('task:view:all') ||
+                can('project:update')
+            )
+        )
     ) && !isReadOnly;
 
     const rawTimeline = [

@@ -4,6 +4,7 @@ import { ITeam } from '../models/team.model';
 import { IIssue } from '../models/issue.model';
 import { ISubTask } from '../models/subTask.model';
 import { BlockedItem, UpcomingDeadlineItem } from '../dto/dashboard.dto';
+import { IPopulatedEmployee } from '../models/employee.model';
 
 export class DashboardMapper {
   static toAvailableFilters(projects: IProject[], sprints: ISprint[], teams: ITeam[]) {
@@ -58,7 +59,7 @@ export class DashboardMapper {
       .slice(0, 5);
   }
 
-  static toWorkloadDistribution(teamMembers: any[], teamSubTasks: ISubTask[], teamIssues: IIssue[]) {
+  static toWorkloadDistribution(teamMembers: IPopulatedEmployee[], teamSubTasks: ISubTask[], teamIssues: IIssue[]) {
     return teamMembers.map((m) => {
       const mTasks = teamSubTasks.filter((s) => s.assignee_id?.toString() === m._id.toString());
       const mIssues = teamIssues.filter((i) => i.assignee_id?.toString() === m._id.toString());

@@ -143,6 +143,24 @@ export default function SubTasks() {
     }, [searchParams, subTasks, fetching]);
 
     const handleStatusChange = async (subTaskId: string, newStatus: string, extraData: { rework_reason?: string; blocked_reason?: string; submission_link?: string; description?: string; branch_name?: string; mentions?: string[]; isUnblocking?: boolean } = {}) => {
+        const targetSubTask = subTasks.find(t => t._id === subTaskId);
+        if (targetSubTask) {
+            const isAssignee = targetSubTask.assignee_id?._id === user?._id;
+            if (newStatus === 'In Progress' && !extraData.rework_reason && !extraData.isUnblocking) {
+                if (!isAssignee) {
+                    toast.error("You can only work on tasks assigned to you");
+                    return;
+                }
+            }
+
+            if (newStatus === 'In Review') {
+                if (!isAssignee) {
+                    toast.error("You can only submit work for tasks assigned to you");
+                    return;
+                }
+            }
+        }
+
         try {
             let response;
             if (newStatus === 'In Progress') {
@@ -160,7 +178,8 @@ export default function SubTasks() {
                 response = await submitSubTaskApi(subTaskId, {
                     submission_link: extraData.submission_link || '',
                     submission_description: extraData.description || '',
-                    branch_name: extraData.branch_name || ''
+                    branch_name: extraData.branch_name || '',
+                    mentions: extraData.mentions
                 });
             } else if (newStatus === 'Done') {
                 response = await reviewSubTaskApi(subTaskId, { action: 'approve' });
@@ -199,14 +218,18 @@ export default function SubTasks() {
         }
 
         const prefix = 'task';
+        const isAssignee = subTask.assignee_id?._id === user?._id;
+
         if (newStatus === "In Progress" && subTask.status === "To Do") {
             if (!can(`${prefix}:status:work`)) return toast.error("Permission denied");
+            if (!isAssignee) return toast.error("You can only start work on tasks assigned to you");
             setSelectedSubTask(subTask);
             setShowStartConfirm(true);
             return;
         }
         if (newStatus === "In Review" && subTask.status === "In Progress") {
             if (!can(`${prefix}:status:work`)) return toast.error("Permission denied");
+            if (!isAssignee) return toast.error("You can only submit work for tasks assigned to you");
             setSelectedSubTask(subTask);
             setShowSubmissionModal(true);
             return;
@@ -237,7 +260,7 @@ export default function SubTasks() {
         }
     };
 
-    const handleSubmissionSubmit = async (data: { submission_link: string; description: string; branch_name: string }) => {
+    const handleSubmissionSubmit = async (data: { submission_link: string; description: string; branch_name: string; mentions?: string[] }) => {
         if (!selectedSubTask) return;
         setIsSubmitting(true);
         try {

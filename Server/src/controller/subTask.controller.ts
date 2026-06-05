@@ -43,7 +43,9 @@ export class SubTaskController {
   createSubTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userId = req.userId!;
-      const subTask = await this._createSubTaskService.execute(req.body, userId);
+      const permissions = req.permissions || [];
+      const userRole = req.userRole;
+      const subTask = await this._createSubTaskService.execute(req.body, userId, permissions, userRole);
       created(res, subTask, SUBTASK_MESSAGES.CREATE_SUCCESS);
     } catch (error) {
       next(error);
@@ -54,7 +56,9 @@ export class SubTaskController {
     try {
       const { subTaskId } = req.params;
       const userId = req.userId!;
-      const subTask = await this._updateSubTaskService.execute(subTaskId as string, req.body, userId);
+      const permissions = req.permissions || [];
+      const userRole = req.userRole;
+      const subTask = await this._updateSubTaskService.execute(subTaskId as string, req.body, userId, permissions, userRole);
       success(res, subTask, SUBTASK_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       next(error);
@@ -95,7 +99,9 @@ export class SubTaskController {
     try {
       const { subTaskId } = req.params;
       const userId = req.userId!;
-      const subTask = await this._assignSubTaskService.execute(subTaskId as string, req.body, userId);
+      const permissions = req.permissions || [];
+      const userRole = req.userRole;
+      const subTask = await this._assignSubTaskService.execute(subTaskId as string, req.body, userId, permissions, userRole);
       success(res, subTask, SUBTASK_MESSAGES.ASSIGN_SUCCESS);
     } catch (error) {
       next(error);
@@ -106,7 +112,9 @@ export class SubTaskController {
     try {
       const { subTaskId } = req.params;
       const userId = req.userId!;
-      const subTask = await this._autoAssignSubTaskService.execute(subTaskId as string, userId);
+      const permissions = req.permissions || [];
+      const userRole = req.userRole;
+      const subTask = await this._autoAssignSubTaskService.execute(subTaskId as string, userId, permissions, userRole);
       success(res, subTask, SUBTASK_MESSAGES.AUTO_ASSIGN_SUCCESS);
     } catch (error) {
       next(error);

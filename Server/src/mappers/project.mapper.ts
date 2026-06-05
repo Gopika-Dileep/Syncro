@@ -27,6 +27,7 @@ export class ProjectMapper {
               _id: String(creator._id),
               name: String(user.name || 'Unknown'),
               avatar: user.avatar ? String(user.avatar) : undefined,
+              designation: creator.designation ? String(creator.designation) : undefined,
             }
           : undefined,
     };
@@ -56,11 +57,7 @@ export class ProjectMapper {
     return update as Partial<IProject>;
   }
 
-  static toInsightsDTO(
-    project: IProject,
-    issues: IIssue[],
-    subTasks: ISubTask[]
-  ): ProjectInsightsDTO {
+  static toInsightsDTO(project: IProject, issues: IIssue[], subTasks: ISubTask[]): ProjectInsightsDTO {
     const stats = {
       total_stories: issues.filter((i) => i.type === 'story').length,
       total_tasks: subTasks.length,
