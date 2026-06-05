@@ -9,4 +9,5 @@ export enum NotificationType {
   NEW_COMMENT = 'new_comment',
   PROJECT_CREATED = 'project_created',
   PROJECT_COMPLETED = 'project_completed',
+  PROJECT_HOLD = 'project_hold',
 }

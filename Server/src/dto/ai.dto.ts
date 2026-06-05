@@ -13,4 +13,3 @@ export interface AIAssignTaskDTO {
   task: Record<string, unknown>;
   employees: Record<string, unknown>[];
 }
-

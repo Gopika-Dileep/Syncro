@@ -9,7 +9,7 @@ import { SubTaskMapper } from '../../mappers/subTask.mapper';
 import { SubTaskStatus } from '../../enums/SubTaskEnums';
 import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepository';
 import { SprintStatus } from '../../enums/SprintEnums';
-import { BadRequestError, NotFoundError } from '../../errors/AppError';
+import { BadRequestError, NotFoundError, ForbiddenError } from '../../errors/AppError';
 import { SPRINT_MESSAGES, TASK_MESSAGES } from '../../constants/messages';
 
 @injectable()
@@ -32,7 +32,14 @@ export class StartSubTaskService implements IStartSubTaskService {
 
     const existingSubTask = await this._subTaskRepository.findById(subTaskId);
     if (existingSubTask) {
-      const sprint = existingSubTask.sprint_id as any;
+      const assigneeObj = existingSubTask.assignee_id as unknown as { _id?: { toString(): string } };
+      const assigneeId = assigneeObj?._id ? assigneeObj._id.toString() : existingSubTask.assignee_id?.toString();
+
+      if (assigneeId !== actorId) {
+        throw new ForbiddenError('You can only start work on subtasks assigned to you');
+      }
+
+      const sprint = existingSubTask.sprint_id as unknown as { status?: string };
       if (sprint && sprint.status !== SprintStatus.ACTIVE) {
         throw new BadRequestError(SPRINT_MESSAGES.CANNOT_START_INACTIVE_SPRINT);
       }
@@ -52,7 +59,14 @@ export class StartSubTaskService implements IStartSubTaskService {
 
     const existingIssue = await this._issueRepository.findById(subTaskId);
     if (existingIssue) {
-      const sprint = existingIssue.sprint_id as any;
+      const assigneeObj = existingIssue.assignee_id as unknown as { _id?: { toString(): string } };
+      const assigneeId = assigneeObj?._id ? assigneeObj._id.toString() : existingIssue.assignee_id?.toString();
+
+      if (assigneeId !== actorId) {
+        throw new ForbiddenError('You can only start work on issues assigned to you');
+      }
+
+      const sprint = existingIssue.sprint_id as unknown as { status?: string };
       if (sprint && sprint.status !== SprintStatus.ACTIVE) {
         throw new BadRequestError(SPRINT_MESSAGES.CANNOT_START_INACTIVE_SPRINT);
       }

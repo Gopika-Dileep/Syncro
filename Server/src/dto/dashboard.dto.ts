@@ -51,6 +51,7 @@ export interface EmployeeDashboardDTO {
     inProgress: number;
     blocked: number;
   };
+  myBlocked?: BlockedItem[];
   typeStats: {
     stories: number;
     tasks: number;

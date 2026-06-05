@@ -75,12 +75,16 @@ export default function Notifications() {
     };
 
     const handleViewDetails = (n: Notification) => {
-        if (n.relatedEntityId) {
-            const path = n.relatedEntityType === 'Issue' ? '/employee/backlogs' : '/employee/tasks';
-            const param = n.relatedEntityType === 'Issue' ? 'selectedIssue' : 'selectedTask';
-            navigate(`${path}?${param}=${n.relatedEntityId}`);
-        } else if (n.link) {
-            navigate(n.link);
+        if (n.link) {
+            if (n.link.startsWith('/employee/projects')) {
+                navigate(n.link.replace('/employee/projects', '/company/projects'));
+            } else if (n.link.startsWith('/employee/tasks') || n.link.startsWith('/employee/backlogs')) {
+                navigate('/company/projects');
+            } else {
+                navigate(n.link);
+            }
+        } else if (n.relatedEntityId) {
+            navigate('/company/projects');
         }
     };
 

@@ -86,7 +86,7 @@ export default function SprintDetails() {
     const handleCompleteClick = async () => {
         if (!sprint) return;
         try {
-            const res = await getSprintsApi({ status: 'Planned' });
+            const res = await getSprintsApi({ status: 'planned', limit: 100 });
             if (res.success) {
                 setAvailableSprints(res.data.sprints);
                 setCompleteModalOpen(true);
@@ -164,8 +164,13 @@ export default function SprintDetails() {
         try {
             const response = await getTeamDirectoryApi();
             if (response.success) {
-             
-                const allMembers = (response.data || []).flatMap(team => team.members || []);
+                const activeTeams = (response.data || []).filter(t => t._id !== 'unassigned' && t.name !== 'Unassigned');
+                const allMembers = activeTeams.flatMap(team => 
+                    (team.members || []).map(m => ({
+                        ...m,
+                        teamName: team.name
+                    }))
+                );
                 const uniqueMembers = allMembers.filter((v, i, a) => a.findIndex(t => t?._id === v?._id) === i);
                 setMembers(uniqueMembers);
             }
@@ -478,80 +483,92 @@ export default function SprintDetails() {
 
     const [activeSubTaskDropdown, setActiveSubTaskDropdown] = useState<string | null>(null);
 
-    const renderSubTask = (subTask: SubTask, issueId: string) => (
-        <div key={subTask._id} className="group/subTask bg-white border border-[#f0f0f0] rounded-[14px] p-3 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 relative overflow-visible">
-            <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="flex items-center justify-center shrink-0">
-                        <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${subTask.status === 'Done' ? 'bg-emerald-500 ring-4 ring-emerald-50' :
-                                subTask.status === 'In Progress' ? 'bg-[#fa8029] ring-4 ring-orange-50' :
-                                    subTask.status === 'Blocked' ? 'bg-amber-500 ring-4 ring-amber-50' :
-                                        'bg-indigo-400 ring-4 ring-indigo-50'
-                            }`} />
-                    </div>
-                    <div className="min-w-0 flex-1 flex flex-col justify-center">
-                        <h4 className="text-[13px] font-bold text-[#1f2124] group-hover/subTask:text-indigo-600 transition-colors leading-normal truncate">
-                            {subTask.title}
-                        </h4>
-                        <div className="flex items-center gap-3 flex-wrap mt-1">
-                            <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border shrink-0 ${getPriorityColor(subTask.priority)}`}>
-                                {subTask.priority}
-                            </span>
-                            <div className="flex items-center gap-1 text-[10px] text-[#aaa] font-bold shrink-0">
-                                <Clock size={11} className="text-[#ccc]" /> {subTask.estimated_hours} hrs
+    const renderSubTask = (subTask: SubTask, issueId: string) => {
+        const parentIssue = issues.find(i => i._id === issueId);
+        const canAssignThisSubTask = (() => {
+            if (!parentIssue) return false;
+            if (sprint?.status?.toLowerCase() === 'completed') return false;
+            if (user?.role === 'company') return true;
+            if (parentIssue.type === 'story') {
+                return parentIssue.assignee_id?._id === user?._id;
+            }
+            return can('task:assign');
+        })();
+
+        return (
+            <div key={subTask._id} className="group/subTask bg-white border border-[#f0f0f0] rounded-[14px] p-3 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 relative overflow-visible">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex items-center justify-center shrink-0">
+                            <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${subTask.status === 'Done' ? 'bg-emerald-500 ring-4 ring-emerald-50' :
+                                    subTask.status === 'In Progress' ? 'bg-[#fa8029] ring-4 ring-orange-50' :
+                                        subTask.status === 'Blocked' ? 'bg-amber-500 ring-4 ring-amber-50' :
+                                            'bg-indigo-400 ring-4 ring-indigo-50'
+                                }`} />
+                        </div>
+                        <div className="min-w-0 flex-1 flex flex-col justify-center">
+                            <h4 className="text-[13px] font-bold text-[#1f2124] group-hover/subTask:text-indigo-600 transition-colors leading-normal truncate">
+                                {subTask.title}
+                            </h4>
+                            <div className="flex items-center gap-3 flex-wrap mt-1">
+                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border shrink-0 ${getPriorityColor(subTask.priority)}`}>
+                                    {subTask.priority}
+                                </span>
+                                <div className="flex items-center gap-1 text-[10px] text-[#aaa] font-bold shrink-0">
+                                    <Clock size={11} className="text-[#ccc]" /> {subTask.estimated_hours} hrs
+                                </div>
+                                {subTask.team_id && (
+                                    <div className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50/50 text-indigo-500 rounded-md border border-indigo-100/50 shrink-0">
+                                        <Users size={10} />
+                                        <span className="text-[9px] font-black uppercase tracking-wider">{subTask.team_id.name}</span>
+                                    </div>
+                                )}
+                                {subTask.status === 'Blocked' && (
+                                    <span className="text-[9px] font-black text-white bg-amber-500 px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">Blocked</span>
+                                )}
                             </div>
-                            {subTask.team_id && (
-                                <div className="flex items-center gap-1 px-2 py-0.5 bg-indigo-50/50 text-indigo-500 rounded-md border border-indigo-100/50 shrink-0">
-                                    <Users size={10} />
-                                    <span className="text-[9px] font-black uppercase tracking-wider">{subTask.team_id.name}</span>
+                            {subTask.status === 'Blocked' && subTask.blocked_reason && (
+                                <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-100/50">
+                                    <p className="text-[10px] text-amber-700 font-bold leading-relaxed italic">
+                                        <MentionText text={subTask.blocked_reason || ""} />
+                                    </p>
                                 </div>
                             )}
-                            {subTask.status === 'Blocked' && (
-                                <span className="text-[9px] font-black text-white bg-amber-500 px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">Blocked</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-2">
+                            {subTask.assignee_id ? (
+                                <button
+                                    onClick={(e) => {
+                                        if (canAssignThisSubTask) {
+                                            e.stopPropagation();
+                                            setSubTaskToAssign({ issueId, subTask });
+                                        }
+                                    }}
+                                    className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${canAssignThisSubTask ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
+                                    title={subTask.assignee_id.name}
+                                >
+                                    {(() => {
+                                        const assignee = subTask.assignee_id as { name: string; user_id?: { name: string } } | null;
+                                        const name = assignee?.name || assignee?.user_id?.name;
+                                        if (!name) return '??';
+                                        return name.split(' ').length > 1
+                                            ? name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
+                                            : name.substring(0, 2).toUpperCase();
+                                    })()}
+                                </button>
+                            ) : canAssignThisSubTask && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setSubTaskToAssign({ issueId, subTask }); }}
+                                    className="w-8 h-8 rounded-full bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-[#fa8029] hover:text-[#fa8029] transition-all shadow-sm"
+                                    title="Assign Employee"
+                                >
+                                    <UserPlus size={14} />
+                                </button>
                             )}
                         </div>
-                        {subTask.status === 'Blocked' && subTask.blocked_reason && (
-                            <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-100/50">
-                                <p className="text-[10px] text-amber-700 font-bold leading-relaxed italic">
-                                    <MentionText text={subTask.blocked_reason || ""} />
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                    <div className="flex items-center gap-2">
-                        {subTask.assignee_id ? (
-                            <button
-                                onClick={(e) => {
-                                    if (can('task:assign') && sprint?.status?.toLowerCase() !== 'completed') {
-                                        e.stopPropagation();
-                                        setSubTaskToAssign({ issueId, subTask });
-                                    }
-                                }}
-                                className={`w-8 h-8 rounded-full bg-[#fa8029] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-md transition-all ${can('task:assign') && sprint?.status?.toLowerCase() !== 'completed' ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
-                                title={subTask.assignee_id.name}
-                            >
-                                {(() => {
-                                    const assignee = subTask.assignee_id as { name: string; user_id?: { name: string } } | null;
-                                    const name = assignee?.name || assignee?.user_id?.name;
-                                    if (!name) return '??';
-                                    return name.split(' ').length > 1
-                                        ? name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
-                                        : name.substring(0, 2).toUpperCase();
-                                })()}
-                            </button>
-                        ) : can('task:assign') && sprint?.status?.toLowerCase() !== 'completed' && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setSubTaskToAssign({ issueId, subTask }); }}
-                                className="w-8 h-8 rounded-full bg-white border border-[#eee] flex items-center justify-center text-[#aaa] hover:border-[#fa8029] hover:text-[#fa8029] transition-all shadow-sm"
-                                title="Assign Employee"
-                            >
-                                <UserPlus size={14} />
-                            </button>
-                        )}
-                    </div>
                     <div className="relative overflow-visible">
                         <button
                             onClick={(e) => {
@@ -677,6 +694,7 @@ export default function SprintDetails() {
             </div>
         </div>
     );
+    };
 
     if (loading) {
         return (
@@ -962,7 +980,7 @@ export default function SprintDetails() {
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        {can('task:create') && issue.type === 'story' && sprint?.status?.toLowerCase() !== 'completed' && (() => {
+                                                        {((can('task:create') && issue.assignee_id?._id === user?._id) || user?.role === 'company') && issue.type === 'story' && sprint?.status?.toLowerCase() !== 'completed' && (() => {
                                                             const userTeamId = user?.team?._id || user?.team_id;
                                                             const teamSubTaskCount = subTaskConfig?.data?.filter(st => {
                                                                 const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;
@@ -999,7 +1017,7 @@ export default function SprintDetails() {
                                                         <div className="py-12 bg-white rounded-3xl border border-[#f0f0f0] border-dashed text-center flex flex-col items-center">
                                                             <AlertCircle size={24} className="text-[#eee] mb-2" />
                                                             <p className="text-[12px] text-[#aaa] font-medium">No sub-tasks defined yet.</p>
-                                                            {can('task:create') && issue.type === 'story' && sprint?.status?.toLowerCase() !== 'completed' && (() => {
+                                                            {((can('task:create') && issue.assignee_id?._id === user?._id) || user?.role === 'company') && issue.type === 'story' && sprint?.status?.toLowerCase() !== 'completed' && (() => {
                                                                 const userTeamId = user?.team?._id || user?.team_id;
                                                                 const teamSubTaskCount = subTaskConfig?.data?.filter(st => {
                                                                     const stTeamId = typeof st.team_id === 'object' ? st.team_id?._id : st.team_id;

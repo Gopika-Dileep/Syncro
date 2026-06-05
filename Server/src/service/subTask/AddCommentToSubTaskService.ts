@@ -17,7 +17,7 @@ export class AddCommentToSubTaskService implements IAddCommentToSubTaskService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
-  ) { }
+  ) {}
 
   async execute(subTaskId: string, userId: string, text: string, attachments?: { file_url: string; file_name: string }[]): Promise<ISubTask> {
     const employee = await this._employeeRepository.findByUserId(userId);

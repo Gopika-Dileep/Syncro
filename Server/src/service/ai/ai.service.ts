@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { z } from 'zod';
 import { llm } from '../../config/llm';
 import { IAIService } from '../../interfaces/services/ai/IAIService';
 import { AIAssignmentSchema, AIAssignTaskDTO } from '../../dto/ai.dto';
@@ -31,6 +32,28 @@ Analyze the task requirements and evaluate each employee against the criteria ab
 
     const result = await structuredLlm.invoke(prompt);
 
+    return result;
+  }
+
+  async determineTeamForTask(query: { task: Record<string, unknown>; teams: string[] }) {
+    const { task, teams } = query;
+    const TeamClassificationSchema = z.object({
+      matchedTeamName: z.string().describe('The exact name of the matched team from the list of provided teams.'),
+    });
+
+    const structuredLlm = llm.withStructuredOutput(TeamClassificationSchema, {
+      name: 'determine_team',
+    });
+
+    const prompt = `You are an expert technical project coordinator. Analyze the following task details:
+${JSON.stringify(task, null, 2)}
+
+Based on the task content, classify which team is responsible for implementing it.
+The available teams are: ${teams.join(', ')}.
+
+Select the single best matching team name from the list. It must match one of the names exactly.`;
+
+    const result = await structuredLlm.invoke(prompt);
     return result;
   }
 }

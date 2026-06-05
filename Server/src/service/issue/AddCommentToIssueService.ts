@@ -17,7 +17,7 @@ export class AddCommentToIssueService implements IAddCommentToIssueService {
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
     @inject(TYPES.ISocketService) private _socketService: ISocketService,
-  ) { }
+  ) {}
 
   async execute(issueId: string, userId: string, text: string, attachments?: { file_url: string; file_name: string }[]): Promise<IIssue> {
     const employee = await this._employeeRepository.findByUserId(userId);

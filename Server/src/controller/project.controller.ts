@@ -44,7 +44,7 @@ export class ProjectController {
   updateProject = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { projectId } = req.params;
-      const project = await this._updateProjectService.execute(projectId as string, req.body);
+      const project = await this._updateProjectService.execute(projectId as string, req.body, req.userId!);
       success(res, project, PROJECT_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
       next(error);

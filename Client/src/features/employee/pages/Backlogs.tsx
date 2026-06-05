@@ -92,7 +92,7 @@ export default function Backlogs() {
 
     const [projects, setProjects] = useState<Project[]>([]);
     const [fetchingProjects, setFetchingProjects] = useState(true);
-    const [members, setMembers] = useState<{ _id: string; name: string; designation?: string }[]>([]);
+    const [members, setMembers] = useState<{ _id: string; name: string; designation?: string; teamName?: string }[]>([]);
 
     const [issuesConfig, setIssuesConfig] = useState<Record<string, { data: Issue[], loading: boolean }>>({});
     const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
@@ -130,7 +130,13 @@ export default function Backlogs() {
         try {
             const res = await getTeamDirectoryApi();
             if (res.success) {
-                const allMembers = res.data.flatMap(t => t.members);
+                const activeTeams = res.data.filter(t => t._id !== 'unassigned' && t.name !== 'Unassigned');
+                const allMembers = activeTeams.flatMap(t =>
+                    t.members.map(m => ({
+                        ...m,
+                        teamName: t.name
+                    }))
+                );
                 const unique = allMembers.filter((v, i, a) => a.findIndex(t => t._id === v._id) === i);
                 setMembers(unique);
             }

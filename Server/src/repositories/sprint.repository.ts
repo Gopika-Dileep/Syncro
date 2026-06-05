@@ -19,7 +19,16 @@ export class SprintRepository extends BaseRepository<ISprint> implements ISprint
     }
 
     if (status) {
-      filter.status = status;
+      const statusLower = status.toLowerCase();
+      if (statusLower === 'planned') {
+        filter.status = 'planned';
+      } else if (statusLower === 'active') {
+        filter.status = 'Active';
+      } else if (statusLower === 'completed') {
+        filter.status = 'Completed';
+      } else {
+        filter.status = status;
+      }
     }
 
     const total = await this._model.countDocuments(filter);

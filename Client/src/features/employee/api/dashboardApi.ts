@@ -34,6 +34,7 @@ export interface EmployeeDashboardData {
     inProgress: number;
     blocked: number;
   };
+  myBlocked?: RecentBlockedItem[];
   typeStats?: {
     stories: number;
     tasks: number;

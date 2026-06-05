@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { ChevronDown, X } from "lucide-react";
 import type { RootState } from "@/store/store";
+import { useNavigate } from "react-router-dom";
 
 
 // --- MINIMALIST COMPONENTS ---
@@ -59,6 +60,7 @@ const MetricCard: FC<MetricCardProps> = ({ title, value, icon: Icon, description
 );
 
 export default function EmployeeDashboard() {
+    const navigate = useNavigate();
     const employee = useSelector((state: RootState) => state.auth.user);
     const [data, setData] = useState<EmployeeDashboardData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -110,6 +112,27 @@ export default function EmployeeDashboard() {
 
     const clearFilters = () => {
         setFilters({ projectId: "", sprintId: "", teamId: "" });
+    };
+
+    const handleViewBlocked = () => {
+        if (data?.myBlocked && data.myBlocked.length > 0) {
+            const first = data.myBlocked[0];
+            if (first.type === 'sub-task') {
+                navigate(`/employee/tasks?selectedTask=${first._id}`);
+            } else {
+                navigate(`/employee/backlogs?selectedIssue=${first._id}`);
+            }
+        } else {
+            navigate('/employee/tasks');
+        }
+    };
+
+    const handleViewItem = (item: RecentBlockedItem) => {
+        if (item.type === 'sub-task') {
+            navigate(`/employee/tasks?selectedTask=${item._id}`);
+        } else {
+            navigate(`/employee/backlogs?selectedIssue=${item._id}`);
+        }
     };
 
     const isManager = !!data?.managerMetrics;
@@ -236,7 +259,7 @@ export default function EmployeeDashboard() {
                             <p className="text-[11px] text-gray-400 font-medium">You have {data.myStats.blocked} tasks that are blocked and need attention.</p>
                         </div>
                     </div>
-                    <button className="text-[10px] font-black text-rose-500 uppercase hover:underline">View Blocked</button>
+                    <button onClick={handleViewBlocked} className="text-[10px] font-black text-rose-500 uppercase hover:underline">View Blocked</button>
                 </div>
             )}
 
@@ -394,8 +417,8 @@ export default function EmployeeDashboard() {
                                                                 {issue.type || 'Item'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3">
-                                                            <p className="text-[12px] font-bold text-[#1a1c1f] line-clamp-1">{issue.title}</p>
+                                                        <td className="py-3 cursor-pointer" onClick={() => handleViewItem(issue)}>
+                                                            <p className="text-[12px] font-bold text-[#1a1c1f] group-hover:text-[#fa8029] hover:underline line-clamp-1 transition-colors">{issue.title}</p>
                                                         </td>
                                                         <td className="py-3 text-center">
                                                             <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${

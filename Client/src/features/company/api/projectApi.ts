@@ -15,6 +15,7 @@ export interface Project {
         _id: string;
         name: string;
         avatar?: string;
+        designation?: string;
     };
 }
 
@@ -91,8 +92,13 @@ export interface ProjectInsights {
         type: string;
         status: string;
         priority: string;
-        assign_to?: { _id: string; name: string; avatar?: string };
+        assign_to?: { _id: string; name: string; avatar?: string; designation?: string };
         team?: { _id: string; name: string };
+        created_by?: { _id: string; name: string; designation: string; avatar?: string };
+        story_points?: number;
+        estimated_hours?: number;
+        description?: string;
+        criteria?: string[];
     }[];
     standaloneTasks: {
         _id: string;
@@ -100,8 +106,13 @@ export interface ProjectInsights {
         type: string;
         status: string;
         priority: string;
-        assign_to?: { _id: string; name: string; avatar?: string };
+        assign_to?: { _id: string; name: string; avatar?: string; designation?: string };
         team?: { _id: string; name: string };
+        created_by?: { _id: string; name: string; designation: string; avatar?: string };
+        story_points?: number;
+        estimated_hours?: number;
+        description?: string;
+        criteria?: string[];
     }[];
     bugs: {
         _id: string;
@@ -109,8 +120,15 @@ export interface ProjectInsights {
         type: string;
         status: string;
         priority: string;
-        assign_to?: { _id: string; name: string; avatar?: string };
+        assign_to?: { _id: string; name: string; avatar?: string; designation?: string };
         team?: { _id: string; name: string };
+        created_by?: { _id: string; name: string; designation: string; avatar?: string };
+        story_points?: number;
+        estimated_hours?: number;
+        description?: string;
+        criteria?: string[];
+        environment?: string;
+        reproduction_steps?: string;
     }[];
     tasks: {
         _id: string;
@@ -118,6 +136,7 @@ export interface ProjectInsights {
         status: string;
         issue_id: string;
         assign_to?: { _id: string; name: string; avatar?: string; team_name?: string };
+        estimated_hours?: number;
     }[];
 }
 

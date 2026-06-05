@@ -69,8 +69,8 @@ export const SubmitSubTaskRequestSchema = z.object({
     subTaskId: z.string().min(1),
   }),
   body: z.object({
-    submission_link: z.string().url('Invalid link').optional().or(z.literal('')),
-    submission_description: z.string().optional(),
+    submission_link: z.string().trim().url('Invalid link').optional().or(z.literal('')),
+    submission_description: z.string().min(1, 'Description of implementation is required'),
     branch_name: z.string().optional(),
     mentions: z.array(z.string().min(1)).optional(),
   }),

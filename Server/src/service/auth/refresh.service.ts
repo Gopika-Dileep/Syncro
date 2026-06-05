@@ -33,8 +33,13 @@ export class RefreshService implements IRefreshService {
     let team_id: string | undefined = undefined;
     let team: { _id: string; name: string } | null = null;
 
+    let employee_id: string | undefined = undefined;
+
     if (user.role === 'employee') {
       const employeeData = await this._employeeRepo.findByUserId(user._id.toString());
+      if (employeeData) {
+        employee_id = employeeData._id.toString();
+      }
       designation = employeeData?.designation || null;
       if (employeeData && employeeData.company_id) companyName = employeeData.company_id.name;
       if (employeeData && employeeData.team_id) {
@@ -52,7 +57,7 @@ export class RefreshService implements IRefreshService {
       companyName = company?.name || null;
     }
 
-    const userDTO = AuthMapper.toUserDTO(user, designation, companyName, team_id, team);
+    const userDTO = AuthMapper.toUserDTO(user, designation, companyName, team_id, team, employee_id);
     const accessToken = generateAccessToken(userDTO.id, userDTO.role, permissions, userDTO.name, userDTO.designation, userDTO.companyName);
     return AuthMapper.toRefreshResponseDTO(accessToken, userDTO, permissions);
   }

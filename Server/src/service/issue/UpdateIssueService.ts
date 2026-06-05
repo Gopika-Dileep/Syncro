@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../di/types';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
+import { ISprintRepository } from '../../interfaces/repositories/ISprintRepository';
 import { ICreateHistoryInput } from '../../dto/issue.dto';
 import { IProjectRepository } from '../../interfaces/repositories/IProjectRepository';
 import { IUpdateIssueService } from '../../interfaces/services/issue/IUpdateIssueService';
@@ -22,8 +23,9 @@ export class UpdateIssueService implements IUpdateIssueService {
     @inject(TYPES.IProjectRepository) private _projectRepository: IProjectRepository,
     @inject(TYPES.IEmployeeRepository) private _employeeRepository: IEmployeeRepository,
     @inject(TYPES.ICompanyRepository) private _companyRepo: ICompanyRepository,
+    @inject(TYPES.ISprintRepository) private _sprintRepository: ISprintRepository,
     @inject(TYPES.INotificationService) private _notificationService: INotificationService,
-  ) { }
+  ) {}
 
   async execute(issueId: string, data: UpdateIssueRequestDTO, userId: string, permissions: string[], userRole?: string): Promise<IssueResponseDTO> {
     const employee = await this._employeeRepository.findByUserId(userId);
@@ -41,6 +43,18 @@ export class UpdateIssueService implements IUpdateIssueService {
 
       if (!oldIssue.sprint_id && oldIssue.status !== 'Ready') {
         throw new BadRequestError(ISSUE_MESSAGES.SPRINT_ADD_READY_ONLY(type));
+      }
+    }
+
+    const targetSprintId = data.sprint_id !== undefined ? data.sprint_id : oldIssue.sprint_id;
+    const newPoints = data.story_points !== undefined ? data.story_points : oldIssue.story_points;
+
+    if (targetSprintId) {
+      const sprintChanged = data.sprint_id !== undefined && String(data.sprint_id) !== String(oldIssue.sprint_id);
+      const pointsChanged = data.story_points !== undefined && data.story_points !== oldIssue.story_points;
+
+      if (sprintChanged || (oldIssue.sprint_id && pointsChanged)) {
+        await this.validateSprintPointsLimit(String(targetSprintId), newPoints || 0, issueId);
       }
     }
 
@@ -80,19 +94,16 @@ export class UpdateIssueService implements IUpdateIssueService {
       if (project) {
         const company = await this._companyRepo.findById(project.company_id.toString());
         if (company) {
-          const adminEmployee = await this._employeeRepository.findOne({ user_id: company.user_id });
-          if (adminEmployee) {
-            await this._notificationService.createNotification({
-              recipientId: adminEmployee._id.toString(),
-              senderId: senderId,
-              type: NotificationType.ITEM_BLOCKED,
-              title: 'Critical Item Blocked',
-              message: `${senderName} blocked ${title} in project ${project.name}. Reason: ${reason}`,
-              link: `/employee/backlogs?selectedIssue=${entityId}`,
-              relatedEntityId: entityId,
-              relatedEntityType: entityType,
-            });
-          }
+          await this._notificationService.createNotification({
+            recipientId: company.user_id.toString(),
+            senderId: senderId,
+            type: NotificationType.ITEM_BLOCKED,
+            title: 'Critical Item Blocked',
+            message: `${senderName} blocked ${title} in project ${project.name}. Reason: ${reason}`,
+            link: `/company/projects/${projectId}`,
+            relatedEntityId: entityId,
+            relatedEntityType: entityType,
+          });
         }
       }
     } catch (err) {
@@ -126,4 +137,20 @@ export class UpdateIssueService implements IUpdateIssueService {
       }
     }
   };
+
+  private async validateSprintPointsLimit(sprintId: string, issuePoints: number, excludeIssueId?: string): Promise<void> {
+    const sprint = await this._sprintRepository.findById(sprintId);
+    if (!sprint) return;
+
+    const filter: Record<string, unknown> = { sprint_id: sprintId };
+    if (excludeIssueId) {
+      filter._id = { $ne: excludeIssueId };
+    }
+    const sprintIssues = await this._issueRepository.find(filter);
+    const currentPoints = sprintIssues.reduce((sum, issue) => sum + (issue.story_points || 0), 0);
+
+    if (currentPoints + issuePoints > sprint.total_points) {
+      throw new BadRequestError(`Cannot assign user story. Adding this issue of ${issuePoints} story points would exceed the sprint's remaining points limit. Sprint Limit: ${sprint.total_points} points, Currently assigned: ${currentPoints} points.`);
+    }
+  }
 }

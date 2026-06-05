@@ -5,7 +5,7 @@ import { ISubTaskRepository } from '../../interfaces/repositories/ISubTaskReposi
 import { ITeamRepository } from '../../interfaces/repositories/ITeamRepository';
 import { ISprintRepository } from '../../interfaces/repositories/ISprintRepository';
 import { IIssueRepository } from '../../interfaces/repositories/IIssueRepository';
-import { EmployeeDashboardDTO, DashboardFilter } from '../../dto/dashboard.dto';
+import { EmployeeDashboardDTO, DashboardFilter, BlockedItem } from '../../dto/dashboard.dto';
 import { TYPES } from '../../di/types';
 import { NotFoundError } from '../../errors/AppError';
 import mongoose from 'mongoose';
@@ -89,7 +89,7 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
       subTaskFilter['sprint_id'] = sId;
     }
 
-    const [issueStats, subTaskStats, team, typeStats, upcomingTasks] = await Promise.all([
+    const [issueStats, subTaskStats, team, typeStats, upcomingTasks, myBlocked] = await Promise.all([
       this._issueRepo.find({
         $or: [{ assignee_id: empIdObj }, { assignee_id: userIdObj }],
         ...baseFilter,
@@ -101,6 +101,7 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
       teamId ? this._teamRepo.findById(teamId.toString()) : Promise.resolve(null),
       this.getEmployeeTypeStats(empIdObj, baseFilter, subTaskFilter),
       this.getUpcomingTasks(empIdObj, baseFilter, subTaskFilter),
+      this.getMyBlockedTasks(empIdObj, baseFilter, subTaskFilter),
     ]);
 
     const matchStatus = (item: { status: string }, target: string) => (item.status || '').toLowerCase() === target.toLowerCase();
@@ -210,6 +211,7 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
       teamStats: teamStatsData,
       teamMetrics: teamMetricsData,
       managerMetrics: managerMetricsData,
+      myBlocked,
       upcomingDeadlines: upcomingTasks,
       recentActivity: [],
       availableFilters: DashboardMapper.toAvailableFilters(availableProjects, availableSprints, availableTeams),
@@ -239,6 +241,12 @@ export class GetEmployeeDashboardService implements IGetEmployeeDashboardService
 
   private async getRecentBlockedItems(filter: Record<string, unknown>) {
     const [issues, subTasks] = await Promise.all([this._issueRepo.find({ ...filter, status: 'Blocked' }, { sort: { updated_at: -1 }, limit: 5 }), this._subTaskRepo.find({ ...filter, status: 'Blocked' }, { sort: { updated_at: -1 }, limit: 5 })]);
+
+    return DashboardMapper.toRecentBlockedItems(issues as IIssue[], subTasks as ISubTask[]);
+  }
+
+  private async getMyBlockedTasks(employeeId: mongoose.Types.ObjectId, filter: Record<string, unknown> = {}, stFilter: Record<string, unknown> = {}): Promise<BlockedItem[]> {
+    const [issues, subTasks] = await Promise.all([this._issueRepo.find({ assignee_id: employeeId, status: 'Blocked', ...filter }), this._subTaskRepo.find({ assignee_id: employeeId, status: 'Blocked', ...stFilter })]);
 
     return DashboardMapper.toRecentBlockedItems(issues as IIssue[], subTasks as ISubTask[]);
   }

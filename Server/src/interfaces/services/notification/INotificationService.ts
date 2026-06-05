@@ -7,4 +7,3 @@ export interface INotificationService {
   markAsRead(notificationId: string): Promise<INotification | null>;
   markAllAsRead(userId: string): Promise<void>;
 }
-

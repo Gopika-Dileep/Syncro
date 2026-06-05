@@ -50,6 +50,7 @@ export type ForgotPasswordRequestDTO = z.infer<typeof ForgotPasswordRequestSchem
 export type ResetPasswordRequestDTO = z.infer<typeof ResetPasswordRequestSchema>['body'];
 
 export interface AuthUserDTO {
+  _id: string;
   id: string;
   name: string;
   role: string;

@@ -142,11 +142,14 @@ export default function Projects() {
             header: "Project Name",
             render: (project) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#f7f7f7] border border-[#ebebeb] flex items-center justify-center text-[#fa8029]">
+                    <div className="w-8 h-8 rounded-lg bg-[#f7f7f7] border border-[#ebebeb] flex items-center justify-center text-[#fa8029] shrink-0">
                         <Layout size={14} />
                     </div>
-                    <div>
-                        <p className="text-[13px] font-bold text-[#1f2124]">{project.name}</p>
+                    <div 
+                        onClick={() => navigate(`/employee/projects/${project._id}`)} 
+                        className="cursor-pointer group/name select-none"
+                    >
+                        <p className="text-[13px] font-bold text-[#1f2124] group-hover:text-[#fa8029] transition-colors">{project.name}</p>
                         <p className="text-[11px] text-[#aaa] truncate max-w-[200px]">{project.description}</p>
                     </div>
                 </div>

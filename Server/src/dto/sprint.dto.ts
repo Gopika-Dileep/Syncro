@@ -7,7 +7,7 @@ export const SprintBaseSchema = z.object({
   sprint_number: z.number().min(1, 'Sprint number must be at least 1'),
   goal: z.string().min(2, 'Goal must be at least 2 characters'),
   total_points: z.number().min(0, 'Total points must be non-negative'),
-  status: z.nativeEnum(SprintStatus).optional().default(SprintStatus.PLANNED),
+  status: z.nativeEnum(SprintStatus).optional(),
   start_date: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: 'Invalid start date',
   }),
@@ -17,7 +17,9 @@ export const SprintBaseSchema = z.object({
 });
 
 export const CreateSprintRequestSchema = z.object({
-  body: SprintBaseSchema,
+  body: SprintBaseSchema.extend({
+    status: z.nativeEnum(SprintStatus).optional().default(SprintStatus.PLANNED),
+  }),
 });
 
 export const GetSprintRequestSchema = z.object({

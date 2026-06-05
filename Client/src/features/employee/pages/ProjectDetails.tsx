@@ -74,7 +74,7 @@ export default function ProjectDetails() {
                     We couldn't retrieve details for this project. Please check if you have the permission to access it.
                 </p>
                 <button
-                    onClick={() => navigate('/company/projects')}
+                    onClick={() => navigate('/employee/projects')}
                     className="mt-4 px-4 py-2 bg-[#fa8029] hover:bg-[#e07020] text-white text-[12px] font-semibold rounded-lg shadow transition-colors"
                 >
                     Back to Projects
@@ -110,11 +110,11 @@ export default function ProjectDetails() {
 
     const getIssueStatusBadge = (status: string) => {
         switch (status.toLowerCase()) {
-            case 'done': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            case 'in progress': return 'bg-blue-50 text-blue-600 border-blue-100';
-            case 'in review': return 'bg-purple-50 text-purple-600 border-purple-100';
-            case 'blocked': return 'bg-rose-50 text-rose-600 border-rose-100';
-            default: return 'bg-slate-50 text-slate-500 border-slate-100';
+            case 'done': return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+            case 'in progress': return 'bg-blue-50 text-blue-600 border border-blue-100';
+            case 'in review': return 'bg-purple-50 text-purple-600 border border-purple-100';
+            case 'blocked': return 'bg-rose-50 text-rose-600 border border-rose-100';
+            default: return 'bg-slate-50 text-slate-500 border border-slate-100';
         }
     };
 
@@ -128,7 +128,7 @@ export default function ProjectDetails() {
                 
                 {/* Breadcrumb Header */}
                 <button 
-                    onClick={() => navigate('/company/projects')}
+                    onClick={() => navigate('/employee/projects')}
                     className="flex items-center gap-2 text-[#ccc] hover:text-[#fa8029] transition-colors font-black text-[10px] uppercase tracking-widest"
                 >
                     <ArrowLeft size={12} strokeWidth={3} /> Back to Projects Matrix
@@ -241,6 +241,7 @@ export default function ProjectDetails() {
                             <p className="text-[10px] font-medium text-[#888]">Reported defects</p>
                         </div>
                     </div>
+
                 </div>
 
                 {/* Tab Navigation Menu */}

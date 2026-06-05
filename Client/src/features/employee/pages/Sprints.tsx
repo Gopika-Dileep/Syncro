@@ -31,13 +31,18 @@ export default function Sprints() {
     const [isCompleteModalOpen, setCompleteModalOpen] = useState(false);
     const [sprintToComplete, setSprintToComplete] = useState<Sprint | null>(null);
     const [isFetchingCompleteData, setIsFetchingCompleteData] = useState(false);
+    const [availableSprints, setAvailableSprints] = useState<Sprint[]>([]);
 
     const handleCompleteClick = async (sprint: Sprint) => {
         setIsFetchingCompleteData(true);
         try {
-            const res = await getSprintByIdApi(sprint._id);
-            if (res.success) {
-                setSprintToComplete(res.data);
+            const [sprintRes, sprintsRes] = await Promise.all([
+                getSprintByIdApi(sprint._id),
+                getSprintsApi({ status: 'planned', limit: 100 })
+            ]);
+            if (sprintRes.success && sprintsRes.success) {
+                setSprintToComplete(sprintRes.data);
+                setAvailableSprints(sprintsRes.data.sprints);
                 setCompleteModalOpen(true);
             }
         } catch {
@@ -72,7 +77,7 @@ export default function Sprints() {
     const fetchSprints = useCallback(async () => {
         setFetching(true);
         try {
-            const res = await getSprintsApi({ search: debouncedSearchTerm });
+            const res = await getSprintsApi({ search: debouncedSearchTerm, limit: 100 });
             setSprints(res.data.sprints || []);
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };
@@ -200,6 +205,14 @@ export default function Sprints() {
                                     </button>
                                     {can('sprint:update') && (
                                         <button
+                                            onClick={() => { setEditingSprint(activeSprint); setModalOpen(true); }}
+                                            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-[#eee] text-[#555] rounded-xl font-bold text-[12px] hover:bg-[#fff5ef] hover:text-[#fa8029] hover:border-[#fa8029]/30 transition-all shadow-sm"
+                                        >
+                                            Edit Sprint
+                                        </button>
+                                    )}
+                                    {can('sprint:update') && (
+                                        <button
                                             disabled={isFetchingCompleteData}
                                             onClick={() => handleCompleteClick(activeSprint)}
                                             className="flex items-center gap-2 px-5 py-2.5 bg-[#1f2124] text-white rounded-xl font-bold text-[12px] hover:bg-black transition-all shadow-lg active:scale-95 disabled:opacity-50"
@@ -303,6 +316,14 @@ export default function Sprints() {
                                                     </button>
                                                 </>
                                             )}
+                                            {sprint.status.toLowerCase() !== 'completed' && can('sprint:update') && (
+                                                <button
+                                                    onClick={() => { setEditingSprint(sprint); setModalOpen(true); }}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-[#eee] text-[#555] rounded-xl font-bold text-[12px] hover:bg-[#fff5ef] hover:text-[#fa8029] hover:border-[#fa8029]/30 transition-all"
+                                                >
+                                                    Edit
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => navigate(`/employee/sprints/${sprint._id}`)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-white border border-[#eee] text-[#555] rounded-xl font-bold text-[12px] hover:bg-[#fcfcfc] transition-all"
@@ -364,9 +385,8 @@ export default function Sprints() {
                 isOpen={isCompleteModalOpen}
                 onClose={() => setCompleteModalOpen(false)}
                 incompleteCount={sprintToComplete?.issues?.filter(i => i.status !== 'Done').length || 0}
-                availableSprints={sprints.filter(s =>
-                    s._id !== sprintToComplete?._id &&
-                    s.status.toLowerCase() === 'planned'
+                availableSprints={availableSprints.filter(s =>
+                    s._id !== sprintToComplete?._id
                 )}
                 onConfirm={handleConfirmComplete}
                 isSubmitting={isSubmitting}
