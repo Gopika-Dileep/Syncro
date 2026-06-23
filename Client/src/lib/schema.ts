@@ -26,7 +26,7 @@ export const registerSchema = z.object({
 
 
 export const employeeSchema = z.object({
-  name: z.string()
+  name: z.string().trim()
     .min(2, "Name is too short")
     .regex(/^[A-Za-z\s]+$/, "Only letters and spaces are allowed"),
   email: z.string().email("Please enter a valid work email"),
