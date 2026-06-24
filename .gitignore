@@ -20,7 +20,9 @@ build/
 # Logs
 # =========================
 logs/
+Server/logs/
 *.log
+*.log.gz
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

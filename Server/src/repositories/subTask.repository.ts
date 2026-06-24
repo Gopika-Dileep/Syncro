@@ -3,6 +3,7 @@ import { ISubTaskRepository } from '../interfaces/repositories/ISubTaskRepositor
 import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../dto/issue.dto';
 import { ISubTask, subTaskModel } from '../models/subTask.model';
 import { BaseRepository } from './base.repository';
+import { SubTaskStatus } from '../enums/SubTaskEnums';
 
 const POPULATE_OPTS = [
   { path: 'issue_id', select: 'title type status' },
@@ -112,7 +113,7 @@ export class SubTaskRepository extends BaseRepository<ISubTask> implements ISubT
     return await this._model
       .find({
         assignee_id: assigneeId,
-        status: { $nin: ['Done'] },
+        status: { $nin: [SubTaskStatus.DONE] },
       })
       .exec();
   }

@@ -30,7 +30,7 @@ export const employeeSchema = z.object({
     .min(2, "Name is too short")
     .regex(/^[A-Za-z\s]+$/, "Only letters and spaces are allowed"),
   email: z.string().email("Please enter a valid work email"),
-  designation: z.string()
+  designation: z.string().trim()                           
     .min(1, "Designation is required")
     .regex(/^[A-Za-z\s]+$/, "Only letters and spaces are allowed"),
   phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),

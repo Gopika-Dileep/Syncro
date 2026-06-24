@@ -10,3 +10,5 @@ export async function connectDb(): Promise<void> {
     process.exit(1);
   }
 }
+
+

@@ -3,7 +3,7 @@ import { IIssueRepository } from '../interfaces/repositories/IIssueRepository';
 import { ICreateCommentInput, ICreateAttachmentInput, ICreateHistoryInput } from '../dto/issue.dto';
 import { IIssue, issueModel } from '../models/issue.model';
 import { BaseRepository } from './base.repository';
-import { IssueType } from '../enums/IssueEnums';
+import { IssueStatus, IssueType } from '../enums/IssueEnums';
 
 @injectable()
 export class IssueRepository extends BaseRepository<IIssue> implements IIssueRepository {
@@ -106,7 +106,7 @@ export class IssueRepository extends BaseRepository<IIssue> implements IIssueRep
     return await this._model
       .find({
         assignee_id: assigneeId,
-        status: { $nin: ['Done'] },
+        status: { $nin: [IssueStatus.DONE] },
       })
       .exec();
   }

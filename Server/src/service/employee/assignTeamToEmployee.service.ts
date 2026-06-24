@@ -10,6 +10,7 @@ export class AssignTeamToEmployeeService implements IAssignTeamToEmployeeService
   constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository) {}
 
   async execute(adminUserId: string, employeeId: string, teamId: string): Promise<{ success: boolean; message: string }> {
+    
     const employee = await this._employeeRepo.findById(employeeId);
     if (!employee) throw new NotFoundError(EMPLOYEE_MESSAGES.NOT_FOUND);
 
