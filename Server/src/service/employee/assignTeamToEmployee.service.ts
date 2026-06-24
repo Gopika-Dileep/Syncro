@@ -4,20 +4,27 @@ import { IEmployeeRepository } from '../../interfaces/repositories/IEmployeeRepo
 import { TYPES } from '../../di/types';
 import { NotFoundError, BadRequestError } from '../../errors/AppError';
 import { EMPLOYEE_MESSAGES } from '../../constants/messages';
+import { ICompanyRepository } from '../../interfaces/repositories/ICompanyRepository';
+
 
 @injectable()
 export class AssignTeamToEmployeeService implements IAssignTeamToEmployeeService {
-  constructor(@inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository) {}
+  constructor(
+    @inject(TYPES.IEmployeeRepository) private _employeeRepo: IEmployeeRepository,
+    @inject(TYPES.ICompanyRepository) private _companyRepo:ICompanyRepository
+  ) {}
 
   async execute(adminUserId: string, employeeId: string, teamId: string): Promise<{ success: boolean; message: string }> {
-    
+    console.log(employeeId, teamId, adminUserId);
     const employee = await this._employeeRepo.findById(employeeId);
+    console.log("employee" , employee)
     if (!employee) throw new NotFoundError(EMPLOYEE_MESSAGES.NOT_FOUND);
 
-    const admin = await this._employeeRepo.findOne({ user_id: adminUserId });
+    const admin = await this._companyRepo.findOne({ user_id: adminUserId });
+    console.log("admin" , admin)
     if (!admin) throw new NotFoundError(EMPLOYEE_MESSAGES.NOT_FOUND);
 
-    const adminCompanyId = admin.company_id?._id ? admin.company_id._id.toString() : admin.company_id?.toString();
+    const adminCompanyId = admin._id ? admin._id.toString() : admin.user_id?.toString();
     const employeeCompanyId = employee.company_id?._id ? employee.company_id._id.toString() : employee.company_id?.toString();
 
     if (adminCompanyId !== employeeCompanyId) {
