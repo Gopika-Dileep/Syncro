@@ -50,7 +50,7 @@ export class AssignIssueService implements IAssignIssueService {
       const issuePoints = issueToUpdate.story_points || 0;
       await this.validateSprintPointsLimit(String(data.sprint_id), issuePoints, data.issue_id);
     }
-
+   
     const updateData: Record<string, unknown> = {
       assigned_by: assigner._id,
     };

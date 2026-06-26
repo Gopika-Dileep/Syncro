@@ -285,9 +285,15 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                 toast.success(action === 'approve' ? "Task approved and completed!" : "Task sent back for rework");
 
                 if (action === 'reject') {
-                    await addCommentToSubTaskApi(fullItem._id, {
-                        text: `🔄 REWORK REQUIRED: ${reworkReason}`
-                    });
+                    if (internalType === 'issue') {
+                        await addCommentToIssueApi(fullItem._id, {
+                            text: `🔄 REWORK REQUIRED: ${reworkReason}`
+                        });
+                    } else {
+                        await addCommentToSubTaskApi(fullItem._id, {
+                            text: `🔄 REWORK REQUIRED: ${reworkReason}`
+                        });
+                    }
                 }
 
                 setReworkReason("");
