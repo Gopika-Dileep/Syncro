@@ -479,7 +479,7 @@ export default function Backlogs() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            {(can('issue:story:create') || can('issue:task:create') || can('issue:bug:create')) && (
+                                            {(can('issue:story:create') || can('issue:task:create') || can('issue:bug:create')) && (project.status !== 'Completed') && (
 
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleOpenCreateModal(project._id); }}
