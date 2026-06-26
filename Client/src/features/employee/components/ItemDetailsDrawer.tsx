@@ -336,6 +336,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
     };
 
     const isReadOnly = fullItem?.sprint_status?.toLowerCase() === 'completed';
+    const itemType = ((fullItem as any)?.type || (fullItem as any)?.subtask_type || '').toLowerCase();
     const isInReview = fullItem.status.toLowerCase() === 'in review' || fullItem.status.toLowerCase() === 'submitted';
     const isRework = (fullItem.status.toLowerCase() !== 'done' && fullItem.status.toLowerCase() !== 'completed') &&
         (fullItem.status.toLowerCase() === 'rework' || !!(internalType === 'subtask' ? (fullItem as SubTask).rework_reason : null));
@@ -346,8 +347,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
             ? parentIssue.assignee_id?._id === currentUser?._id
             : (
                 (internalType === 'subtask' ? can('task:assign') : (
-                    (fullItem as Issue).type?.toLowerCase() === 'story' ? can('issue:story:assign') :
-                    (fullItem as Issue).type?.toLowerCase() === 'bug' ? can('issue:bug:assign') :
+                    itemType === 'story' ? can('issue:story:assign') :
+                    itemType === 'bug' ? can('issue:bug:assign') :
                     can('issue:task:assign')
                 )) ||
                 can('task:view:all') ||
@@ -405,7 +406,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 <span className="text-[9px] font-black text-[#fa8029] bg-[#fff5ef] px-2.5 py-0.5 rounded-full uppercase border border-[#fa8029]/10 flex items-center gap-1">
                                     <Hash size={10} /> Sub-task
                                 </span>
-                            ) : (fullItem as Issue).type === 'bug' ? (
+                            ) : itemType === 'bug' ? (
                                 <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-2.5 py-0.5 rounded-full uppercase border border-rose-100 flex items-center gap-1">
                                     <Flag size={10} /> Bug
                                 </span>
@@ -504,11 +505,11 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                     </div>
                                     <div className="p-3 rounded-xl bg-white border border-gray-100 shadow-sm">
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                                            {type === 'issue' && (fullItem as Issue).type === 'story' ? 'Story Points' : 'Est. Time'}
+                                            {type === 'issue' && itemType === 'story' ? 'Story Points' : 'Est. Time'}
                                         </span>
                                         <div className="flex items-center gap-2 text-[13px] font-bold text-gray-700">
-                                            {internalType === 'issue' && (fullItem as Issue).type === 'story' ? <Hash size={14} /> : <Clock size={14} />}
-                                            {internalType === 'issue' && (fullItem as Issue).type === 'story' ? (fullItem as Issue).story_points : `${(fullItem as SubTask).estimated_hours || 0}h`}
+                                            {internalType === 'issue' && itemType === 'story' ? <Hash size={14} /> : <Clock size={14} />}
+                                            {internalType === 'issue' && itemType === 'story' ? (fullItem as Issue).story_points : `${(fullItem as SubTask).estimated_hours || 0}h`}
                                         </div>
                                     </div>
                                 </div>
@@ -522,7 +523,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 </div>
 
                                 {/* Bug Specifics */}
-                                {type === 'issue' && (fullItem as Issue).type === 'bug' && (
+                                {type === 'issue' && itemType === 'bug' && (
                                     <>
                                         {(fullItem as Issue).reproduction_steps && (
                                             <div>
@@ -544,7 +545,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 )}
 
                                 {/* Acceptance Criteria for Stories */}
-                                {type === 'issue' && (fullItem as Issue).type === 'story' && (fullItem as Issue).criteria && (fullItem as Issue).criteria.length > 0 && (
+                                {type === 'issue' && itemType === 'story' && (fullItem as Issue).criteria && (fullItem as Issue).criteria.length > 0 && (
                                     <div className="space-y-3">
                                         <h3 className="text-[12px] font-bold text-emerald-600 uppercase tracking-wider mb-3 flex items-center gap-2">
                                             <CheckCircle size={14} /> Acceptance Criteria
@@ -656,7 +657,7 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
                                 )}
 
                                 {/* Child Sub-tasks Section for Stories */}
-                                {type === 'issue' && (fullItem as Issue).type === 'story' && childSubTasks.length > 0 && (
+                                {type === 'issue' && itemType === 'story' && childSubTasks.length > 0 && (
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Sub-tasks Development ({childSubTasks.length})</h3>
@@ -984,8 +985,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                     {fullItem.status === 'In Progress' && !showBlockInput && !isReadOnly && (
                         internalType === 'issue' ? (
-                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block') :
-                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block') :
+                            itemType === 'story' ? can('issue:story:block') :
+                            itemType === 'bug' ? can('issue:bug:block') :
                             can('issue:task:block')
                         ) : (
                             (fullItem as SubTask).subtask_type === 'sub-task' ? can('task:block') :
@@ -1006,8 +1007,8 @@ export default function ItemDetailsDrawer({ isOpen, onClose, item, type, onUpdat
 
                     {fullItem.status === 'Blocked' && !showBlockInput && !isReadOnly && (
                         internalType === 'issue' ? (
-                            (fullItem as Issue).type.toLowerCase() === 'story' ? can('issue:story:block') :
-                            (fullItem as Issue).type.toLowerCase() === 'bug' ? can('issue:bug:block') :
+                            itemType === 'story' ? can('issue:story:block') :
+                            itemType === 'bug' ? can('issue:bug:block') :
                             can('issue:task:block')
                         ) : (
                             (fullItem as SubTask).subtask_type === 'sub-task' ? can('task:block') :

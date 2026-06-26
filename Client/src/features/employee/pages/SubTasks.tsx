@@ -15,6 +15,11 @@ import {
     getSubTaskByIdApi,
     autoAssignSubTaskApi
 } from "../api/subTaskApi";
+import {
+    updateIssueApi,
+    assignIssueApi,
+    autoAssignIssueApi
+} from "../api/issueApi";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
 import {
@@ -163,6 +168,7 @@ export default function SubTasks() {
 
         try {
             let response;
+            const isSubTask = targetSubTask?.subtask_type === 'sub-task';
             if (newStatus === 'In Progress') {
                 if (extraData.rework_reason) {
                     response = await reviewSubTaskApi(subTaskId, {
@@ -170,7 +176,9 @@ export default function SubTasks() {
                         rework_reason: extraData.rework_reason
                     });
                 } else if (extraData.isUnblocking) {
-                    response = await updateSubTaskApi(subTaskId, { status: 'In Progress' });
+                    response = isSubTask
+                        ? await updateSubTaskApi(subTaskId, { status: 'In Progress' })
+                        : await updateIssueApi(subTaskId, { status: 'In Progress' });
                 } else {
                     response = await startSubTaskApi(subTaskId);
                 }
@@ -184,13 +192,21 @@ export default function SubTasks() {
             } else if (newStatus === 'Done') {
                 response = await reviewSubTaskApi(subTaskId, { action: 'approve' });
             } else if (newStatus === 'Blocked') {
-                response = await updateSubTaskApi(subTaskId, { 
-                    status: 'Blocked', 
-                    blocked_reason: extraData.blocked_reason,
-                    mentions: extraData.mentions
-                });
+                response = isSubTask
+                    ? await updateSubTaskApi(subTaskId, { 
+                        status: 'Blocked', 
+                        blocked_reason: extraData.blocked_reason,
+                        mentions: extraData.mentions
+                    })
+                    : await updateIssueApi(subTaskId, {
+                        status: 'Blocked',
+                        blocked_reason: extraData.blocked_reason,
+                        mentions: extraData.mentions
+                    });
             } else {
-                response = await updateSubTaskApi(subTaskId, { status: newStatus });
+                response = isSubTask
+                    ? await updateSubTaskApi(subTaskId, { status: newStatus })
+                    : await updateIssueApi(subTaskId, { status: newStatus });
             }
 
             if (response.success) {
@@ -274,7 +290,9 @@ export default function SubTasks() {
     const handleAssignSubmit = async (memberId: string) => {
         if (!selectedSubTask) return;
         try {
-            const response = await assignSubTaskApi(selectedSubTask._id, memberId);
+            const response = selectedSubTask.subtask_type === 'sub-task'
+                ? await assignSubTaskApi(selectedSubTask._id, memberId)
+                : await assignIssueApi(selectedSubTask._id, { assignee_id: memberId });
             if (response.success) {
                 fetchSubTasks();
                 toast.success("Assigned successfully");
@@ -288,7 +306,9 @@ export default function SubTasks() {
     const handleAutoAssignSubmit = async () => {
         if (!selectedSubTask) return;
         try {
-            const response = await autoAssignSubTaskApi(selectedSubTask._id);
+            const response = selectedSubTask.subtask_type === 'sub-task'
+                ? await autoAssignSubTaskApi(selectedSubTask._id)
+                : await autoAssignIssueApi(selectedSubTask._id);
             if (response.success) {
                 fetchSubTasks();
                 toast.success("AI Auto-assigned successfully");
@@ -635,7 +655,7 @@ export default function SubTasks() {
                     isOpen={showDetailsDrawer}
                     onClose={() => setShowDetailsDrawer(false)}
                     item={selectedSubTask}
-                    type="subtask"
+                    type={selectedSubTask.subtask_type === 'sub-task' ? 'subtask' : 'issue'}
                     onUpdate={() => fetchSubTasks()}
                     onReassign={() => {
                         setShowDetailsDrawer(false);
