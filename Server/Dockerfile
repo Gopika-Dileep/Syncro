@@ -13,7 +13,7 @@ COPY src ./src
 
 # Build the TypeScript project (transpile-only to avoid OOM on low-memory hosts)
 # Type correctness is enforced via CI/local tsc --noEmit before push
-RUN node --max-old-space-size=512 ./node_modules/.bin/tsc --noCheck --declaration false --declarationMap false --sourceMap false
+RUN ./node_modules/.bin/tsc --noCheck --declaration false --declarationMap false --sourceMap false
 
 # --- Production Runner Stage ---
 FROM node:20-alpine

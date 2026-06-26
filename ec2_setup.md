@@ -64,6 +64,28 @@ This guide covers setting up an AWS EC2 instance to host the Syncro backend serv
    docker ps
    ```
 
+4. **Configure Swap Space (Required for low-memory hosts like t2.micro):**
+   Standard t2.micro instances only have 1GB of RAM, which can cause TypeScript compilation inside Docker to fail with Out Of Memory (OOM) errors (e.g. `signal: killed`). Run the following commands to configure 2GB of swap space:
+   ```bash
+   # Create a 2GB swap file
+   sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+   
+   # Set the correct permissions
+   sudo chmod 600 /swapfile
+   
+   # Setup swap space
+   sudo mkswap /swapfile
+   
+   # Enable swap
+   sudo swapon /swapfile
+   
+   # Make the swap file permanent across reboots
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+   
+   # Verify swap is active
+   free -h
+   ```
+
 ---
 
 ## Step 3: Clone the Repository on EC2

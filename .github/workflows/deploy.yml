@@ -59,6 +59,19 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Ensure swap space is configured to prevent docker build OOM issues on low-memory (t2.micro) instances
+            if ! swapon --show | grep -q "swapfile"; then
+              echo "No swap file detected. Setting up a 2GB swap file..."
+              sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              echo "Swap setup complete."
+            else
+              echo "Swap file already configured."
+            fi
+
             cd ~/Syncro
             git checkout main
             git pull origin main
